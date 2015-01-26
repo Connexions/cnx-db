@@ -9,8 +9,10 @@ setup_requires = (
     'pytest-runner',
     )
 install_requires = (
+    'lxml',
     'psycopg2',
     'sqlalchemy',
+    'rhaptos.cnxmlutils',
     'venusian',
     )
 tests_require = [
