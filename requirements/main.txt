@@ -1,4 +1,6 @@
 # This project's dependencies
+lxml
 psycopg2
 sqlalchemy
+rhaptos.cnxmlutils
 venusian
