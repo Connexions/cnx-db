@@ -12,6 +12,7 @@ import unittest
 from lxml import etree
 # XXX (2017-10-12) deps-on-cnx-archive: Depends on cnx-archive
 from cnxarchive.tests import testing
+from pyramid import testing as pyramid_testing
 
 
 class HtmlReferenceResolutionTestCase(unittest.TestCase):
@@ -19,12 +20,12 @@ class HtmlReferenceResolutionTestCase(unittest.TestCase):
     maxDiff = None
 
     def setUp(self):
-        self.fixture.setUp()
-        from ... import _set_settings
         settings = testing.integration_test_settings()
-        _set_settings(settings)
+        config = pyramid_testing.setUp(settings=settings)
+        self.fixture.setUp()
 
     def tearDown(self):
+        pyramid_testing.tearDown()
         self.fixture.tearDown()
 
     @property
@@ -277,12 +278,12 @@ class CnxmlReferenceResolutionTestCase(unittest.TestCase):
     maxDiff = None
 
     def setUp(self):
-        self.fixture.setUp()
-        from ... import _set_settings
         settings = testing.integration_test_settings()
-        _set_settings(settings)
+        config = pyramid_testing.setUp(settings=settings)
+        self.fixture.setUp()
 
     def tearDown(self):
+        pyramid_testing.tearDown()
         self.fixture.tearDown()
 
     @property
