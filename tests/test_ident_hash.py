@@ -150,7 +150,6 @@ class JoinIdentTestCase(unittest.TestCase):
         ident_hash = self.call_target(id, version)
         self.assertEqual(expected, ident_hash)
 
-
     def test_w_double_null_version(self):
         id = '85e57f79-02b3-47d2-8eed-c1bbb1e1d5c2'
         version = (None, None,)
