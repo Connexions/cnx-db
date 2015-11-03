@@ -77,7 +77,8 @@ class SplitIdentTestCase(unittest.TestCase):
         )
         ident_hash = "{}@{}".format(expected_id, '.'.join(expected_version))
 
-        id, version, id_type = self.call_target(ident_hash, split_version=True,return_type=True)
+        id, version, id_type = self.call_target(
+            ident_hash, split_version=True, return_type=True)
 
         self.assertEqual(id, expected_id)
         self.assertEqual(version, expected_version)
@@ -90,7 +91,8 @@ class SplitIdentTestCase(unittest.TestCase):
         )
         ident_hash = "{}@{}".format(expected_id, expected_version[0])
 
-        id, version, id_type = self.call_target(ident_hash, split_version=True,return_type=True)
+        id, version, id_type = self.call_target(
+            ident_hash, split_version=True, return_type=True)
 
         self.assertEqual(id, expected_id)
         self.assertEqual(version, expected_version)
@@ -103,7 +105,7 @@ class SplitIdentTestCase(unittest.TestCase):
         )
         ident_hash = expected_id
 
-        id, version, id_type = self.call_target(ident_hash, True,True)
+        id, version, id_type = self.call_target(ident_hash, True, True)
 
         self.assertEqual(id, expected_id)
         self.assertEqual(version, expected_version)
