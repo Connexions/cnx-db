@@ -15,8 +15,6 @@ from . import testing
 
 class SplitIdentTestCase(unittest.TestCase):
 
-    from cnxdb.ident_hash import CNXHash
-
     def call_target(self, *args, **kwargs):
         from cnxdb.ident_hash import split_ident_hash
         return split_ident_hash(*args, **kwargs)
