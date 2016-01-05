@@ -406,6 +406,13 @@ CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 uuid, identifier2 text
 AS $$
   SELECT identifiers_equal(identifier1::text, identifier2)
 $$ LANGUAGE sql;
+
+CREATE OR REPLACE FUNCTION uuid2base64 (identifier uuid)
+  RETURNS character(24)
+AS $$
+  from cnxarchive.utils import CNXHash
+  return CNXHash.uuid2base64(identifier)
+$$ LANGUAGE plpythonu;
 """.format(inspect.getsource(identifiers_equal)))
 
         import uuid
