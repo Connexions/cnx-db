@@ -278,33 +278,31 @@ class TestCNXHash(unittest.TestCase):
 class TestMiscellaneousFunctions:
     def test_identifiers_equal_function(self, db_cursor):
         db_cursor.execute("""\
-CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 uuid, identifier2 uuid)
-  RETURNS BOOLEAN
-AS $$
-  from cnxarchive.utils import CNXHash
-  return CNXHash.identifiers_equal(identifier1,identifier2)
-$$ LANGUAGE plpythonu;
-
-CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 text, identifier2 uuid)
-  RETURNS BOOLEAN
-AS $$
-  from cnxarchive.utils import CNXHash
-  return CNXHash.identifiers_equal(identifier1,identifier2)
-$$ LANGUAGE plpythonu;
-
-CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 uuid, identifier2 text)
-  RETURNS BOOLEAN
-AS $$
-  from cnxarchive.utils import CNXHash
-  return CNXHash.identifiers_equal(identifier1,identifier2)
-$$ LANGUAGE plpythonu;
-
 CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 text, identifier2 text)
   RETURNS BOOLEAN
 AS $$
   from cnxarchive.utils import CNXHash
-  return CNXHash.identifiers_equal(identifier1,identifier2)
-$$ LANGUAGE plpythonu;""")
+  return CNXHash.identifiers_equal(identifier1, identifier2)
+$$ LANGUAGE plpythonu;
+
+CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 uuid, identifier2 uuid)
+  RETURNS BOOLEAN
+AS $$
+  SELECT identifiers_equal(identifier1::text, identifier2::text)
+$$ LANGUAGE sql;
+
+CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 text, identifier2 uuid)
+  RETURNS BOOLEAN
+AS $$
+  SELECT identifiers_equal(identifier1, identifier2::text)
+$$ LANGUAGE sql;
+
+CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 uuid, identifier2 text)
+  RETURNS BOOLEAN
+AS $$
+  SELECT identifiers_equal(identifier1::text, identifier2)
+$$ LANGUAGE sql;
+""")
 
         import uuid
         db_cursor.execute(
