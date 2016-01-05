@@ -179,6 +179,58 @@ class JoinIdentTestCase(unittest.TestCase):
         self.assertEqual(expected, ident_hash)
 
 
+def identifiers_equal(identifier1, identifier2):
+    fulluuid1 = None
+    fulluuid2 = None
+    base64hash1 = None
+    base64hash2 = None
+    shortid1 = None
+    shortid2 = None
+
+    try:
+        type1 = CNXHash.validate(identifier1)
+        type2 = CNXHash.validate(identifier2)
+    except IdentHashSyntaxError:
+        return False
+
+    if type1 == CNXHash.FULLUUID and type2 == CNXHash.FULLUUID:
+        if (isinstance(identifier1, CNXHash) or isinstance(identifier1,
+                                                           uuid.UUID)):
+            fulluuid1 = identifier1.__str__()
+        else:
+            fulluuid1 = identifier1
+        if (isinstance(identifier2, CNXHash) or isinstance(fulluuid2,
+                                                           uuid.UUID)):
+            fulluuid2 = identifier2.__str__()
+        else:
+            fulluuid2 = identifier2
+        return fulluuid1 == fulluuid2
+    elif type1 == CNXHash.BASE64HASH and type2 == CNXHash.BASE64HASH:
+        base64hash1 = identifier1
+        base64hash2 = identifier2
+        return base64hash1 == base64hash2
+    elif type1 == CNXHash.SHORTID and type2 == CNXHash.SHORTID:
+        shortid1 == identifier1
+        shortid2 == identifier2
+        return shortid1 == shortid2
+    elif type1 == CNXHash.BASE64HASH and type2 == CNXHash.FULLUUID:
+        base64hash1 = identifier1
+        base64hash2 = CNXHash.uuid2base64(identifier2)
+        return base64hash1 == base64hash2
+    elif type1 == CNXHash.FULLUUID and type2 == CNXHash.BASE64HASH:
+        base64hash1 = CNXHash.uuid2base64(identifier1)
+        base64hash2 = identifier2
+        return base64hash1 == base64hash2
+    elif type1 == CNXHash.SHORTID and (type2 == CNXHash.BASE64HASH or
+                                       type2 == CNXHash.FULLUUID):
+        return False
+    elif (type1 == CNXHash.BASE64HASH or
+          type1 == CNXHash.FULLUUID) and type2 == CNXHash.SHORTID:
+        return False
+    else:
+        return False
+
+
 class TestCNXHash(unittest.TestCase):
 
     @classmethod
@@ -252,37 +304,40 @@ class TestCNXHash(unittest.TestCase):
         self.assertFalse(self.cnxhash.similar(uuid.uuid4()))
         self.assertFalse(self.cnxhash.similar([]))
         self.assertTrue(self.cnxhash.similar(self.uuid))
-        self.assertTrue(
-            CNXHash.identifiers_similar(self.cnxhash, self.cnxhash.get_shortid()))
-        self.assertTrue(
-            CNXHash.identifiers_similar(self.cnxhash.get_shortid(), self.cnxhash))
-        self.assertTrue(
-            CNXHash.identifiers_similar(self.cnxhash.get_shortid(), self.uuid))
 
     def test_equality(self):
-        self.assertTrue(self.cnxhash == self.cnxhash)
-        self.assertTrue(self.uuid == self.cnxhash)
-        self.assertTrue(CNXHash.identifiers_equal(self.uuid, self.cnxhash))
         self.assertTrue(
-            CNXHash.identifiers_equal(self.cnxhash, str(self.cnxhash)))
+            identifiers_equal(self.cnxhash, self.cnxhash))
         self.assertTrue(
-            CNXHash.identifiers_equal(str(self.cnxhash), self.cnxhash))
+            identifiers_equal(self.uuid, self.cnxhash))
+        self.assertTrue(
+            identifiers_equal(self.cnxhash, str(self.cnxhash)))
+        self.assertTrue(
+            identifiers_equal(str(self.cnxhash), self.cnxhash))
         self.assertFalse(
-            CNXHash.identifiers_equal(self.cnxhash, self.cnxhash.get_shortid()))
-        self.assertTrue(CNXHash.identifiers_equal(
+            identifiers_equal(self.cnxhash, self.cnxhash.get_shortid()))
+        self.assertTrue(identifiers_equal(
             self.cnxhash.get_shortid(), self.cnxhash.get_shortid()))
-        self.assertFalse(CNXHash.identifiers_equal(self.cnxhash, []))
-        self.assertFalse(CNXHash.identifiers_equal(uuid.uuid4(), uuid.uuid4()))
+        self.assertFalse(identifiers_equal(self.cnxhash, []))
+        self.assertFalse(identifiers_equal(uuid.uuid4(), uuid.uuid4()))
 
 
 class TestMiscellaneousFunctions:
     def test_identifiers_equal_function(self, db_cursor):
+        import inspect
+
+        from .test_ident_hash import identifiers_equal
+
         db_cursor.execute("""\
 CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 text, identifier2 text)
   RETURNS BOOLEAN
 AS $$
-  from cnxarchive.utils import CNXHash
-  return CNXHash.identifiers_equal(identifier1, identifier2)
+import uuid
+from cnxarchive.utils import CNXHash, IdentHashSyntaxError
+
+{}
+
+return identifiers_equal(identifier1, identifier2)
 $$ LANGUAGE plpythonu;
 
 CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 uuid, identifier2 uuid)
@@ -302,7 +357,7 @@ CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 uuid, identifier2 text
 AS $$
   SELECT identifiers_equal(identifier1::text, identifier2)
 $$ LANGUAGE sql;
-""")
+""".format(inspect.getsource(identifiers_equal)))
 
         import uuid
         db_cursor.execute(
