@@ -14,7 +14,7 @@ import json
 from lxml import etree
 
 # XXX (2017-10-12) deps-on-cnx-archive: Depends on cnx-archive
-from cnxarchive.utils import split_ident_hash
+from cnxarchive.utils import split_ident_hash, join_ident_hash
 
 
 __all__ = (
@@ -342,16 +342,19 @@ class CnxmlToHtmlReferenceResolver(BaseReferenceResolver):
         the page is within the book.
         """
         from cnxepub import flatten_tree_to_ident_hashes  # XXX
-        from ..utils import join_ident_hash  # XXX
         from ..database import get_tree  # XXX
         book_ident_hash = join_ident_hash(book_uuid, book_version)
+        page_ident_hash = join_ident_hash(page_uuid, page_version)
         with self.db_connection.cursor() as cursor:
             tree = get_tree(book_ident_hash, cursor)
-            pages = list(flatten_tree_to_ident_hashes(tree))
-        page_ident_hash = join_ident_hash(page_uuid, page_version)
-        if page_ident_hash in pages:
-            return book_uuid, '{}:{}'.format(
-                latest and book_uuid or book_ident_hash, page_ident_hash)
+            for p_ident_hash in flatten_tree_to_ident_hashes(tree):
+                p_id, p_version = split_ident_hash(p_ident_hash)
+                if (p_id == page_uuid and
+                        (page_version is None or
+                         page_version == p_version)):
+                    return book_uuid, '{}:{}'.format(
+                        latest and book_uuid or book_ident_hash,
+                        page_ident_hash)
         # The page isn't in the given book, so only return the page.
         return page_uuid, page_ident_hash
 
@@ -413,15 +416,19 @@ class CnxmlToHtmlReferenceResolver(BaseReferenceResolver):
             if ref_type == MODULE_REFERENCE:
                 module_id, version, collection_id,\
                     collection_version, url_frag = payload
-                uuid, version = self.get_uuid_n_version(module_id, version)
-                ident_hash = '{}@{}'.format(uuid, version)
+                if version:
+                    uuid, version = self.get_uuid_n_version(module_id, version)
+                else:
+                    uuid, _ = self.get_uuid_n_version(module_id)
                 if uuid is None:
                     bad_references.append(
                         ReferenceNotFound("Unable to find a reference to "
                                           "'{}' at version '{}'."
                                           .format(module_id, version),
                                           self.document_ident, ref))
+                    break
 
+                ident_hash = join_ident_hash(uuid, version)
                 if collection_id:
                     book_uuid, book_version = self.get_uuid_n_version(
                         collection_id, collection_version)
