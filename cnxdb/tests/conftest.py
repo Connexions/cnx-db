@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from .testing import get_connection_string
+from .testing import get_connection_string, get_connection_string_parts
+
+
+@pytest.fixture
+def connection_string_parts():
+    """Returns a connection string as parts (dict)"""
+    return get_connection_string_parts()
 
 
 @pytest.fixture

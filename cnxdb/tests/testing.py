@@ -13,16 +13,28 @@ _DEFAULT_CONNECTION_SETTINGS = {
     'host': 'localhost',
     'port': '5432',
     }
-_DEFAULT_CONNECTION_STRING = ' '.join(
-    ['{}={}'.format(key, value)
-     for key, value in _DEFAULT_CONNECTION_SETTINGS.items()])
-_CONNECTION_STRING = os.environ.get('TESTING_CONNECTION_STRING',
-                                    _DEFAULT_CONNECTION_STRING)
+
+
+def parse_connection_string_to_parts(connection_string):
+    """Parses a connection string to parts (dict of key values)."""
+    return dict(map(lambda x: x.split('='), connection_string.split()))
+
+
+def get_connection_string_parts():
+    """Retrieves the connection string as dictionary key values."""
+    parts = {}
+    [parts.setdefault(k, v) for k, v in _DEFAULT_CONNECTION_SETTINGS.items()]
+    connection_string = os.environ.get('TESTING_CONNECTION_STRING', None)
+    if connection_string is not None:
+        parts.update(parse_connection_string_to_parts(connection_string))
+    return parts
 
 
 def get_connection_string():
     """Retrieves the connection string from configuration."""
-    return _CONNECTION_STRING
+    return ' '.join(
+        ['{}={}'.format(key, value)
+         for key, value in get_connection_string_parts().items()])
 
 
 def db_connection_factory(connection_string=None):
