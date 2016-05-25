@@ -50,5 +50,7 @@ setup(
         'cnxdb.tests': ['data/init/**/*.*'],
         },
     entry_points="""\
+    [console_scripts]
+    cnx-db = cnxdb.cli.main:main
     """,
     )

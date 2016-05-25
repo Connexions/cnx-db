@@ -40,9 +40,7 @@ Usage
 
 Initialize an database::
 
-    cnx-archive-initdb <app-config>.ini
-
-Replace ``<app-config>.ini`` with the application configuration file.
+    cnx-db init [-h host] [-p port] -d dbname -U user
 
 .. todo:: Deprecate ``cnx-archive-initdb`` in favor of ``cnx-db init ...``.
 
