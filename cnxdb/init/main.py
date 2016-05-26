@@ -6,6 +6,7 @@ import warnings
 
 import psycopg2
 
+from . import exceptions
 from .manifest import get_schema
 
 
@@ -15,10 +16,40 @@ SCHEMA_DIR = os.path.join(here, '..', 'schema')
 logger = logging.getLogger('cnxdb')
 
 
+SCHEMA_INITIALIZED_CHECK = """\
+DO LANGUAGE plpgsql
+$$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_class WHERE relname='modules') THEN
+    RAISE EXCEPTION USING MESSAGE = 'Database schema is initialized.';
+  END IF;
+END;
+$$;
+"""
+
+
+def _has_schema(cursor):
+    """Checks for the existence of the database schema.
+    Returns a boolean to indicate if the database schema exists or not.
+
+    """
+    try:
+        cursor.execute(SCHEMA_INITIALIZED_CHECK)
+    except psycopg2.InternalError as exc:
+        if 'Database schema is initialized.' in exc.args[0]:
+            return True
+        else:  # pragma: no cover
+            return False
+    else:
+        return False
+
+
 def init_db(connection_string, as_venv_importable=False):
     """Initialize the database from the given ``connection_string``."""
     with psycopg2.connect(connection_string) as db_connection:
         with db_connection.cursor() as cursor:
+            if _has_schema(cursor):
+                raise exceptions.DBSchemaInitialized()
             for schema_part in get_schema(SCHEMA_DIR):
                 cursor.execute(schema_part)
     if as_venv_importable:

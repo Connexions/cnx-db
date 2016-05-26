@@ -28,6 +28,19 @@ def test_db_init(connection_string, db_wipe):
     assert 'pending_documents' in tables
 
 
+def test_db_init_called_twice(connection_string, db_wipe):
+    from cnxdb.init.main import init_db
+    init_db(connection_string)
+
+    from cnxdb.init.exceptions import DBSchemaInitialized
+    try:
+        init_db(connection_string)
+    except DBSchemaInitialized as exc:
+        pass
+    else:
+        assert False, "the initialization check failed"
+
+
 @pytest.mark.skipif(not testing.is_venv(), reason="not within a venv")
 def test_db_init_with_venv(connection_string, db_wipe):
     from cnxdb.init.main import init_db
