@@ -53,8 +53,12 @@ def init_cmd(args_namespace):
     """initialize the database"""
     connection_string_parts = _compile_connection_string_parts(args_namespace)
     connection_string = _translate_parts_to_string(connection_string_parts)
-    from ..init import init_db
-    init_db(connection_string, False)
+    from ..init import init_db, DBSchemaInitialized
+    try:
+        init_db(connection_string, False)
+    except DBSchemaInitialized:
+        print("Database is already initialized", file=sys.stderr)
+        return 3
     return 0
 
 
@@ -77,9 +81,7 @@ def main(argv=None):
     venv_parser.set_defaults(cmd=venv_cmd)
     args = parser.parse_args(argv)
 
-    args.cmd(args)
-
-    return 0
+    return args.cmd(args)
 
 
 __all__ = ('main',)

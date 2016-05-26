@@ -38,6 +38,19 @@ def test_init(connection_string_parts, db_wipe):
     assert 'pending_documents' in tables
 
 
+def test_init_called_twice(capsys, connection_string_parts, db_wipe):
+    from cnxdb.cli.main import main
+    args = ['init'] + _translate_parts_to_args(connection_string_parts)
+
+    return_code = main(args)
+    assert return_code == 0
+
+    return_code = main(args)
+    assert return_code == 3
+    out, err = capsys.readouterr()
+    assert 'already initialized' in err
+
+
 # TODO test init within venv (and skipif)
 
 # TODO test init default options for host and port
