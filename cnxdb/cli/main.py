@@ -67,7 +67,7 @@ def venv_cmd(args_namespace):
     raise NotImplementedError()
 
 
-def main(argv=None):
+def create_main_parser():
     parser = argparse.ArgumentParser(__doc__)
     sub_parsers = parser.add_subparsers()
     db_args_parser = create_common_db_args_parser()
@@ -79,6 +79,11 @@ def main(argv=None):
                                          help=venv_cmd.__doc__,
                                          parents=[db_args_parser])
     venv_parser.set_defaults(cmd=venv_cmd)
+    return parser
+
+
+def main(argv=None):
+    parser = create_main_parser()
     args = parser.parse_args(argv)
 
     return args.cmd(args)
