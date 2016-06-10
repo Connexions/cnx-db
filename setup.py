@@ -10,6 +10,7 @@ setup_requires = (
     )
 install_requires = (
     'psycopg2',
+    'venusian',
     )
 tests_require = [
     'pytest',
