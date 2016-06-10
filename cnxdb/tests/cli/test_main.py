@@ -82,4 +82,46 @@ def test_init_without_user(connection_string_parts, db_wipe):
         return_code = main(args)
     assert exc_info.value.code == 2
 
-# TODO test venv ...
+
+def assert_venv_is_active(connection_string_parts):
+    """Asserts the venv is active and working"""
+    with psycopg2.connect(**connection_string_parts) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("CREATE FUNCTION pypath() RETURNS text LANGUAGE "
+                           "plpythonu AS $$import sys;return sys.prefix$$")
+            cursor.execute("SELECT pypath()")
+            db_pypath = cursor.fetchone()[0]
+
+    assert os.path.samefile(db_pypath, sys.prefix)
+
+
+@pytest.mark.skipif(not testing.is_venv(), reason="not within a venv")
+def test_venv(connection_string_parts, db_init, db_wipe):
+    # Remove the venv schema before trying to initialize it.
+    with psycopg2.connect(**connection_string_parts) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("DROP SCHEMA venv CASCADE")
+
+    from cnxdb.cli.main import main
+    args = ['venv'] + _translate_parts_to_args(connection_string_parts)
+
+    return_code = main(args)
+    assert return_code == 0
+
+    assert_venv_is_active(connection_string_parts)
+
+
+@pytest.mark.skipif(not testing.is_venv(), reason="not within a venv")
+def test_venv_called_twice(connection_string_parts, db_init, db_wipe):
+    # Note, the initialization already setup the venv,
+    # so this really calles 3 times.
+    from cnxdb.cli.main import main
+    args = ['venv'] + _translate_parts_to_args(connection_string_parts)
+
+    return_code = main(args)
+    assert return_code == 0
+
+    return_code = main(args)
+    assert return_code == 0
+
+    assert_venv_is_active(connection_string_parts)

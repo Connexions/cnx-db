@@ -47,4 +47,8 @@ def init_cmd(args_namespace):
 @register_subcommand('venv', *assign_db_args)
 def venv_cmd(args_namespace):
     """(re)initialize the venv within the database"""
-    raise NotImplementedError()
+    connection_string_parts = _compile_connection_string_parts(args_namespace)
+    connection_string = _translate_parts_to_string(connection_string_parts)
+    from ..init import init_venv, DBSchemaInitialized
+    init_venv(connection_string)
+    return 0

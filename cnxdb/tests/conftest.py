@@ -28,3 +28,10 @@ def db_wipe(connection_string, request):
                                "CREATE SCHEMA public")
                 cursor.execute("DROP SCHEMA IF EXISTS venv CASCADE")
     request.addfinalizer(finalize)
+
+
+@pytest.fixture
+def db_init(connection_string, request):
+    """Initializes the database"""
+    from cnxdb.init.main import init_db
+    init_db(connection_string, True)
