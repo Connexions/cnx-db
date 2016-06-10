@@ -5,7 +5,7 @@ import venusian
 SUBCOMMAND_CATEGORY = 'subcommands'
 
 
-def register_subcommand(command_name, parser_callback=None):
+def register_subcommand(command_name, parser_callback=None, parser_kwargs={}):
     """Register a function as a subcommand.
     For example::
 
@@ -20,7 +20,8 @@ def register_subcommand(command_name, parser_callback=None):
     def wrapper(wrapped):
         def callback(scanner, name, obj):
             # Create a parser for the subcommand with the given command_name.
-            parser = scanner.sub_parsers.add_parser(command_name)
+            parser = scanner.sub_parsers.add_parser(command_name,
+                                                    **parser_kwargs)
             # Call the parser's callback, which assigns arguments.
             if parser_callback is not None:
                 parser_callback(parser)

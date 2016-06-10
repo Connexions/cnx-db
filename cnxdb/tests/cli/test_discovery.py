@@ -38,7 +38,7 @@ def test_registration(scanner, sub_parsers):
         mock.call().set_defaults(cmd=func),
     ])
 
-    sub_parsers.add_parser.assert_any_call('module2-command')
+    sub_parsers.add_parser.assert_any_call('module2-command', add_help=False)
     func = scanned_import.module2.command
     sub_parsers.add_parser.assert_has_calls([
         mock.call().set_defaults(cmd=func),
