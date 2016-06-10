@@ -10,8 +10,13 @@ import venusian
 
 
 @pytest.fixture
-def sub_parsers():
-    sub_parser = argparse.ArgumentParser().add_subparsers()
+def parser():
+    return argparse.ArgumentParser()
+
+
+@pytest.fixture
+def sub_parsers(parser):
+    sub_parser = parser.add_subparsers()
     return mock.Mock(spec=sub_parser)
 
 
@@ -41,3 +46,16 @@ def test_registration(scanner, sub_parsers):
     sub_parsers.add_parser.assert_has_calls([
         mock.call().add_argument('module2'),
     ])
+
+
+def test_discovery(parser):
+    from . import scanned_import
+    from cnxdb.cli.discovery import discover_subcommands
+    discover_subcommands(parser, scope=scanned_import)
+
+    args = parser.parse_args(['module1-command'])
+    assert args.cmd(args)
+
+    test_arg = 'echo'
+    args = parser.parse_args(['module2-command', test_arg])
+    assert args.cmd(args) == test_arg

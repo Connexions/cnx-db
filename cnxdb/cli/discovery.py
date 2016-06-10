@@ -31,12 +31,18 @@ def register_subcommand(command_name, parser_callback=None):
     return wrapper
 
 
-def discover_subcommands(parser):
+def discover_subcommands(parser, scope=None):
     """Discover registered subcommands. The side-effect of running this
     function is that it adds the subcommands to the given parser.
+    If given, `scope` can be used to scope the discovery to a specifc module
+    or package.
 
     """
-    raise NotImplementedError()
+    if scope is None:
+        from .. import cli as scope
+    sub_parsers = parser.add_subparsers()
+    scanner = venusian.Scanner(sub_parsers=sub_parsers)
+    scanner.scan(scope, categories=(SUBCOMMAND_CATEGORY,))
 
 
 __all__ = (
