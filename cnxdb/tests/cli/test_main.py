@@ -5,6 +5,8 @@ import sys
 import psycopg2
 import pytest
 
+from .. import testing
+
 
 def _translate_parts_to_args(parts):
     """Translates connection string parts to arguments"""
@@ -51,13 +53,33 @@ def test_init_called_twice(capsys, connection_string_parts, db_wipe):
     assert 'already initialized' in err
 
 
-# TODO test init within venv (and skipif)
+@pytest.mark.skipif(not testing.is_db_local(),
+                    reason="not testing against a local database")
+def test_init_local(connection_string_parts, db_wipe):
+    from cnxdb.cli.main import main
+    args = ['init'] + _translate_parts_to_args(connection_string_parts)[4:]
 
-# TODO test init default options for host and port
-#      skipif(host is not 'localhost')
+    return_code = main(args)
+    assert return_code == 0
 
-# TODO test with missing option dbname
-# TODO test with missing option user
 
+def test_init_without_dbname(connection_string_parts, db_wipe):
+    from cnxdb.cli.main import main
+    args = ['init']
+    args.extend(_translate_parts_to_args(connection_string_parts)[:4])
+    args.extend(_translate_parts_to_args(connection_string_parts)[6:])
+
+    with pytest.raises(SystemExit) as exc_info:
+        return_code = main(args)
+    assert exc_info.value.code == 2
+
+
+def test_init_without_user(connection_string_parts, db_wipe):
+    from cnxdb.cli.main import main
+    args = ['init'] + _translate_parts_to_args(connection_string_parts)[:6]
+
+    with pytest.raises(SystemExit) as exc_info:
+        return_code = main(args)
+    assert exc_info.value.code == 2
 
 # TODO test venv ...

@@ -73,9 +73,15 @@ def is_venv():
     return hasattr(sys, 'real_prefix')
 
 
+def is_db_local():
+    """Returns a boolean telling whether the database is local or not."""
+    return get_connection_string_parts()['host'] == 'localhost'
+
+
 __all__ = (
     'db_connect',
     'db_connection_factory',
     'get_connection_string',
+    'is_db_local',
     'is_venv',
     )

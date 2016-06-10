@@ -14,8 +14,10 @@ def add_db_args_to_parser(parser):
                         default='5432',
                         help="database port")
     parser.add_argument('-d', '--dbname',
+                        required=True,
                         help="database name")
     parser.add_argument('-U', '--user',
+                        required=True,
                         help="database user")
     # parser.add_argument('-W', '--password', help="database password")
 
