@@ -48,9 +48,9 @@ def test_db_init_with_venv(connection_string, db_wipe):
 
     with psycopg2.connect(connection_string) as conn:
         with conn.cursor() as cursor:
-            cursor.execute("CREATE FUNCTION pypath() RETURNS text LANGUAGE "
+            cursor.execute("CREATE FUNCTION pyprefix() RETURNS text LANGUAGE "
                            "plpythonu AS $$import sys;return sys.prefix$$")
-            cursor.execute("SELECT pypath()")
-            db_pypath = cursor.fetchone()[0]
+            cursor.execute("SELECT pyprefix()")
+            db_pyprefix = cursor.fetchone()[0]
 
-    assert os.path.samefile(db_pypath, sys.prefix)
+    assert os.path.samefile(db_pyprefix, sys.prefix)
