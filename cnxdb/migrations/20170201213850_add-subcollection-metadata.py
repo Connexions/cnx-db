@@ -34,10 +34,10 @@ SELECT bool_or(is_collated)
           module_version(major_version, minor_version) = col_ver
 $function$;""")
 
-    with open_here('../schema/subcol_uuids_func.sql', 'rb') as f:
+    with open_here('../archive-sql/schema/subcol_uuids_func.sql', 'rb') as f:
         cursor.execute(f.read())
 
-    with open_here('../schema/shred_collxml.sql', 'rb') as f:
+    with open_here('../archive-sql/schema/shred_collxml.sql', 'rb') as f:
         cursor.execute(f.read())
 
 
