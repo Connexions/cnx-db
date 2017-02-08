@@ -6,6 +6,8 @@ CREATE INDEX modules_uuid_idx on modules (uuid);
 CREATE INDEX modules_uuid_txt_version_idx on
     modules (CAST(uuid as text), module_version(major_version, minor_version));
 CREATE INDEX modules_short_id_idx on modules (short_id(uuid));
+CREATE INDEX modules_ident_hash on modules(ident_hash(uuid, major_version, minor_version));
+CREATE INDEX modules_short_ident_hash on modules(short_ident_hash(uuid, major_version, minor_version));
 
 CREATE INDEX latest_modules_upmodid_idx ON latest_modules  (upper(moduleid));
 CREATE INDEX latest_modules_upname_idx ON latest_modules  (upper(name));

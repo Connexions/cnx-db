@@ -168,3 +168,16 @@ SELECT bool_or(is_collated)
         ON module_ident = documentid
     WHERE uuid = col_uuid AND module_version(major_version, minor_version) = col_ver
 $function$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION ident_hash(uuid uuid, major integer, minor integer)
+ RETURNS text
+ LANGUAGE sql
+ IMMUTABLE
+AS $function$ select uuid || '@' || concat_ws('.', major, minor) $function$;
+
+CREATE OR REPLACE FUNCTION short_ident_hash(uuid uuid, major integer, minor integer)
+ RETURNS text
+ LANGUAGE sql
+ IMMUTABLE
+AS $function$ select short_id(uuid) || '@' || concat_ws('.', major, minor) $function$;
+
