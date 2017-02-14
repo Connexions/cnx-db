@@ -34,5 +34,9 @@
     {
         "file": "constants",
         "description": "Contains table inserts for static/constant data."
+    },
+    {
+        "file": "subcol_uuids_func.sql",
+        "description": "A function for adding SubCollections to a tree"
     }
 ]
