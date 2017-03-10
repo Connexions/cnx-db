@@ -216,9 +216,6 @@ CREATE TRIGGER update_files_sha1
     FOR EACH ROW
     EXECUTE PROCEDURE update_sha1();
 
-
-
-
 CREATE OR REPLACE FUNCTION add_module_file ()
   RETURNS trigger
 AS $$
@@ -229,3 +226,19 @@ $$ LANGUAGE plpythonu;
 CREATE TRIGGER module_file_added
   AFTER INSERT ON module_files FOR EACH ROW
   EXECUTE PROCEDURE add_module_file();
+
+CREATE OR REPLACE FUNCTION rebake()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $$
+BEGIN
+  UPDATE modules SET stateid = 5 
+    WHERE module_ident = NEW.module_ident;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER ruleset_trigger
+  AFTER INSERT OR UPDATE ON module_files FOR EACH ROW 
+  WHEN (new.filename = 'ruleset.css'::text)
+  EXECUTE PROCEDURE rebake();
