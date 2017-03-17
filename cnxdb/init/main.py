@@ -113,7 +113,8 @@ def init_venv(connection_string):
                            "FROM information_schema.schemata "
                            "WHERE schema_name = 'venv';")
             try:
-                schema_exists = cursor.fetchone()[0]
+                # Does the schema already exist?
+                cursor.fetchone()[0]
             except TypeError:
                 cursor.execute("CREATE SCHEMA venv")
                 try:

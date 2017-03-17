@@ -74,7 +74,7 @@ def test_init_without_dbname(connection_string_parts):
     args.extend(_translate_parts_to_args(connection_string_parts)[6:])
 
     with pytest.raises(SystemExit) as exc_info:
-        return_code = main(args)
+        main(args)
     assert exc_info.value.code == 2
 
 
@@ -84,7 +84,7 @@ def test_init_without_user(connection_string_parts):
     args = ['init'] + _translate_parts_to_args(connection_string_parts)[:6]
 
     with pytest.raises(SystemExit) as exc_info:
-        return_code = main(args)
+        main(args)
     assert exc_info.value.code == 2
 
 
