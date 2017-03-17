@@ -5,3 +5,5 @@ recursive-include cnxdb/migrations *.py
 recursive-include cnxdb/tests/**/data *.*
 recursive-include docs *.*
 recursive-exclude docs/_build *.*
+include versioneer.py
+include cnxdb/_version.py
