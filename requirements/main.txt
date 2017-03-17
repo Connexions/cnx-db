@@ -1,0 +1,3 @@
+# This project's dependencies
+psycopg2
+venusian

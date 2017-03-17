@@ -8,12 +8,7 @@ __pycache__
 .DS_Store
 /*.log
 .cache
-
-# Virtualenv #
-##############
-bin
-lib
-include
+.state
 
 # Build file #
 ##############

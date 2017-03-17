@@ -1,0 +1,4 @@
+# The project's testing dependencies...
+pytest
+pytest-cov
+mock==1.0.1;python_version<="2.7"
