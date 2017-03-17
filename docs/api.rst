@@ -1,10 +1,6 @@
 API
 ===
 
-Utilities
-=========
-
-.. automodule:: cnxdb.utils
 
 Initialization
 ==============
@@ -14,33 +10,11 @@ Initialization
 
 .. automodule:: cnxdb.init
 
-:mod:`cnxdb.manifest`
----------------------
+:mod:`cnxdb.init.manifest`
+--------------------------
 
-.. automodule:: cnxdb.manifest
+.. automodule:: cnxdb.init.manifest
 
-CRUD
-====
-
-:mod:`cnxdb.create`
--------------------
-
-.. automodule:: cnxdb.create
-
-:mod:`cnxdb.delete`
--------------------
-
-.. automodule:: cnxdb.delete
-   
-:mod:`cnxdb.read`
------------------
-
-.. automodule:: cnxdb.read
-
-:mod:`cnxdb.update`
--------------------
-
-.. automodule:: cnxdb.update
 
 Migrations
 ==========
@@ -48,4 +22,4 @@ Migrations
 :mod:`cnxdb.migrations`
 -----------------------
 
-.. automodule:: cnxdb.
+.. automodule:: cnxdb.migrations
