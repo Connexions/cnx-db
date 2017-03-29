@@ -6,14 +6,6 @@
 Connexions Database Library
 ===========================
 
-.. image:: https://travis-ci.org/Connexions/cnx-db.svg
-   :target: https://travis-ci.org/Connexions/cnx-db
-
-.. image:: https://coveralls.io/repos/Connexions/cnx-db/badge.png?branch=master
-   :target: https://coveralls.io/r/Connexions/cnx-db?branch=master
-
-.. image:: https://badge.fury.io/py/cnx-db.svg
-   :target: http://badge.fury.io/py/cnx-db
 
 Contents:
 
@@ -22,18 +14,22 @@ Contents:
 
    usage
    api
+   changes
 
 
 Installation
 ------------
 
-Install using one of the following methods (run within the project root)::
+Install using::
 
-    python setup.py install
+    pip install cnx-db
 
-Or::
+Development
+-----------
 
-    pip install .
+For all things development, use the Makefile::
+
+    make help
 
 Usage
 -----
@@ -59,24 +55,19 @@ be created using the following commands::
 
 The tests can then be run using::
 
-    python setup.py test
+    make tests
 
 Or::
 
-    pip install pytest  # only run once to install dependency
+    pip install -r requirements/tests.txt
     py.test
-
-Or, to run multiple versions of python::
-
-    pip install tox  # only run once to install dependency
-    tox
 
 License
 -------
 
 This software is subject to the provisions of the GNU Affero General
 Public License Version 3.0 (AGPL). See license.txt for details.
-Copyright (c) 2016 Rice University
+Copyright (c) 2017 Rice University
 
 
 Indices and tables

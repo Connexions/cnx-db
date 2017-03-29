@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 from setuptools import setup, find_packages
-
+import versioneer
 
 IS_PY3 = sys.version_info > (3,)
 
@@ -32,7 +32,7 @@ if not IS_PY3:
 
 setup(
     name='cnx-db',
-    version='0.3.0',
+    version=versioneer.get_version(),
     author='Connexions team',
     author_email='info@cnx.org',
     url="https://github.com/connexions/cnx-db",
@@ -50,6 +50,7 @@ setup(
         'cnxdb': ['*-sql/*.sql', '*-sql/**/*.sql', 'schema/*.json'],
         'cnxdb.tests': ['data/init/**/*.*'],
         },
+    cmdclass=versioneer.get_cmdclass(),
     entry_points="""\
     [console_scripts]
     cnx-db = cnxdb.cli.main:main

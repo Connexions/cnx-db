@@ -5,9 +5,7 @@ python:
 addons:
   postgresql: "9.4"
 before_install:
-  - pip install pycodestyle
-  - pycodestyle --exclude=tests,migrations *.py cnxdb
-  - pycodestyle --max-line-length=200 cnxdb/tests cnxdb/migrations
+  - make lint
 
   - sudo apt-get update
   # remove zope.interface installed from aptitude
@@ -24,7 +22,7 @@ before_install:
   # - cd rhaptos.cnxmlutils && python setup.py install && cd ..
 
   # Install the coverage utility and codecov reporting utility
-  - pip install pytest pytest-cov
+  - pip install -r requirements/tests.txt
   - pip install codecov
 install:
   - pip install .
@@ -39,7 +37,7 @@ before_script:
   - cd ..
 script:
   # This is the same as `python setup.py test` with a coverage wrapper.
-  - py.test --cov-config .coveragerc --cov=cnxdb
+  - py.test
 after_success:
   # Report test coverage to codecov.io
   - codecov
