@@ -2,9 +2,11 @@ STATEDIR = $(PWD)/.state
 BINDIR = $(STATEDIR)/env/bin
 
 # Short descriptions for commands (var format _SHORT_DESC_<cmd>)
+_SHORT_DESC_BUILD := "Build the db for dev and/or deployment"
 _SHORT_DESC_DOCS := "Build docs"
 _SHORT_DESC_LINT := "Run linting tools on the codebase"
 _SHORT_DESC_PYENV := "Set up the python environment"
+_SHORT_DESC_SERVE := "Serve the db"
 _SHORT_DESC_TESTS := "Run the tests"
 
 default : help
@@ -38,6 +40,14 @@ endif
 	$(BINDIR)/python -m pip install $(foreach req,$(_REQUIREMENTS_FILES),-r $(req))
 	# Install the package
 	$(BINDIR)/python -m pip install -e .
+
+$(STATEDIR)/docker-build: Dockerfile requirements/main.txt requirements/deploy.txt
+	# Build our docker container(s) for this project.
+	docker-compose build
+
+	# Mark the state so we don't rebuild this needlessly.
+	mkdir -p $(STATEDIR)
+	touch $(STATEDIR)/docker-build
 
 # /Helpers
 
@@ -142,3 +152,37 @@ lint : $(STATEDIR)/env/pyvenv.cfg setup.cfg
 # /Lint
 
 .PHONY: docs
+
+# ###
+#  Build
+# ###
+
+help-build :
+	@echo "${_SHORT_DESC_BUILD}"
+	@echo "Usage: make build"
+
+build:
+	# This is duplicate of $(STATEDIR)/docker-build to force the build.
+
+	# Build our docker container(s) for this project.
+	docker-compose build
+
+	# Mark the state so we don't rebuild this needlessly.
+	mkdir -p $(STATEDIR)
+	touch $(STATEDIR)/docker-build
+
+# /Build
+
+
+# ###
+#  Serve
+# ###
+
+help-serve :
+	@echo "${_SHORT_DESC_SERVE}"
+	@echo "Usage: make serve"
+
+serve: $(STATEDIR)/docker-build
+	docker-compose up
+
+# /Serve
