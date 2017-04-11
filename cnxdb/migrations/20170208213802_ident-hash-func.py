@@ -38,5 +38,6 @@ CREATE INDEX modules_short_ident_hash on modules(short_ident_hash(uuid, major_ve
 
 
 def down(cursor):
-    cursor.execute('drop function ident_hash(uuid, int, int) CASCADE')
-    cursor.execute('drop function short_ident_hash(uuid, int, int) CASCADE')
+    with super_user(cursor) as cur:
+        cur.execute('drop function ident_hash(uuid, int, int) CASCADE')
+        cur.execute('drop function short_ident_hash(uuid, int, int) CASCADE')
