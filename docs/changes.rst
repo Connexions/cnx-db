@@ -6,6 +6,16 @@
 
    - feature message
 
+0.4.0
+-----
+
+- Add a Make recipe for building and serving this project/component.
+- Correct styling, documentation and test running code.
+- Add the Make interface for common developer tasks.
+- Install versioneer for version management via git.
+- Add SQL function and trigger to rebake on baking recipe insert or update.
+- Update SQL manifest to add subcollection uuid SQL functions.
+
 0.3.0
 -----
 
