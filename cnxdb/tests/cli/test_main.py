@@ -18,7 +18,7 @@ def _translate_parts_to_args(parts):
 
 
 @pytest.mark.usefixtures('db_wipe')
-def test_init(connection_string_parts):
+def test_init(connection_string_parts, db_cursor_without_db_init):
     from cnxdb.cli.main import main
     args = ['init'] + _translate_parts_to_args(connection_string_parts)
     return_code = main(args)
@@ -29,10 +29,8 @@ def test_init(connection_string_parts):
         return (not table_name.startswith('pg_') and
                 not table_name.startswith('_pg_'))
 
-    with psycopg2.connect(**connection_string_parts) as conn:
-        with conn.cursor() as cursor:
-            tables = testing.get_database_table_names(cursor,
-                                                      table_name_filter)
+    cursor = db_cursor_without_db_init
+    tables = testing.get_database_table_names(cursor, table_name_filter)
 
     assert 'modules' in tables
     assert 'pending_documents' in tables

@@ -9,7 +9,7 @@ from .. import testing
 
 
 @pytest.mark.usefixtures('db_wipe')
-def test_db_init(connection_string):
+def test_db_init(connection_string, db_cursor_without_db_init):
     from cnxdb.init.main import init_db
     init_db(connection_string)
 
@@ -17,10 +17,8 @@ def test_db_init(connection_string):
         return (not table_name.startswith('pg_') and
                 not table_name.startswith('_pg_'))
 
-    with psycopg2.connect(connection_string) as conn:
-        with conn.cursor() as cursor:
-            tables = testing.get_database_table_names(cursor,
-                                                      table_name_filter)
+    cursor = db_cursor_without_db_init
+    tables = testing.get_database_table_names(cursor, table_name_filter)
 
     assert 'modules' in tables
     assert 'pending_documents' in tables
