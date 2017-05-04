@@ -34,7 +34,7 @@ else
 	python3 -m venv $(VENV_EXTRA_ARGS) $(STATEDIR)/env
 endif
 	# Upgrade tooling requirements
-	$(BINDIR)/python -m pip install --upgrade pip setuptools wheel
+	$(BINDIR)/python -m pip install --upgrade pip setuptools wheel tox
 
 	# Install requirements
 	$(BINDIR)/python -m pip install $(foreach req,$(_REQUIREMENTS_FILES),-r $(req))
@@ -109,7 +109,7 @@ help-tests :
 	@echo "    (see also setup.cfg's pytest configuration)"
 
 tests : $(STATEDIR)/env/pyvenv.cfg
-	tox $(TESTS_EXTRA_ARGS) $(TESTS)
+	$(BINDIR)/tox $(TESTS_EXTRA_ARGS) $(TESTS)
 
 # /Tests
 
