@@ -78,10 +78,27 @@ def is_db_local():
     return get_connection_string_parts()['host'] == 'localhost'
 
 
+def _default_table_name_filter(table_name):
+    return (not table_name.startswith('pg_') and
+            not table_name.startswith('_pg_'))
+
+
+def get_database_table_names(cursor,
+                             table_name_filter=_default_table_name_filter):
+    """Query for the names of all the tables in the database."""
+    cursor.execute("SELECT table_name "
+                   "FROM information_schema.tables "
+                   "ORDER BY table_name")
+    tables = [table_name for (table_name,) in cursor.fetchall()
+              if table_name_filter(table_name)]
+    return list(tables)
+
+
 __all__ = (
     'db_connect',
     'db_connection_factory',
     'get_connection_string',
+    'get_database_table_names',
     'is_db_local',
     'is_venv',
     )

@@ -31,11 +31,8 @@ def test_init(connection_string_parts):
 
     with psycopg2.connect(**connection_string_parts) as conn:
         with conn.cursor() as cursor:
-            cursor.execute("SELECT table_name "
-                           "FROM information_schema.tables "
-                           "ORDER BY table_name")
-            tables = [table_name for (table_name,) in cursor.fetchall()
-                      if table_name_filter(table_name)]
+            tables = testing.get_database_table_names(cursor,
+                                                      table_name_filter)
 
     assert 'modules' in tables
     assert 'pending_documents' in tables
