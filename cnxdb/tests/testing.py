@@ -73,6 +73,11 @@ def is_venv():
     return hasattr(sys, 'real_prefix')
 
 
+def is_py3():
+    """Returns a boolean value if running under python3.x"""
+    return sys.version_info > (3,)
+
+
 def is_db_local():
     """Returns a boolean telling whether the database is local or not."""
     return get_connection_string_parts()['host'] == 'localhost'
@@ -100,5 +105,6 @@ __all__ = (
     'get_connection_string',
     'get_database_table_names',
     'is_db_local',
+    'is_py3',
     'is_venv',
     )
