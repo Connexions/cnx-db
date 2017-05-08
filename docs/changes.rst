@@ -6,6 +6,13 @@
 
    - feature message
 
+0.5.0
+-----
+
+- Add a payload to the post_publication channel notification.
+- Fix tests by explicitly including cnx-archive.
+- Fix tests to only run trigger tests within Python 2.7.
+
 0.4.0
 -----
 
