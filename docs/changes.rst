@@ -6,6 +6,11 @@
 
    - feature message
 
+0.5.1
+-----
+
+- Include a migration for the post_publication channel payload change.
+
 0.5.0
 -----
 
