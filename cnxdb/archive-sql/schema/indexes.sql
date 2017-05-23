@@ -23,6 +23,7 @@ CREATE INDEX fti_idx ON modulefti USING gist (module_idx);
 CREATE INDEX collated_fti_idx ON collated_fti USING gist (module_idx);
 
 CREATE INDEX modulefti_lexemes_module_ident on modulefti_lexemes (module_ident);
+CREATE INDEX collated_fti_lexemes_context_item_idx on collated_fti_lexemes (context, item);
 
 CREATE INDEX keywords_upword_idx ON keywords  (upper(word));
 CREATE INDEX keywords_word_idx ON keywords  (word);
