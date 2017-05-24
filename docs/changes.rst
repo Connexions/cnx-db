@@ -6,6 +6,11 @@
 
    - feature message
 
+0.5.2
+-----
+
+- Fix to speedup in-book search for baked content.
+
 0.5.1
 -----
 
