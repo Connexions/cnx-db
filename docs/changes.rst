@@ -6,6 +6,11 @@
 
    - feature message
 
+0.5.3
+-----
+
+- Add an index for moduletags to improve search.
+
 0.5.2
 -----
 
