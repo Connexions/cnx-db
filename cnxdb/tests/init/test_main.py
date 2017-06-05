@@ -9,9 +9,9 @@ from ...contrib import testing
 
 
 @pytest.mark.usefixtures('db_wipe')
-def test_db_init(connection_string, db_cursor_without_db_init):
+def test_db_init(db_connection_string, db_cursor_without_db_init):
     from cnxdb.init.main import init_db
-    init_db(connection_string)
+    init_db(db_connection_string)
 
     def table_name_filter(table_name):
         return (not table_name.startswith('pg_') and
@@ -25,13 +25,13 @@ def test_db_init(connection_string, db_cursor_without_db_init):
 
 
 @pytest.mark.usefixtures('db_wipe')
-def test_db_init_called_twice(connection_string):
+def test_db_init_called_twice(db_connection_string):
     from cnxdb.init.main import init_db
-    init_db(connection_string)
+    init_db(db_connection_string)
 
     from cnxdb.init.exceptions import DBSchemaInitialized
     try:
-        init_db(connection_string)
+        init_db(db_connection_string)
     except DBSchemaInitialized as exc:
         pass
     else:
@@ -40,11 +40,11 @@ def test_db_init_called_twice(connection_string):
 
 @pytest.mark.skipif(not testing.is_venv(), reason="not within a venv")
 @pytest.mark.usefixtures('db_wipe')
-def test_db_init_with_venv(connection_string):
+def test_db_init_with_venv(db_connection_string):
     from cnxdb.init.main import init_db
-    init_db(connection_string, True)
+    init_db(db_connection_string, True)
 
-    with psycopg2.connect(connection_string) as conn:
+    with psycopg2.connect(db_connection_string) as conn:
         with conn.cursor() as cursor:
             cursor.execute("CREATE FUNCTION pyprefix() RETURNS text LANGUAGE "
                            "plpythonu AS $$import sys;return sys.prefix$$")
