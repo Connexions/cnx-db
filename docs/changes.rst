@@ -6,6 +6,11 @@
 
    - feature message
 
+0.5.4
+-----
+
+- Fix to only create the moduletags index when it does not exist.
+
 0.5.3
 -----
 
