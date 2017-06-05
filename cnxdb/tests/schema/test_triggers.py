@@ -5,7 +5,7 @@ import uuid
 import pytest
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-from .. import testing
+from ...contrib import testing
 
 
 # Note, the triggers are only python 2.x compatible. It's assumed,

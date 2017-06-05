@@ -56,5 +56,7 @@ setup(
     cnx-db = cnxdb.cli.main:main
     [dbmigrator]
     migrations_directory = cnxdb:migrations
+    [pytest11]
+    cnx-db = cnxdb.contrib.pytest
     """,
     )

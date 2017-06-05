@@ -5,7 +5,7 @@ import sys
 import psycopg2
 import pytest
 
-from .. import testing
+from ...contrib import testing
 
 
 @pytest.mark.usefixtures('db_wipe')
