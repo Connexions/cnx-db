@@ -55,11 +55,11 @@ be created using the following commands::
 
 The tests can then be run using::
 
-    make tests
+    make test
 
 Or::
 
-    pip install -r requirements/tests.txt
+    pip install -r requirements/test.txt
     py.test
 
 License
