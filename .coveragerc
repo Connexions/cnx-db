@@ -8,5 +8,6 @@ omit =
   cnxdb/contrib/testing.py
   cnxdb/tests/*
   cnxdb/_version.py
+  cnxdb/__init__.py
 exclude_lines =
   pragma: no cover
