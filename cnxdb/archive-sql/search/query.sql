@@ -64,7 +64,7 @@ FROM
   derived_weighted_query_results AS wqr
 WHERE
   wqr.module_ident = lm.module_ident
-  AND lm.portal_type != 'CompositeModule'
+  AND lm.portal_type not in  ('CompositeModule','SubCollection')
   {filters}
   {groupby}
 ORDER BY {sorts}
