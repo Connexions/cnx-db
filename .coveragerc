@@ -4,6 +4,8 @@ omit =
 
 [report]
 omit =
+  cnxdb/contrib/pytest.py
+  cnxdb/contrib/testing.py
   cnxdb/tests/*
   cnxdb/_version.py
 exclude_lines =
