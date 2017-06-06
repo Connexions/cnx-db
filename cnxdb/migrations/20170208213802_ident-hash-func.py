@@ -14,10 +14,23 @@ def open_here(filepath, *args, **kwargs):
     fp.close()
 
 
-def up(cursor):
+@contextmanager
+def super_user(cur):
+    import psycopg2
+    cur.execute('select CURRENT_USER')
+    old_user = cur.fetchone()[0]
+    old_dsn = cur.connection.dsn
+    new_dsn = old_dsn.replace('user={}'.format(old_user), 'user=postgres')
+    # FIXME test if old_user is superuser
+    new_con = psycopg2.connect(new_dsn)
+    yield new_con.cursor()
+    new_con.commit()
 
+
+def up(cursor):
     with open_here('../archive-sql/schema/functions.sql', 'rb') as f:
-        cursor.execute(f.read())
+        with super_user(cursor) as cur:
+            cur.execute(f.read())
 
     cursor.execute("""
 CREATE INDEX modules_ident_hash on modules(ident_hash(uuid, major_version, minor_version));
@@ -25,7 +38,6 @@ CREATE INDEX modules_short_ident_hash on modules(short_ident_hash(uuid, major_ve
 
 
 def down(cursor):
-    # TODO rollback code
-
-    cursor.execute('drop function ident_hash(uuid, int, int) CASCADE')
-    cursor.execute('drop function short_ident_hash(uuid, int, int) CASCADE')
+    with super_user(cursor) as cur:
+        cur.execute('drop function ident_hash(uuid, int, int) CASCADE')
+        cur.execute('drop function short_ident_hash(uuid, int, int) CASCADE')
