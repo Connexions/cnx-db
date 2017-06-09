@@ -6,6 +6,13 @@
 
    - feature message
 
+0.6.0
+-----
+
+- Share this project's pytest fixtures for use in dependent projects.
+- Create the cnxdb.contrib package.
+- Fix to exclude subcollections from the search query.
+
 0.5.4
 -----
 
