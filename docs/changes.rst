@@ -6,6 +6,11 @@
 
    - feature message
 
+0.7.0
+-----
+
+- Add association table for celery results to documents.
+
 0.6.0
 -----
 
