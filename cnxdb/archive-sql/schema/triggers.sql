@@ -11,13 +11,13 @@ BEGIN
   		created, revised, abstractid, stateid, doctype, licenseid,
   		submitter,submitlog, parent, language,
 		authors, maintainers, licensors, parentauthors, google_analytics,
-                major_version, minor_version, print_style)
+                major_version, minor_version, print_style, baked, recipe)
   	VALUES (
          NEW.uuid, NEW.module_ident, NEW.portal_type, NEW.moduleid, NEW.version, NEW.name,
   	 NEW.created, NEW.revised, NEW.abstractid, NEW.stateid, NEW.doctype, NEW.licenseid,
   	 NEW.submitter, NEW.submitlog, NEW.parent, NEW.language,
 	 NEW.authors, NEW.maintainers, NEW.licensors, NEW.parentauthors, NEW.google_analytics,
-         NEW.major_version, NEW.minor_version, NEW.print_style);
+         NEW.major_version, NEW.minor_version, NEW.print_style, NEW.baked, NEW.recipe);
   END IF;
 
   IF TG_OP = ''UPDATE'' THEN

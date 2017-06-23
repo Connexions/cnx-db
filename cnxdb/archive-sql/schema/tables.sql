@@ -76,7 +76,7 @@ CREATE TABLE "modules" (
 	"doctype" text NOT NULL,
 	"submitter" text,
 	"submitlog" text,
-	"stateid"   integer DEFAULT 1,
+	"stateid"   integer DEFAULT 5,
 	"parent" integer,
 	"language" text,
 	"authors" text[],
@@ -90,10 +90,13 @@ CREATE TABLE "modules" (
 	"major_version" integer default 1,
 	"minor_version" integer default NULL,
 	"print_style" text,
+	"baked" timestamp with time zone,
+	"recipe" integer,
 	FOREIGN KEY (abstractid) REFERENCES "abstracts" DEFERRABLE,
 	FOREIGN KEY (stateid) REFERENCES "modulestates" DEFERRABLE,
 	FOREIGN KEY (parent) REFERENCES "modules" DEFERRABLE,
-	FOREIGN KEY (licenseid) REFERENCES "licenses" DEFERRABLE
+	FOREIGN KEY (licenseid) REFERENCES "licenses" DEFERRABLE,
+	FOREIGN KEY (recipe) REFERENCES "files" (fileid) DEFERRABLE
 );
 
 -- the following needs to be an identical copy of modules as latest_modules
@@ -127,7 +130,9 @@ CREATE TABLE "latest_modules" (
         -- modules have versions like <major_version>
 	"major_version" integer,
 	"minor_version" integer,
-	"print_style" text
+	"print_style" text,
+	"baked" timestamp with time zone,
+	"recipe" integer
 );
 
 CREATE TABLE "modulefti" (
@@ -274,4 +279,11 @@ CREATE TABLE collated_file_associations (
   FOREIGN KEY (item) REFERENCES modules (module_ident),
   -- primary key allows for a single collection and module association
   PRIMARY KEY (context, item)
+);
+
+CREATE TABLE print_style_recipes (
+  print_style TEXT PRIMARY KEY,
+  fileid INTEGER,
+  type TEXT default "web",
+  FOREIGN KEY (fileid) REFERENCES files (fileid)
 );
