@@ -14,6 +14,7 @@ install_requires = (
     'venusian',
     )
 tests_require = [
+    'pyramid',
     'pytest',
     'pytest-mock',
     ]
