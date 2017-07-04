@@ -10,6 +10,7 @@ setup_requires = (
     )
 install_requires = (
     'psycopg2',
+    'sqlalchemy',
     'venusian',
     )
 tests_require = [
