@@ -1,23 +1,15 @@
 import pytest
 
-from cnxdb.connection.engine import get_engine
+from cnxdb.connection import engine
 
 
-@pytest.fixture
-def test_engine_marker():
-    """Set the cnxdb.connection._engine with a marker object"""
-    import cnxdb.connection.engine
+def test_get_engine_without_configuration():
+    with pytest.raises(RuntimeError) as exc_info:
+        engine.get_current_engine()
+    assert 'not configured' in exc_info.value.args[0].lower()
+
+
+def test_set_and_get_engine():
     o = object()
-    cnxdb.connection.engine._engine = o
-    yield o
-    cnxdb.connection.engine._engine = None
-
-
-def test_get_engine_with_prepared_engine(test_engine_marker):
-    engine = get_engine()
-    assert engine is test_engine_marker
-
-
-def test_get_engine_with_pyramid():
-    engine = get_engine()
-    # TODO implmt & test includeme func
+    engine.set_current_engine(o)
+    assert engine.get_current_engine() is o

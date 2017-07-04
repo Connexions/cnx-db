@@ -2,6 +2,8 @@ import os
 
 from sqlalchemy import create_engine
 
+from cnxdb.connection.engine import set_current_engine
+
 
 def prepare(settings=None):
     """This function prepares an application for use with this codebase.
@@ -27,12 +29,11 @@ def prepare(settings=None):
         raise RuntimeError("Missing 'sqlalchemy.url' settings. "
                            "You can define this using the DB_URL env var.")
 
-    import cnxdb.connection.engine
     engine = create_engine(settings['sqlalchemy.url'])
-    cnxdb.connection.engine._engine = engine
+    set_current_engine(engine)
 
     def closer():
-        cnxdb.connection.engine._engine = None
+        set_current_engine(None)
         engine.dispose()
 
     return {'engine': engine, 'closer': closer}
