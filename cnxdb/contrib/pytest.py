@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import os
+import warnings
+
 import psycopg2
 import pytest
 
@@ -14,12 +16,16 @@ from .testing import (
 @pytest.fixture
 def db_connection_string_parts():
     """Returns a connection string as parts (dict)"""
+    warnings.warn("please use db_url instead of "
+                  "db_connection_string_parts", UserWarning)
     return get_connection_string_parts()
 
 
 @pytest.fixture
 def db_connection_string():
     """Returns a connection string"""
+    warnings.warn("please use db_url instead of "
+                  "db_connection_string", UserWarning)
     return get_connection_string()
 
 

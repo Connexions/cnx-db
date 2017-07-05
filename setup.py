@@ -12,6 +12,7 @@ install_requires = (
     'psycopg2',
     'sqlalchemy',
     'venusian',
+    'zope.deprecation',
     )
 tests_require = [
     'pyramid',

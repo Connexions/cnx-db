@@ -3,9 +3,25 @@ import functools
 import os
 import sys
 
-import psycopg2
+from sqlalchemy import create_engine
+from zope.deprecation import deprecate
 
 
+__all__ = (
+    'db_connect',
+    'db_connection_factory',
+    'get_connection_string',
+    'get_database_table_names',
+    'get_db_url',
+    'is_db_local',
+    'is_py3',
+    'is_venv',
+)
+
+_DEFAULT_DB_URL = 'postgresql://tester:tester@localhost:5432/testing'
+
+
+# BBB (4-Jul-2018) Move to using a database URL.
 _DEFAULT_CONNECTION_SETTINGS = {
     'dbname': 'testing',
     'user': 'tester',
@@ -30,23 +46,31 @@ def get_connection_string_parts():
     return parts
 
 
+@deprecate("please use cnxdb.contrib.testing.get_db_url")
 def get_connection_string():
     """Retrieves the connection string from configuration."""
     return ' '.join(
         ['{}={}'.format(key, value)
          for key, value in get_connection_string_parts().items()])
+# /BBB
 
 
+_deprecation_connection_message = ("please use the database engine "
+                                   "and engine.raw_connection() "
+                                   "if necessary")
+
+
+@deprecate(_deprecation_connection_message)
 def db_connection_factory(connection_string=None):
-    if connection_string is None:
-        connection_string = get_connection_string()
+    engine = create_engine(get_db_url())
 
     def db_connect():
-        return psycopg2.connect(connection_string)
+        return engine.raw_connection()
 
     return db_connect
 
 
+@deprecate(_deprecation_connection_message)
 def db_connect(method):
     """Decorator for methods that need to use the database
 
@@ -63,6 +87,18 @@ def db_connect(method):
             with db_connection.cursor() as cursor:
                 return method(self, cursor, *args, **kwargs)
     return wrapped
+
+
+def get_db_url():
+    """Retrieve the database connection URL"""
+    db_url = os.environ.get('DB_URL', None)
+    if db_url is None and 'TESTING_CONNECTION_STRING' in os.environ:
+        conn_str = get_connection_string()
+        from cnxdb.connection.util import libpq_dsn_to_url
+        db_url = libpq_dsn_to_url(conn_str)
+    elif db_url is None:
+        db_url = _DEFAULT_DB_URL
+    return db_url
 
 
 def is_venv():
@@ -97,14 +133,3 @@ def get_database_table_names(cursor,
     tables = [table_name for (table_name,) in cursor.fetchall()
               if table_name_filter(table_name)]
     return list(tables)
-
-
-__all__ = (
-    'db_connect',
-    'db_connection_factory',
-    'get_connection_string',
-    'get_database_table_names',
-    'is_db_local',
-    'is_py3',
-    'is_venv',
-)
