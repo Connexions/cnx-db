@@ -10,6 +10,7 @@ from .testing import (
     get_connection_string,
     get_connection_string_parts,
     get_database_table_names,
+    get_db_url,
 )
 
 
@@ -27,6 +28,12 @@ def db_connection_string():
     warnings.warn("please use db_url instead of "
                   "db_connection_string", UserWarning)
     return get_connection_string()
+
+
+@pytest.fixture(scope='session')
+def db_url():
+    """Returns a database URL"""
+    return get_db_url()
 
 
 def _db_wipe(db_connection_string):

@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
 
+from cnxdb import db
 from cnxdb.connection import engine
 
 
@@ -28,6 +29,10 @@ def includeme(config):
     assert 'sqlalchemy.url' in s, "Missing 'sqlalchemy.url' setting"
 
     config.registry.engine = create_engine(s['sqlalchemy.url'])
+
+    # Initialize the tables data
+    db.tables.metadata.reflect(bind=config.registry.engine)
+    config.registry.tables = db.tables
 
     config.add_directive('set_current_engine', _set_current_engine)
     config.add_directive('unset_current_engine', _unset_current_engine)

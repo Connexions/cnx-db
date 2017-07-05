@@ -2,6 +2,7 @@ import os
 
 from sqlalchemy import create_engine
 
+from cnxdb import db
 from cnxdb.connection.engine import set_current_engine
 
 
@@ -31,6 +32,9 @@ def prepare(settings=None):
 
     engine = create_engine(settings['sqlalchemy.url'])
     set_current_engine(engine)
+
+    # Initialize the tables
+    db.tables.metadata.reflect(bind=engine)
 
     def closer():
         set_current_engine(None)
