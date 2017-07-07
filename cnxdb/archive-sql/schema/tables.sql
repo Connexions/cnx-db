@@ -56,6 +56,13 @@ create table "document_acl" (
        FOREIGN KEY ("uuid") REFERENCES document_controls ("uuid")
 );
 
+CREATE TABLE files (
+    fileid serial PRIMARY KEY,
+    md5 text,
+    sha1 text UNIQUE,
+    file bytea,
+    media_type text
+);
 
 CREATE TABLE "modules" (
 	"module_ident" serial PRIMARY KEY,
@@ -76,7 +83,7 @@ CREATE TABLE "modules" (
 	"doctype" text NOT NULL,
 	"submitter" text,
 	"submitlog" text,
-	"stateid"   integer DEFAULT 5,
+	"stateid"   integer DEFAULT 1,
 	"parent" integer,
 	"language" text,
 	"authors" text[],
@@ -180,14 +187,6 @@ CREATE TABLE "modulekeywords" (
 	FOREIGN KEY (keywordid) REFERENCES "keywords" DEFERRABLE
 );
 
-CREATE TABLE files (
-    fileid serial PRIMARY KEY,
-    md5 text,
-    sha1 text UNIQUE,
-    file bytea,
-    media_type text
-);
-
 CREATE TABLE module_files (
     module_ident integer references modules,
     fileid integer references files,
@@ -284,6 +283,6 @@ CREATE TABLE collated_file_associations (
 CREATE TABLE print_style_recipes (
   print_style TEXT PRIMARY KEY,
   fileid INTEGER,
-  type TEXT default "web",
+  recipe_type TEXT default 'web',
   FOREIGN KEY (fileid) REFERENCES files (fileid)
 );
