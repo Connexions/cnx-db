@@ -15,6 +15,7 @@ CREATE TABLE print_style_recipes (
   print_style TEXT PRIMARY KEY,
   fileid INTEGER,
   type TEXT default 'web',
+  revised TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (fileid) REFERENCES files (fileid)
 );""")
 
