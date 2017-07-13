@@ -11,13 +11,13 @@ BEGIN
   		created, revised, abstractid, stateid, doctype, licenseid,
   		submitter,submitlog, parent, language,
 		authors, maintainers, licensors, parentauthors, google_analytics,
-                major_version, minor_version, print_style, baked, recipe)
+                major_version, minor_version, print_style, baked, recipe, recipe_tag)
   	VALUES (
          NEW.uuid, NEW.module_ident, NEW.portal_type, NEW.moduleid, NEW.version, NEW.name,
   	 NEW.created, NEW.revised, NEW.abstractid, NEW.stateid, NEW.doctype, NEW.licenseid,
   	 NEW.submitter, NEW.submitlog, NEW.parent, NEW.language,
 	 NEW.authors, NEW.maintainers, NEW.licensors, NEW.parentauthors, NEW.google_analytics,
-         NEW.major_version, NEW.minor_version, NEW.print_style, NEW.baked, NEW.recipe);
+         NEW.major_version, NEW.minor_version, NEW.print_style, NEW.baked, NEW.recipe, NEW.recipe_tag);
   END IF;
 
   IF TG_OP = ''UPDATE'' THEN
@@ -44,7 +44,10 @@ BEGIN
 	google_analytics=NEW.google_analytics,
         major_version=NEW.major_version,
         minor_version=NEW.minor_version,
-        print_style=NEW.print_style
+        print_style=NEW.print_style,
+        baked=NEW.baked,
+        recipe=NEW.recipe,
+        recipe_tag=NEW.recipe_tag
         WHERE module_ident=NEW.module_ident;
   END IF;
 
@@ -70,13 +73,13 @@ BEGIN
          created, revised, abstractid, licenseid, doctype, submitter,
          submitlog, stateid, parent, language, authors, maintainers,
          licensors, parentauthors, google_analytics, buylink,
-         major_version, minor_version, print_style )
+         major_version, minor_version, print_style, baked, recipe, recipe_tag )
     select
          module_ident, portal_type, moduleid, uuid, version, name,
          created, revised, abstractid, licenseid, doctype, submitter,
          submitlog, stateid, parent, language, authors, maintainers,
          licensors, parentauthors, google_analytics, buylink,
-         major_version, minor_version, print_style
+         major_version, minor_version, print_style, baked, recipe, recipe_tag
     from current_modules where moduleid=OLD.moduleid;
   END IF;
   RETURN OLD;
