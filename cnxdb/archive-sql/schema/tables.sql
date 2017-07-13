@@ -99,6 +99,7 @@ CREATE TABLE "modules" (
 	"print_style" text,
 	"baked" timestamp with time zone,
 	"recipe" integer,
+    "recipe_tag" text,
 	FOREIGN KEY (abstractid) REFERENCES "abstracts" DEFERRABLE,
 	FOREIGN KEY (stateid) REFERENCES "modulestates" DEFERRABLE,
 	FOREIGN KEY (parent) REFERENCES "modules" DEFERRABLE,
@@ -139,7 +140,8 @@ CREATE TABLE "latest_modules" (
 	"minor_version" integer,
 	"print_style" text,
 	"baked" timestamp with time zone,
-	"recipe" integer
+	"recipe" integer,
+    "recipe_tag" text
 );
 
 CREATE TABLE "modulefti" (
@@ -284,6 +286,7 @@ CREATE TABLE print_style_recipes (
   print_style TEXT PRIMARY KEY,
   fileid INTEGER,
   recipe_type TEXT default 'web',
+  tag text,
   revised TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (fileid) REFERENCES files (fileid)
 );
