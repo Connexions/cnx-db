@@ -98,8 +98,9 @@ CREATE TABLE "modules" (
 	"minor_version" integer default NULL,
 	"print_style" text,
 	"baked" timestamp with time zone,
+        -- Time when this version was successfully baked with the below recipe
 	"recipe" integer,
-    "recipe_tag" text,
+        -- Recipe used for successful baking
 	FOREIGN KEY (abstractid) REFERENCES "abstracts" DEFERRABLE,
 	FOREIGN KEY (stateid) REFERENCES "modulestates" DEFERRABLE,
 	FOREIGN KEY (parent) REFERENCES "modules" DEFERRABLE,
@@ -140,8 +141,7 @@ CREATE TABLE "latest_modules" (
 	"minor_version" integer,
 	"print_style" text,
 	"baked" timestamp with time zone,
-	"recipe" integer,
-    "recipe_tag" text
+	"recipe" integer
 );
 
 CREATE TABLE "modulefti" (
@@ -283,10 +283,34 @@ CREATE TABLE collated_file_associations (
 );
 
 CREATE TABLE print_style_recipes (
-  print_style TEXT PRIMARY KEY,
-  fileid INTEGER,
-  recipe_type TEXT default 'web',
+  print_style TEXT,
+      -- name used in modules.print_style
   tag text,
+      -- version or other tag of the above print style
+  fileid INTEGER,
+      -- recipe for this particular print_style @ tag
+  recipe_type TEXT default 'web',
+      -- What this recipe is used for - processing for web output, etc.
+      -- future may have 'pdf' or other cases
   revised TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      -- time of upload to the archive db
+  FOREIGN KEY (fileid) REFERENCES files (fileid),
+  PRIMARY KEY (print_style, tag)
+      -- allow a recipe per each version of print_style
+);
+
+-- Duplicate of above table, for only the current, default print style
+-- maintained with triggers
+
+CREATE TABLE default_print_style_recipes (
+  print_style TEXT PRIMARY KEY,
+      -- name used in modules.print_style, provides default recipe
+      -- to use for next baking
+  tag text,
+      -- version of print_style this recipe is from
+  fileid INTEGER,
+      -- default recipe for this particular print_style 
+  recipe_type TEXT,
+  revised TIMESTAMP WITH TIME ZONE NOT NULL,
   FOREIGN KEY (fileid) REFERENCES files (fileid)
 );
