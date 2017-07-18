@@ -7,9 +7,7 @@ def up(cursor):
     cursor.execute("""
 ALTER TABLE latest_modules ADD COLUMN baked timestamp with time zone;
 ALTER TABLE latest_modules ADD COLUMN recipe integer;
-ALTER TABLE latest_modules ADD COLUMN recipe_tag text;
 ALTER TABLE modules ADD COLUMN baked timestamp with time zone;
-ALTER TABLE modules ADD COLUMN recipe_tag text;
 ALTER TABLE modules ADD COLUMN recipe integer REFERENCES files (fileid);""")
 
     cursor.execute("""
@@ -21,6 +19,75 @@ CREATE TABLE print_style_recipes (
   revised TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (fileid) REFERENCES files (fileid)
 );""")
+
+    cursor.execute("""
+CREATE TABLE default_print_style_recipes (
+  print_style TEXT PRIMARY KEY,
+  fileid INTEGER,
+  recipe_type TEXT,
+  tag TEXT,
+  revised TIMESTAMP WITH TIME ZONE NOT NULL,
+  FOREIGN KEY (fileid) REFERENCES files (fileid)
+);""")
+
+    cursor.execute("""
+CREATE OR REPLACE FUNCTION update_default_recipes() RETURNS trigger AS '
+BEGIN
+  IF (TG_OP = ''INSERT'' OR TG_OP = ''UPDATE'') AND
+          NEW.revised >= ((SELECT revised FROM print_style_recipes
+              WHERE print_style = NEW.print_style ORDER BY revised DESC LIMIT 1)
+              UNION ALL VALUES (NEW.revised) LIMIT 1)
+  THEN
+      DELETE FROM default_print_style_recipes WHERE print_style = NEW.print_style;
+      INSERT into default_print_style_recipes (
+        print_style, tag, fileid, recipe_type, revised)
+    VALUES (
+        NEW.print_style, NEW.tag, NEW.fileid, NEW.recipe_type, NEW.revised);
+  END IF;
+
+  IF TG_OP = ''UPDATE'' THEN
+      UPDATE default_print_style_recipes SET
+        fileid=NEW.fileid,
+        recipe_type=NEW.recipe_type,
+        NEW.revised)
+        WHERE print_style=NEW.print_style AND tag=NEW.tag;
+  END IF;
+
+RETURN NEW;
+END;
+
+' LANGUAGE 'plpgsql';
+""")
+
+    cursor.execute("""
+CREATE TRIGGER update_default_recipes
+  BEFORE INSERT OR UPDATE ON print_style_recipes FOR EACH ROW
+  EXECUTE PROCEDURE update_default_recipes();
+""")
+
+    cursor.execute("""
+CREATE OR REPLACE FUNCTION delete_from_default_recipes() RETURNS trigger AS '
+BEGIN
+  DELETE FROM  default_print_style_recipes
+    WHERE print_style=OLD.print_style and tag=OLD.tag;
+  IF FOUND THEN
+    INSERT into default_print_style_recipes (
+        print_style, tag, fileid, recipe_type, revised)
+    SELECT DISTINCT ON (print_style)
+        print_style, tag, fileid, recipe_type, max(revised)
+    from print_style_recipes where print_style=OLD.print_style
+    order by revised desc;
+  END IF;
+  RETURN OLD;
+END;
+' LANGUAGE 'plpgsql';
+""")
+
+    cursor.execute("""
+CREATE TRIGGER delete_from_default_recipes
+  AFTER DELETE ON print_style_recipes FOR EACH ROW
+  EXECUTE PROCEDURE delete_from_default_recipes();
+""")
 
     cursor.execute("""
 CREATE OR REPLACE FUNCTION update_latest() RETURNS trigger AS '
@@ -36,13 +103,13 @@ BEGIN
   		created, revised, abstractid, stateid, doctype, licenseid,
   		submitter,submitlog, parent, language,
 		authors, maintainers, licensors, parentauthors, google_analytics,
-                major_version, minor_version, print_style, baked, recipe, recipe_tag)
+                major_version, minor_version, print_style, baked, recipe)
   	VALUES (
          NEW.uuid, NEW.module_ident, NEW.portal_type, NEW.moduleid, NEW.version, NEW.name,
   	 NEW.created, NEW.revised, NEW.abstractid, NEW.stateid, NEW.doctype, NEW.licenseid,
   	 NEW.submitter, NEW.submitlog, NEW.parent, NEW.language,
 	 NEW.authors, NEW.maintainers, NEW.licensors, NEW.parentauthors, NEW.google_analytics,
-         NEW.major_version, NEW.minor_version, NEW.print_style, NEW.baked, NEW.recipe, NEW.recipe_tag);
+         NEW.major_version, NEW.minor_version, NEW.print_style, NEW.baked, NEW.recipe);
   END IF;
 
   IF TG_OP = ''UPDATE'' THEN
@@ -72,7 +139,6 @@ BEGIN
         print_style=NEW.print_style,
         baked=NEW.baked,
         recipe=NEW.recipe,
-        recipe_tag=NEW.recipe_tag
         WHERE module_ident=NEW.module_ident;
   END IF;
 
@@ -92,13 +158,13 @@ BEGIN
          created, revised, abstractid, licenseid, doctype, submitter,
          submitlog, stateid, parent, language, authors, maintainers,
          licensors, parentauthors, google_analytics, buylink,
-         major_version, minor_version, print_style, baked, recipe, recipe_tag)
+         major_version, minor_version, print_style, baked, recipe)
     select
          module_ident, portal_type, moduleid, uuid, version, name,
          created, revised, abstractid, licenseid, doctype, submitter,
          submitlog, stateid, parent, language, authors, maintainers,
          licensors, parentauthors, google_analytics, buylink,
-         major_version, minor_version, print_style, baked, recipe, recipe_tag
+         major_version, minor_version, print_style, baked, recipe
     from current_modules where moduleid=OLD.moduleid;
   END IF;
   RETURN OLD;
@@ -113,10 +179,8 @@ def down(cursor):
     cursor.execute("""
 ALTER TABLE modules DROP COLUMN baked;
 ALTER TABLE modules DROP COLUMN recipe;
-ALTER TABLE modules DROP COLUMN recipe_tag;
 ALTER TABLE latest_modules DROP COLUMN baked;
 ALTER TABLE latest_modules DROP COLUMN recipe;
-ALTER TABLE latest_modules DROP COLUMN recipe_tag;
 """)
     cursor.execute("""
 CREATE OR REPLACE FUNCTION update_latest() RETURNS trigger AS '
