@@ -16,7 +16,8 @@ ALTER TABLE modules ADD COLUMN recipe integer REFERENCES files (fileid);""")
 CREATE TABLE print_style_recipes (
   print_style TEXT PRIMARY KEY,
   fileid INTEGER,
-  type TEXT default 'web',
+  recipe_type TEXT default 'web',
+  tag TEXT,
   revised TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (fileid) REFERENCES files (fileid)
 );""")
@@ -112,8 +113,10 @@ def down(cursor):
     cursor.execute("""
 ALTER TABLE modules DROP COLUMN baked;
 ALTER TABLE modules DROP COLUMN recipe;
+ALTER TABLE modules DROP COLUMN recipe_tag;
 ALTER TABLE latest_modules DROP COLUMN baked;
 ALTER TABLE latest_modules DROP COLUMN recipe;
+ALTER TABLE latest_modules DROP COLUMN recipe_tag;
 """)
     cursor.execute("""
 CREATE OR REPLACE FUNCTION update_latest() RETURNS trigger AS '
@@ -194,4 +197,3 @@ BEGIN
   RETURN OLD;
 END;
 ' LANGUAGE 'plpgsql';""")
-
