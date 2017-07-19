@@ -49,7 +49,7 @@ BEGIN
       UPDATE default_print_style_recipes SET
         fileid=NEW.fileid,
         recipe_type=NEW.recipe_type,
-        NEW.revised)
+        revised=NEW.revised
         WHERE print_style=NEW.print_style AND tag=NEW.tag;
   END IF;
 
@@ -138,7 +138,7 @@ BEGIN
         minor_version=NEW.minor_version,
         print_style=NEW.print_style,
         baked=NEW.baked,
-        recipe=NEW.recipe,
+        recipe=NEW.recipe
         WHERE module_ident=NEW.module_ident;
   END IF;
 
@@ -176,6 +176,7 @@ def down(cursor):
     # Take it all back out
 
     cursor.execute("DROP TABLE print_style_recipes")
+    cursor.execute("DROP TABLE default_print_style_recipes")
     cursor.execute("""
 ALTER TABLE modules DROP COLUMN baked;
 ALTER TABLE modules DROP COLUMN recipe;
