@@ -19,7 +19,7 @@ UNION ALL
   JOIN t ON (c1.nodeid = t.parent)
   WHERE not nodeid = any (t.path)
 )
-SELECT m.module_ident
+SELECT m.name, m.uuid
 FROM t
 JOIN modules m on t.value = m.module_ident
 WHERE t.parent IS NULL;
