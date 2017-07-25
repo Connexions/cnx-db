@@ -1,0 +1,19 @@
+-- arguments: page_uuid:string; page_version:string
+
+WITH RECURSIVE t(node, title, parent, path, value) AS (
+  SELECT nodeid, title, parent_id, ARRAY[nodeid], documentid
+  FROM trees tr, modules m
+  WHERE m.uuid = %(page_uuid)s::uuid
+  AND module_version(m.major_version, m.minor_version) = %(page_version)s
+  AND tr.documentid = m.module_ident
+  AND tr.parent_id IS NOT NULL
+UNION ALL
+  SELECT c1.nodeid, c1.title, c1.parent_id, t.path || ARRAY[c1.nodeid], c1.documentid /* Recursion */
+  FROM trees c1
+  JOIN t ON (c1.nodeid = t.parent)
+  WHERE not nodeid = any (t.path)
+)
+SELECT m.module_ident
+FROM t
+JOIN modules m on t.value = m.module_ident
+WHERE t.parent IS NULL;
