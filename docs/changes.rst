@@ -6,6 +6,11 @@
 
    - feature message
 
+0.8.0
+-----
+
+- Add tables and triggers to store recipes associated with print-styles.
+
 0.7.0
 -----
 
