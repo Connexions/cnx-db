@@ -12,7 +12,7 @@ _DEFAULT_CONNECTION_SETTINGS = {
     'password': 'tester',
     'host': 'localhost',
     'port': '5432',
-    }
+}
 
 
 def parse_connection_string_to_parts(connection_string):
@@ -107,4 +107,4 @@ __all__ = (
     'is_db_local',
     'is_py3',
     'is_venv',
-    )
+)

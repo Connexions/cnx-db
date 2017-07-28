@@ -16,7 +16,7 @@ def test_get_schema():
         'sub/subsub/subsubfile_123-abc-123.sql',
         'sub/subfile_123-efg.sql',
         'file_abc.sql',
-        )
+    )
     from cnxdb.init.manifest import get_schema
     for i, file in enumerate(get_schema(example_schema_dir)):
         abs_filepath = os.path.abspath(os.path.join(example_schema_dir,
