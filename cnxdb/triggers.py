@@ -14,7 +14,7 @@ import cnxdb
 from cnxarchive.transforms import (
     produce_cnxml_for_module, produce_html_for_module,
     transform_abstract_to_cnxml, transform_abstract_to_html,
-    )
+)
 # from .utils import split_ident_hash, IdentHashMissingVersion
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -24,7 +24,7 @@ SQL_DIRECTORY = os.path.join(CNXDB_DIRECTORY, 'archive-sql')
 logger = logging.getLogger('cnxarchive')
 
 
-def set_version(portal_type, legacy_version, td):
+def set_version(portal_type, legacy_version, td):  # pragma: no cover
     """Set the major_version and minor_version if they are not set."""
     modified = 'OK'
     legacy_major, legacy_minor = legacy_version.split('.')
@@ -41,13 +41,14 @@ def set_version(portal_type, legacy_version, td):
         # N.B. a very few older modules had major=2 and minor zero-based.
         # The odd math below adds one to the minor for those
         modified = 'MODIFY'
-        td['new']['major_version'] = int(legacy_minor)+(int(legacy_major)-1)
+        td['new']['major_version'] = int(legacy_minor) + \
+            (int(legacy_major) - 1)
         td['new']['minor_version'] = None
 
     return modified
 
 
-def get_module_uuid(plpy, moduleid):
+def get_module_uuid(plpy, moduleid):  # pragma: no cover
     """Retrieve page uuid from legacy moduleid."""
     plan = plpy.prepare("SELECT uuid FROM modules WHERE moduleid = $1;",
                         ('text',))
@@ -56,7 +57,7 @@ def get_module_uuid(plpy, moduleid):
         return result[0]['uuid']
 
 
-def get_current_module_ident(moduleid, plpy):
+def get_current_module_ident(moduleid, plpy):  # pragma: no cover
     """Retrieve module_ident for a given moduleid.
 
     Note that module_ident is used only for internal database relational
@@ -70,7 +71,7 @@ def get_current_module_ident(moduleid, plpy):
         return results[0]['module_ident']
 
 
-def get_collections(module_ident, plpy):
+def get_collections(module_ident, plpy):  # pragma: no cover
     """Get all the collections that the module is part of."""
     plan = plpy.prepare('''
     WITH RECURSIVE t(node, parent, path, document) AS (
@@ -90,7 +91,7 @@ def get_collections(module_ident, plpy):
         yield i['module_ident']
 
 
-def get_subcols(module_ident, plpy):
+def get_subcols(module_ident, plpy):  # pragma: no cover
     """Get all the collections that the module is part of."""
     plan = plpy.prepare('''
     WITH RECURSIVE t(node, parent, path, document) AS (
@@ -111,7 +112,7 @@ def get_subcols(module_ident, plpy):
         yield i['module_ident']
 
 
-def next_version(module_ident, plpy):
+def next_version(module_ident, plpy):  # pragma: no cover
     """Determine next minor version for a given module_ident.
 
     Note potential race condition!
@@ -120,7 +121,7 @@ def next_version(module_ident, plpy):
     return minor + 1
 
 
-def get_minor_version(module_ident, plpy):
+def get_minor_version(module_ident, plpy):  # pragma: no cover
     """Retrieve minor version only given module_ident."""
     plan = plpy.prepare('''\
         SELECT m.minor_version
@@ -132,7 +133,8 @@ def get_minor_version(module_ident, plpy):
 
 
 def republish_collection(submitter, submitlog, next_minor_version,
-                         collection_ident, plpy, revised=None):
+                         collection_ident, plpy,
+                         revised=None):  # pragma: no cover
     """Insert a new row for collection_ident with a new version.
 
     Returns the module_ident of the row inserted.
@@ -188,7 +190,7 @@ def republish_collection(submitter, submitlog, next_minor_version,
     return new_ident
 
 
-def republish_module(td, plpy):
+def republish_module(td, plpy):  # pragma: no cover
     """When a module is republished, create new minor versions of collections.
 
     All collections (including subcollections) that this module is contained
@@ -252,7 +254,8 @@ def republish_module(td, plpy):
     return modified
 
 
-def rebuild_collection_tree(old_collection_ident, new_document_id_map, plpy):
+def rebuild_collection_tree(old_collection_ident, new_document_id_map,
+                            plpy):  # pragma: no cover
     """Create a new tree for the collection based on the old tree.
 
     This uses new document ids, replacing old ones.
@@ -305,7 +308,7 @@ def rebuild_collection_tree(old_collection_ident, new_document_id_map, plpy):
     build_tree(root_node, None)
 
 
-def republish_module_trigger(plpy, td):
+def republish_module_trigger(plpy, td):  # pragma: no cover
     """Trigger called from postgres database when republishing a module.
 
     When a module is republished, the versions of the collections that it is
@@ -339,7 +342,7 @@ def republish_module_trigger(plpy, td):
     return modified
 
 
-def assign_moduleid_default_trigger(plpy, td):
+def assign_moduleid_default_trigger(plpy, td):  # pragma: no cover
     """Trigger to fill in legacy ``moduleid`` when publishing.
 
     This correctly assigns ``moduleid`` value to
@@ -400,7 +403,7 @@ FROM (
     return modified_state
 
 
-def assign_version_default_trigger(plpy, td):
+def assign_version_default_trigger(plpy, td):  # pragma: no cover
     """Trigger to fill in legacy data fields.
 
     A compatibilty trigger to fill in legacy data fields that are not
@@ -431,7 +434,7 @@ def assign_version_default_trigger(plpy, td):
     return modified_state
 
 
-def assign_document_controls_default_trigger(plpy, td):
+def assign_document_controls_default_trigger(plpy, td):  # pragma: no cover
     """Trigger to fill in document_controls when legacy publishes.
 
     A compatibilty trigger to fill in ``uuid`` and ``licenseid`` columns
@@ -458,7 +461,7 @@ RETURNING uuid""", ('integer',))
     return modified_state
 
 
-def upsert_document_acl_trigger(plpy, td):
+def upsert_document_acl_trigger(plpy, td):  # pragma: no cover
     """Trigger for filling in acls when legacy publishes.
 
     A compatibility trigger to upsert authorization control entries (ACEs)
@@ -495,7 +498,7 @@ VALUES ($1, $2, $3)""", ['uuid', 'text', 'permission_type'])
         plpy.execute(plan, (uuid_, uid, permission,))
 
 
-def upsert_users_from_legacy_publication_trigger(plpy, td):
+def upsert_users_from_legacy_publication_trigger(plpy, td):  # pragma: no cover
     """A compatibility trigger to upsert users from legacy persons table."""
     modified_state = "OK"
     authors = td['new']['authors'] and td['new']['authors'] or []
@@ -529,7 +532,7 @@ FROM persons where personid = $1""", ['text'])
     return modified_state
 
 
-def insert_users_for_optional_roles_trigger(plpy, td):
+def insert_users_for_optional_roles_trigger(plpy, td):  # pragma: no cover
     """Trigger to update users from optional roles entries.
 
     A compatibility trigger to insert users from moduleoptionalroles
@@ -556,7 +559,7 @@ FROM persons where personid = $1""", ['text'])
     return modified_state
 
 
-def add_module_file(plpy, td):
+def add_module_file(plpy, td):  # pragma: no cover
     """Database trigger for adding a module file.
 
     When a legacy ``index.cnxml`` is added, this trigger
@@ -623,7 +626,7 @@ WHERE filename = $1 AND module_ident = $2""", ['text', 'integer'])
     return
 
 
-def _transform_abstract(plpy, module_ident):
+def _transform_abstract(plpy, module_ident):  # pragma: no cover
     """Transform abstract, bi-directionally.
 
     Transforms an abstract using one of content columns
