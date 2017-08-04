@@ -7,6 +7,7 @@ import pytest
 
 from cnxdb.contrib import testing
 
+
 @pytest.mark.usefixtures('db_wipe')
 def test_db_init(db_connection_string, db_cursor_without_db_init):
     from cnxdb.init.main import init_db

@@ -5,6 +5,7 @@ import sys
 import re
 
 import psycopg2
+import psycopg2.extras
 
 from uuid import uuid4
 
@@ -27,7 +28,9 @@ class FakePlpy(object):
     def execute(plan, args, rows=None):
         return plan.execute(args, rows=rows)
 
+
 fake_plpy = FakePlpy()
+
 
 class FakePlpyPlan(object):
     def __init__(self, stmt):
@@ -72,9 +75,11 @@ def plpy_connect(method):
             with db_connection.cursor(
                     cursor_factory=psycopg2.extras.DictCursor) as cursor:
                 plpy = PlPy(cursor)
-                psycopg2.extras.register_default_json(globally=False, loads=lambda x: x)
+                psycopg2.extras.register_default_json(globally=False,
+                                                      loads=lambda x: x)
                 return method(self, plpy, *args, **kwargs)
     return wrapped
+
 
 class PlPy(object):
     """Class to wrap access to DB in plpy style api"""
@@ -89,7 +94,8 @@ class PlPy(object):
 
         if query in self._plans:
             args_fmt = self._plans[query]
-            self._cursor.execute('EXECUTE "{}"({})'.format(query, args_fmt), args)
+            self._cursor.execute('EXECUTE "{}"({})'.format(query, args_fmt),
+                                 args)
         else:
             self._cursor.execute(query, args)
 
@@ -102,7 +108,6 @@ class PlPy(object):
             res = None
         return res
 
-
     def prepare(self, query, args=None):
         """"Prepare a plan, with optional placeholders for EXECUTE"""
 
@@ -111,13 +116,13 @@ class PlPy(object):
             argstr = str(args).replace("'", '')
             if len(args) < 2:
                 argstr = argstr.replace(',', '')
-            self._cursor.execute('PREPARE "{}"{} AS {}'.format(plan, argstr, query))
+            self._cursor.execute('PREPARE "{}"{} AS {}'.format(plan, argstr,
+                                                               query))
         else:
             self._cursor.execute('PREPARE "{}" AS {}'.format(plan, query))
 
         self._plans[plan] = ', '.join(('%s',) * len(args))
         return plan
-
 
 
 def parse_connection_string_to_parts(connection_string):
@@ -212,4 +217,9 @@ __all__ = (
     'is_db_local',
     'is_py3',
     'is_venv',
+    'fake_plpy',
+    'plpy_connect',
+    'FakePlpy',
+    'FakePlpyPlan',
+    'PlPy'
 )
