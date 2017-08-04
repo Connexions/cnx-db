@@ -41,8 +41,8 @@ def set_version(portal_type, legacy_version, td):  # pragma: no cover
         # N.B. a very few older modules had major=2 and minor zero-based.
         # The odd math below adds one to the minor for those
         modified = 'MODIFY'
-        td['new']['major_version'] = int(legacy_minor) + \
-            (int(legacy_major) - 1)
+        td['new']['major_version'] = \
+            int(legacy_minor) + (int(legacy_major) - 1)
         td['new']['minor_version'] = None
 
     return modified

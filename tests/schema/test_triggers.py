@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 import json
 import uuid
-import re
 
-from datetime import datetime, tzinfo
+from datetime import datetime
 import hashlib
 import os
-import sys
-import time
 import unittest
 
-import psycopg2
-
 import pytest
+
+
+import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from cnxdb.contrib import testing
@@ -91,6 +89,7 @@ class TestModulePublishTriggerTestCase:
         cursor.execute("DELETE FROM document_controls;")
         cursor.execute("DELETE FROM abstracts;")
         cursor.execute('ALTER TABLE modules ENABLE TRIGGER module_published;')
+        # use_cases.empty_all_tables(cursor)
 
     @testing.db_connect
     def test_get_current_module_ident(self, cursor):
@@ -100,9 +99,8 @@ class TestModulePublishTriggerTestCase:
         from cnxdb.triggers import get_current_module_ident
 
         use_cases.add_module(cursor, version='1.1', minor_version=1,
-                             revised='2013-10-03 21:14:11.000000+02',
-                             returning='module_ident')
-        module_ident_1 = cursor.fetchone()[0]
+                             revised='2013-10-03 21:14:11.000000+02')
+        # module_ident_1 = cursor.fetchone()[0]
         use_cases.add_module(cursor, version='1.2', minor_version=2,
                              returning='module_ident')
         module_ident_2 = cursor.fetchone()[0]
@@ -111,8 +109,6 @@ class TestModulePublishTriggerTestCase:
         module_ident = get_current_module_ident('m1', testing.fake_plpy)
 
         assert(module_ident == module_ident_2)
-
-        use_cases.remove_module(cursor, module_ident=[module_ident_1, module_ident_2])
 
     @testing.db_connect
     def test_next_version(self, cursor):
@@ -127,7 +123,6 @@ class TestModulePublishTriggerTestCase:
         cursor.connection.commit()
 
         assert(next_version(module_ident, testing.fake_plpy) == 3)
-        use_cases.remove_module(cursor, module_ident=[module_ident])
 
     @testing.db_connect
     def test_get_collections(self, cursor):
@@ -148,12 +143,14 @@ class TestModulePublishTriggerTestCase:
                              returning='module_ident')
         module_ident = cursor.fetchone()[0]
 
-        use_cases.add_tree(cursor, documentid=collection_ident, returning='nodeid')
+        use_cases.add_tree(cursor, documentid=collection_ident,
+                           returning='nodeid')
         nodeid_1 = cursor.fetchone()[0]
         use_cases.add_tree(cursor, parent_id=nodeid_1, documentid=module_ident,
                            childorder=1)
 
-        use_cases.add_tree(cursor, documentid=collection2_ident, returning='nodeid')
+        use_cases.add_tree(cursor, documentid=collection2_ident,
+                           returning='nodeid')
         nodeid_2 = cursor.fetchone()[0]
         use_cases.add_tree(cursor, parent_id=nodeid_2, documentid=module_ident,
                            childorder=1)
@@ -172,18 +169,9 @@ class TestModulePublishTriggerTestCase:
 
         cursor.connection.commit()
 
-        cursor.execute("select * from trees;")
-        print(cursor.fetchall())
-        cursor.execute("select module_ident, portal_type, stateid from modules;")
-        print(cursor.fetchall())
-        cursor.execute("select module_ident, portal_type, stateid from latest_modules;")
-        print(cursor.fetchall())
-
         # Now the collection should be in latest modules.
-        assert(
-            list(get_collections(module_ident, testing.fake_plpy)) == \
-            [collection_ident, collection2_ident])
-
+        assert(list(get_collections(module_ident, testing.fake_plpy)) ==
+               [collection_ident, collection2_ident])
 
     @testing.db_connect
     def test_rebuild_collection_tree(self, cursor):
@@ -204,7 +192,8 @@ class TestModulePublishTriggerTestCase:
                              returning='module_ident')
         module2_ident = cursor.fetchone()[0]
 
-        use_cases.add_tree(cursor, documentid=collection_ident, returning='nodeid')
+        use_cases.add_tree(cursor, documentid=collection_ident,
+                           returning='nodeid')
         nodeid = cursor.fetchone()[0]
 
         use_cases.add_tree(cursor, parent_id=nodeid, documentid=module_ident,
@@ -213,7 +202,7 @@ class TestModulePublishTriggerTestCase:
         use_cases.add_tree(cursor, parent_id=nodeid, documentid=module2_ident,
                            childorder=1)
 
-        use_cases.add_collection(cursor, version='1.9',  minor_version=10,
+        use_cases.add_collection(cursor, version='1.9', minor_version=10,
                                  returning='module_ident')
         new_collection_ident = cursor.fetchone()[0]
 
@@ -224,8 +213,8 @@ class TestModulePublishTriggerTestCase:
 
         new_document_id_map = {
             collection_ident: new_collection_ident,
-            module_ident: new_module_ident
-            }
+            module_ident: new_module_ident}
+
         rebuild_collection_tree(collection_ident, new_document_id_map,
                                 testing.fake_plpy)
 
@@ -240,8 +229,9 @@ class TestModulePublishTriggerTestCase:
         )
         SELECT document FROM t
         ''', [new_collection_ident])
-        assert(cursor.fetchall() == [(new_collection_ident,),
-                         (new_module_ident,), (module2_ident,)])
+        assert(cursor.fetchall() ==
+               [(new_collection_ident,), (new_module_ident,),
+                (module2_ident,)])
 
     @testing.db_connect
     def test_republish_collection(self, cursor):
@@ -254,20 +244,20 @@ class TestModulePublishTriggerTestCase:
         VALUES ('3a5344bd-410d-4553-a951-87bccd996822'::uuid)""")
         cursor.execute("""INSERT INTO abstracts (abstractid) VALUES (1)""")
 
-        cursor.execute("SELECT * FROM modules;")
-        print(cursor.fetchall())
-        use_cases.add_collection(cursor, version='1.10', minor_version=10,
+        use_cases.add_collection(cursor, version='7.10', major_version=7,
+                                 minor_version=10,
                                  uuid='3a5344bd-410d-4553-a951-87bccd996822',
                                  created='2013-07-31 14:00:00.000000-05',
                                  revised='2013-10-03 21:59:12.000000-07',
-                                 abstractid=1, doctype='doctype', submitter='submitter',
-                                 submitlog='submitlog', authors=['authors'],
-                                 maintainers=['maintainers'], licensors=['licensors'],
+                                 abstractid=1, doctype='doctype',
+                                 submitter='submitter', submitlog='submitlog',
+                                 authors=['authors'], licensors=['licensors'],
+                                 maintainers=['maintainers'],
                                  parentauthors=['parentauthors'],
-                                 google_analytics='analytics code', buylink='buylink',
+                                 google_analytics='analytics code',
+                                 buylink='buylink',
                                  returning='module_ident')
         collection_ident = cursor.fetchone()[0]
-        print(collection_ident)
         cursor.connection.commit()
 
         republished_submitter = "republished_submitter"
@@ -276,38 +266,23 @@ class TestModulePublishTriggerTestCase:
         new_ident = republish_collection(republished_submitter,
                                          republished_submitlog, 3,
                                          collection_ident, testing.fake_plpy)
-        print("HELLOOOO")
-        cursor.execute("SELECT * FROM modules;")
-        print(cursor.fetchall())
 
-        cursor.execute('''SELECT * FROM modules WHERE
-        module_ident = %s''', [new_ident])
+        cursor.execute('''SELECT
+            portal_type, moduleid, uuid, version, name, created, abstractid,
+            licenseid, doctype, submitter, submitlog, stateid, parent,
+            language, authors, maintainers, licensors, parentauthors,
+            google_analytics, buylink, major_version, minor_version
+                 FROM modules WHERE module_ident = %s''', [new_ident])
         data = cursor.fetchone()
-        print(data)
-        assert(data[1] == 'Collection')  # portal_type
-        assert(data[2] == 'col1')  # moduleid
-        assert(data[3] == '3a5344bd-410d-4553-a951-87bccd996822')  # uuid
-        assert(data[4] == '1.10')  # version
-        assert(data[5] == 'Name of col1')  # name
-        assert(str(data[6]) == '2013-07-31 14:00:00-05:00')  # created
-        #FIXME the assert for revised gets cureent date/time use mock for "currrent time"?
-        # assert(str(data[7]) == '2013-10-03 21:59:12-07:00')   # revised
-        assert(data[8] == 1)  # abstractid
-        assert(data[9] == 11)  # licenseid
-        assert(data[10] == 'doctype')   # doctype
-        assert(data[11] == republished_submitter)
-        assert(data[12] == republished_submitlog)
-        assert(data[13] == 5)  # stateid
-        assert(data[14] == None)
-        assert(data[15] == 'en')
-        assert(data[16] == ['authors'])
-        assert(data[17] == ['maintainers'])
-        assert(data[18] == ['licensors'])
-        assert(data[19] == ['parentauthors'])
-        assert(data[20] == 'analytics code')
-        assert(data[21] == 'buylink')
-        assert(data[22] == 1)
-        assert(data[23] == 3)
+        assert(data ==
+               ('Collection', 'col1', '3a5344bd-410d-4553-a951-87bccd996822',
+                '7.10', 'Name of col1',
+                datetime(2013, 7, 31, 14, 0,
+                         tzinfo=psycopg2.tz.FixedOffsetTimezone(offset=-300,
+                                                                name=None)),
+                1, 11, 'doctype', republished_submitter, republished_submitlog,
+                5, None, 'en', ['authors'], ['maintainers'], ['licensors'],
+                ['parentauthors'], 'analytics code', 'buylink', 7, 3))
 
     @testing.db_connect
     def test_republish_collection_w_keywords(self, cursor):
@@ -320,8 +295,8 @@ class TestModulePublishTriggerTestCase:
         VALUES ('3a5344bd-410d-4553-a951-87bccd996822'::uuid)""")
 
         use_cases.add_collection(cursor, version='1.10', minor_version=10,
-                             uuid='3a5344bd-410d-4553-a951-87bccd996822',
-                             returning='module_ident')
+                                 uuid='3a5344bd-410d-4553-a951-87bccd996822',
+                                 returning='module_ident')
         collection_ident = cursor.fetchone()[0]
         keywords = ['smoo', 'dude', 'gnarly', 'felice']
         values_expr = ", ".join("('{}')".format(v) for v in keywords)
@@ -358,8 +333,8 @@ class TestModulePublishTriggerTestCase:
         cursor.execute("""INSERT INTO document_controls (uuid)
         VALUES ('3a5344bd-410d-4553-a951-87bccd996822'::uuid)""")
         use_cases.add_collection(cursor, version='1.10', minor_version=10,
-                             uuid='3a5344bd-410d-4553-a951-87bccd996822',
-                             returning='module_ident')
+                                 uuid='3a5344bd-410d-4553-a951-87bccd996822',
+                                 returning='module_ident')
         collection_ident = cursor.fetchone()[0]
 
         filepath = os.path.join(DATA_DIRECTORY, 'ruleset.css')
@@ -415,7 +390,7 @@ class TestModulePublishTriggerTestCase:
         WHERE module_ident = %s""", (new_ident,))
 
         inserted_subjects = [x[0] for x in cursor.fetchall()]
-        assert(sorted(inserted_subjects) == \
+        assert(sorted(inserted_subjects) ==
                sorted([name for id, name in subjects]))
 
     def test_set_version(self):
@@ -428,16 +403,17 @@ class TestModulePublishTriggerTestCase:
                 'major_version': 1,
                 'minor_version': None,
                 'version': '1.13',
-                }
             }
-        modified = set_version(td['new']['portal_type'], td['new']['version'], td)
+        }
+        modified = set_version(td['new']['portal_type'],
+                               td['new']['version'],
+                               td)
         assert(modified == 'MODIFY')
         assert(td['new'] == {
             'portal_type': 'Module',
             'major_version': 13,
             'minor_version': None,
-            'version': '1.13',
-            })
+            'version': '1.13', })
 
         # set_version for collections
         td = {
@@ -446,16 +422,17 @@ class TestModulePublishTriggerTestCase:
                 'major_version': 1,
                 'minor_version': None,
                 'version': '1.100',
-                }
             }
-        modified = set_version(td['new']['portal_type'], td['new']['version'], td)
+        }
+        modified = set_version(td['new']['portal_type'],
+                               td['new']['version'],
+                               td)
         assert(modified == 'MODIFY')
         assert(td['new'] == {
             'portal_type': 'Collection',
             'major_version': 100,
             'minor_version': 1,
-            'version': '1.100',
-            })
+            'version': '1.100', })
 
     @testing.plpy_connect
     def test_get_module_uuid(self, plpy):
@@ -475,26 +452,24 @@ class TestModulePublishTriggerTestCase:
         from cnxdb.triggers import get_subcols
 
         module_ident = use_cases.add_module_plpy(plpy)
-        print("module_ident" + str(module_ident))
 
         expected_results = []
         for i in range(3):
-            collection_ident = use_cases.add_sub_collection_no_vars(plpy)[0][0]
+            collection_ident = use_cases.add_module_plpy(
+                plpy, portal_type='SubCollection')
             expected_results.append(collection_ident)
             nodeid = plpy.execute("""
-                INSERT INTO trees
-                    (parent_id, documentid, title, childorder, latest, is_collated)
-                VALUES
-                    (NULL, {}, 'title', 0, NULL, False) RETURNING nodeid;
-                """.format(collection_ident))[0][0]
+            INSERT INTO trees
+                (parent_id, documentid, title, childorder, latest, is_collated)
+            VALUES
+                (NULL, {}, 'title', 0, NULL, False) RETURNING nodeid;
+            """.format(collection_ident))[0][0]
             plpy.execute("""
-                INSERT INTO trees
-                    (parent_id, documentid, title, childorder, latest, is_collated)
-                VALUES
-                    ({}, {}, 'title', 0, NULL, False);
-                """.format(nodeid, module_ident))
-
-        print(plpy.execute("SELECT * from trees;"))
+            INSERT INTO trees
+                (parent_id, documentid, title, childorder, latest, is_collated)
+            VALUES
+                ({}, {}, 'title', 0, NULL, False);
+            """.format(nodeid, module_ident))
 
         subcols = tuple(get_subcols(module_ident, plpy))
         assert(subcols == tuple(expected_results))
@@ -528,95 +503,69 @@ class TestModulePublishTriggerTestCase:
         assert(n_modules == old_n_modules + 1)
 
         # Check that major and minor version are set correctly
-        cursor.execute('SELECT major_version, minor_version FROM modules ORDER BY module_ident DESC')
+        cursor.execute("""SELECT major_version, minor_version
+                          FROM modules ORDER BY module_ident DESC""")
         major, minor = cursor.fetchone()
         assert(major == 13)
-        assert(minor == None)
+        assert(minor is None)
 
     @testing.db_connect
     def test_module(self, cursor):
-        self.resetTables(cursor)
-
-        cursor.execute("""INSERT INTO document_controls (uuid)
-        VALUES ('e79ffde3-7fb4-4af3-9ec8-df648b391597'::uuid)""")
-        cursor.execute("""INSERT INTO document_controls (uuid)
-        VALUES ('f3c9ab70-a916-4d8c-9256-42953287b4e9'::uuid)""")
-
-
-        cursor.execute("INSERT INTO abstracts (abstractid) VALUES (1)")
-        use_cases.add_module(cursor, moduleid='m42119', version='1.3', minor_version=3,
-                             uuid='f3c9ab70-a916-4d8c-9256-42953287b4e9',
-                             name='Introduction to Science and the Realm of Physics, Physical Quantities, and Units',
-                             created='2013-07-31 14:07:20.590652-05',
-                             revised='2013-07-31 15:07:20.590652-05',
-                             abstractid=1, submitter='cnxcap', stateid=1,
-                             submitlog='updated images', returning='module_ident')
-        module_ident_1 = cursor.fetchone()[0]
-        use_cases.add_collection(cursor, returning='module_ident', moduleid='col11406',
-                                 uuid='e79ffde3-7fb4-4af3-9ec8-df648b391597',
-                                 version='1.7', major_version=7, minor_version=1,
-                                 stateid=1)
-        use_cases.add_collection(cursor, returning='module_ident', moduleid='col11406',
-                                 uuid='e79ffde3-7fb4-4af3-9ec8-df648b391597',
-                                 version='1.7', major_version=7, minor_version=1,
-                                 stateid=1)
-        collection_ident_1 = cursor.fetchone()[0]
-        cursor.execute("""INSERT INTO latest_modules (portal_type, moduleid, uuid, version, major_version, minor_version, stateid, licenseid, doctype, name, created, revised)
-                          VALUES ('Collection', 'col11406', 'e79ffde3-7fb4-4af3-9ec8-df648b391597', '1.7', 7, 1, 1, 11, '', 'Name of col1', now(),now())""")
-
+        use_cases.empty_all_tables(cursor)
+        file_data = os.path.join(DATA_DIRECTORY, 'data.sql')
+        use_cases.add_all_data(cursor, file_data)
 
         # Create a fake collated tree for College Physics
         # which contains the module that is going to have a new version
         cursor.execute("""\
-        INSERT INTO trees (parent_id, documentid, is_collated)
-            VALUES (NULL, %s, True) RETURNING nodeid""", (collection_ident_1, ))
+INSERT INTO trees (parent_id, documentid, is_collated)
+    VALUES (NULL, 1, TRUE) RETURNING nodeid""")
         nodeid = cursor.fetchone()[0]
         cursor.execute("""\
-        INSERT INTO trees (parent_id, documentid, is_collated)
-            VALUES (%s, %s, True)""", (nodeid, module_ident_1, ))
+INSERT INTO trees (parent_id, documentid, is_collated)
+    VALUES (%s, 2, TRUE)""", (nodeid,))
         cursor.connection.commit()
 
-
         # update other collection to have subcollection uuids
-        cursor.execute("SELECT subcol_uuids('e79ffde3-7fb4-4af3-9ec8-df648b391597','7.1')")
+        cursor.execute(
+            "SELECT subcol_uuids('e79ffde3-7fb4-4af3-9ec8-df648b391597','7.1')"
+        )
 
-        cursor.execute('SELECT nodeid FROM trees WHERE documentid = %s', (module_ident_1, ))
+        cursor.execute('SELECT nodeid FROM trees WHERE documentid = 18')
         old_nodeid = cursor.fetchone()[0]
 
         cursor.execute('SELECT COUNT(*) FROM modules')
         old_n_modules = cursor.fetchone()[0]
 
-        print(old_n_modules)
-        cursor.execute('SELECT COUNT(*) FROM latest_modules')
-        old_n_modules = cursor.fetchone()[0]
-        print(old_n_modules)
-
-        # # Insert a new version of an existing module
+        # Insert a new version of an existing module
         cursor.execute('''\
         INSERT INTO modules
-        (moduleid, portal_type, version, name,
-         created, revised,
-         authors, maintainers, licensors, abstractid, stateid, licenseid, doctype, submitter, submitlog,
-         language, parent)
+        (moduleid, portal_type, version, name, created, revised,
+         authors, maintainers, licensors, abstractid, stateid, licenseid,
+         doctype, submitter, submitlog, language, parent)
         VALUES ('m42119', 'Module', '1.4',
-        'Introduction to Science and the Realm of Physics, Physical Quantities, and Units',
+        'Introduction to Science and the Realm of Physics, ...',
         '2013-07-31 14:07:20.590652-05' , '2013-07-31 15:07:20.590652-05',
-        NULL, NULL, NULL, 1, NULL, 11, '', 'reedstrm', 'I did not change something',
-        'en', NULL) RETURNING module_ident''')
+        NULL, NULL, NULL, 1, NULL, 11, '', 'reedstrm',
+        'I did not change something', 'en', NULL) RETURNING module_ident''')
+
         new_module_ident = cursor.fetchone()[0]
 
-        # After the new module is inserted, there should be a new module and two
-        # new collections, and two new subcollections
+        # After the new module is inserted, there should be a new module and
+        # two new collections, and two new subcollections
         cursor.execute('SELECT COUNT(*) FROM modules')
-        # assert(cursor.fetchone()[0] == old_n_modules + 5)
+        assert(cursor.fetchone()[0] == old_n_modules + 5)
 
         # Test that the module inserted has the right major and minor versions
-        cursor.execute('''SELECT major_version, minor_version, uuid FROM modules
-            WHERE portal_type = 'Module' ORDER BY module_ident DESC''')
+        cursor.execute('''SELECT major_version, minor_version, uuid
+                          FROM modules
+                          WHERE portal_type = 'Module'
+                          ORDER BY module_ident DESC''')
         major, minor, uuid = cursor.fetchone()
         assert(major == 4)
-        assert(minor == None)
-        # Test that the module inserted has the same uuid as an older version of m42955
+        assert(minor is None)
+        # Test that the module inserted has the same uuid as an older version
+        # of m42955
         assert(uuid == 'f3c9ab70-a916-4d8c-9256-42953287b4e9')
 
         # Test that the latest row in modules is a collection with updated
@@ -626,13 +575,14 @@ class TestModulePublishTriggerTestCase:
         new_collection_id = results[0]
 
         assert(results[1] == 'Collection')  # portal_type
-        assert(results[5] == '<span style="color:red;">Derived</span>'
-                                     ' Copy of College <i>Physics</i>')  # name
+        assert(results[5] ==
+               '<span style="color:red;">Derived</span>'
+               ' Copy of College <i>Physics</i>')  # name
         assert(results[11] == 'reedstrm')  # submitter
         assert(results[12] == 'I did not change something')  # submitlog
         assert(results[-5] == 1)  # major_version
         assert(results[-4] == 2)  # minor_version
-        assert(results[-3] == None)  # print_style
+        assert(results[-3] is None)  # print_style
 
         results = cursor.fetchone()
         new_collection_2_id = results[0]
@@ -643,29 +593,31 @@ class TestModulePublishTriggerTestCase:
         assert(results[12] == 'I did not change something')  # submitlog
         assert(results[-5] == 7)  # major_version
         assert(results[-4] == 2)  # minor_version
-        assert(results[-3] == None)  # print_style
+        assert(results[-3] is None)  # print_style
 
         results = cursor.fetchone()
         new_subcollection_id = results[0]
 
         assert(results[1] == 'SubCollection')  # portal_type
-        assert(results[5] == 'Introduction: The Nature of Science and Physics')  # name
+        # name
+        assert(results[5] == 'Introduction: The Nature of Science and Physics')
         assert(results[11] == 'reedstrm')  # submitter
         assert(results[12] == 'I did not change something')  # submitlog
         assert(results[-5] == 7)  # major_version
         assert(results[-4] == 2)  # minor_version
-        assert(results[-3] == None)  # print_style
+        assert(results[-3] is None)  # print_style
 
         results = cursor.fetchone()
         new_subcollection_2_id = results[0]
 
         assert(results[1] == 'SubCollection')  # portal_type
-        assert(results[5] == 'Introduction: The Nature of Science and Physics')  # name
+        # name
+        assert(results[5] == 'Introduction: The Nature of Science and Physics')
         assert(results[11] == 'reedstrm')  # submitter
         assert(results[12] == 'I did not change something')  # submitlog
         assert(results[-5] == 1)  # major_version
         assert(results[-4] == 2)  # minor_version
-        assert(results[-3] == None)  # print_style
+        assert(results[-3] is None)  # print_style
 
         cursor.execute("UPDATE modules SET print_style = '*NEW PRINT STYLE*'"
                        " WHERE abstractid = 1")
@@ -681,7 +633,8 @@ class TestModulePublishTriggerTestCase:
         new_nodeid = cursor.fetchone()[0]
 
         sql = '''
-        WITH RECURSIVE t(node, parent, document, title, childorder, latest, path) AS (
+        WITH RECURSIVE t(node, parent, document,
+                         title, childorder, latest, path) AS (
             SELECT tr.nodeid, tr.parent_id, tr.documentid, tr.title,
                    tr.childorder, tr.latest, ARRAY[tr.nodeid]
             FROM trees tr
@@ -717,335 +670,333 @@ class TestModulePublishTriggerTestCase:
             24: new_subcollection_id,
             22: new_subcollection_2_id,
             3: new_module_ident,
-            }
+        }
         for i, old_node in enumerate(old_tree):
-            assert(new_document_ids.get(old_node[2], old_node[2]) == \
-                             new_tree[i][2])  # documentid
+            assert(new_document_ids.get(old_node[2], old_node[2]) ==
+                   new_tree[i][2])  # documentid
             assert(old_node[3] == new_tree[i][3])  # title
             assert(old_node[4] == new_tree[i][4])  # child order
             assert(old_node[5] == new_tree[i][5])  # latest
+        use_cases.empty_all_tables(cursor)
 
-    # @testing.db_connect
-    # def test_module_files_from_cnxml(self, cursor):
-    #     self.resetTables(cursor)
-    #     use_cases.add_module(cursor, moduleid='m42119', version='1.1', minor_version='1',
-    #                          created='2013-09-13 15:10:43.000000+02',
-    #                          revised='2013-09-13 15:10:43.000000+02',
-    #                          name='Old Version', returning='module_ident')
-    #     old_module_ident = cursor.fetchone()[0]
-    #
-    #     # add file into the files and module_files tables
-    #     cursor.execute("INSERT INTO files (file) VALUES ('fake file') RETURNING fileid;")
-    #     fileid1 = cursor.fetchone()[0]
-    #     cursor.execute("""INSERT INTO module_files (module_ident, fileid, filename)
-    #                       VALUES (%s, %s, 'file.txt');""",
-    #                       (old_module_ident, fileid1, ))
-    #     cursor.execute("INSERT INTO files (file) VALUES ('another fake file') RETURNING fileid;")
-    #     fileid2 = cursor.fetchone()[0]
-    #     cursor.execute("""INSERT INTO module_files (module_ident, fileid, filename)
-    #                       VALUES (%s, %s, 'index.cnxml');""",
-    #                       (old_module_ident, fileid2, ))
-    #
-    #     # Insert abstract with cnxml
-    #     use_cases.add_abstract(cursor, abstractid=20802,
-    #                            abstract='Here is my <emphasis>string</emphasis> summary.')
-    #
-    #     # Insert a new version of an existing module
-    #     # cursor.execute('''\
-    #     # INSERT INTO modules
-    #     # (moduleid, portal_type, version, name, created, revised, authors, maintainers, licensors,  abstractid, stateid, licenseid, doctype, submitter, submitlog, language, parent)
-    #     # VALUES (
-    #     # 'm42119', 'Module', '1.2', 'New Version', '2013-09-13 15:10:43.000000+02' ,
-    #     # '2013-09-13 15:10:43.000000+02', NULL, NULL, NULL, 20802, NULL, 11, '', NULL, '',
-    #     # 'en', NULL) RETURNING module_ident''')
-    #     use_cases.add_module(cursor, moduleid='m42119', version='1.2', minor_version='2',
-    #                          created='2013-09-13 15:10:43.000000+02',
-    #                          revised='2013-09-13 15:10:43.000000+02',
-    #                          name='New Version', abstractid=20802, returning='module_ident')
-    #     new_module_ident = cursor.fetchone()[0]
-    #
-    #     # Make sure there are no module files for new_module_ident in the
-    #     # database
-    #     cursor.execute('''SELECT count(*) FROM module_files
-    #     WHERE module_ident = %s''', (new_module_ident,))
-    #     assert(cursor.fetchone()[0] == 0)
-    #
-    #     # Make sure there's no fulltext index info
-    #     cursor.execute('''SELECT count(*)
-    #     FROM modulefti WHERE module_ident = %s''',
-    #                    (new_module_ident,))
-    #     assert(cursor.fetchone()[0] == 0)
-    #
-    #     # Copy files for m42119 except *.html and index.cnxml
-    #     cursor.execute('''\
-    #     SELECT f.file, m.filename, f.media_type
-    #     FROM module_files m JOIN files f ON m.fileid = f.fileid
-    #     WHERE m.module_ident = %s AND m.filename ~ '^(.(?!\.html$))+$'
-    #     AND m.filename != 'index.cnxml'
-    #     ''', (old_module_ident, ))
-    #
-    #     for data, filename, media_type in cursor.fetchall():
-    #         sha1 = hashlib.new('sha1', data[:]).hexdigest()
-    #         cursor.execute("SELECT fileid from files where sha1 = %s",
-    #                        (sha1,))
-    #         try:
-    #             fileid = cursor.fetchone()[0]
-    #         except TypeError:
-    #             cursor.execute('''INSERT INTO files (file, media_type)
-    #             VALUES (%s, %s)
-    #             RETURNING fileid''', (data, media_type,))
-    #             fileid = cursor.fetchone()[0]
-    #         cursor.execute('''\
-    #         INSERT INTO module_files (module_ident, fileid, filename)
-    #         VALUES (%s, %s, %s)''',
-    #                        (new_module_ident, fileid, filename,))
-    #
-    #     # Insert index.cnxml only after adding all the other files
-    #     cursor.execute('''\
-    #     SELECT fileid
-    #     FROM module_files
-    #     WHERE module_ident = %s AND filename = 'index.cnxml'
-    #     ''', (old_module_ident, ))
-    #     fileid = cursor.fetchone()[0]
-    #     cursor.execute('''\
-    #     INSERT INTO module_files (module_ident, fileid, filename)
-    #         SELECT %s, %s, m.filename
-    #         FROM module_files m
-    #         WHERE m.module_ident = %s AND m.filename = 'index.cnxml' ''',
-    #                    (new_module_ident, fileid, old_module_ident, ))
-    #
-    #     # Test that html abstract is generated
-    #     cursor.execute('''SELECT abstract, html FROM abstracts
-    #         WHERE abstractid = 20802''')
-    #     abstract, html = cursor.fetchone()
-    #     assert(abstract ==
-    #                      'Here is my <emphasis>string</emphasis> summary.')
-    #     assert('Here is my <strong>string</strong> summary.' == html)
-    #
-    #     # Get the index.cnxml.html generated by the trigger
-    #     cursor.execute('''SELECT file
-    #     FROM module_files m JOIN files f ON m.fileid = f.fileid
-    #     WHERE module_ident = %s AND filename = 'index.cnxml.html' ''',
-    #                    (new_module_ident,))
-    #     index_htmls = cursor.fetchall()
-    #
-    #     # Test that we generated exactly one index.cnxml.html for new_module_ident
-    #     assert(len(index_htmls) == 1)
-    #     # Test that the index.cnxml.html contains html
-    #     html = index_htmls[0][0][:]
-    #     assert('<html' == html)
-    #
-    #     # Test that the generated index.cnxml.html was processed for fulltext search
-    #     cursor.execute('''SELECT module_idx, fulltext
-    #     FROM modulefti WHERE module_ident = %s''',
-    #                    (new_module_ident,))
-    #     idx, fulltext = cursor.fetchall()[0]
-    #     assert(len(idx) == 3545)
-    #     assert('Introduction to Science and the Realm of Physics, '
-    #                   'Physical Quantities, and Units' == fulltext)
+    @testing.db_connect
+    def test_module_files_from_cnxml(self, cursor):
+        use_cases.empty_all_tables(cursor)
+        file_data = os.path.join(DATA_DIRECTORY, 'data.sql')
+        use_cases.add_all_data(cursor, file_data)
 
-    # @testing.db_connect
-    # def test_module_files_from_html(self, cursor):
-    #     # Insert abstract with cnxml -- (this is tested elsewhere)
-    #     # This also tests for when a abstract has a resource. The transfomr
-    #     #   happens within when the add_module_file trigger is executed.
-    #     #   This means the resouces should be available.
-    #     self.resetTables(cursor)
-    #     abstract = 'Image: <media><image mime-type="image/jpeg" src="Figure_01_00_01.jpg" /></media>'
-    #     cursor.execute("INSERT INTO abstracts (abstractid, abstract) "
-    #                    "VALUES (20802, %s)",
-    #                    (abstract,))
-    #
-    #     # Insert a old version of a module
-    #     cursor.execute('''
-    #     INSERT INTO modules
-    #     (moduleid, portal_type, version, name, created, revised, authors,
-    #     maintainers, licensors,  abstractid, stateid, licenseid, doctype,
-    #     submitter, submitlog, language, parent)
-    #     VALUES (
-    #     'm42119', 'Module', '1.1', 'Old Version', '2013-09-13 15:10:43.000000+02' ,
-    #     '2013-09-13 15:10:43.000000+02', NULL, NULL, NULL, 20802, NULL, 11, '', NULL, '',
-    #     'en', NULL) RETURNING module_ident''')
-    #     old_module_ident = cursor.fetchone()[0]
-    #
-    #     # Insert a new version of an existing module
-    #     cursor.execute('''
-    #     INSERT INTO modules
-    #     (moduleid, portal_type, version, name, created, revised, authors,
-    #     maintainers, licensors,  abstractid, stateid, licenseid, doctype,
-    #     submitter, submitlog, language, parent)
-    #     VALUES (
-    #     'm42119', 'Module', '1.2', 'New Version', '2013-09-13 15:10:43.000000+02' ,
-    #     '2013-09-13 15:10:43.000000+02', NULL, NULL, NULL, 20802, NULL, 11, '', NULL, '',
-    #     'en', NULL) RETURNING module_ident''')
-    #     new_module_ident = cursor.fetchone()[0]
-    #
-    #     # Make sure there are no module files for new_module_ident in the
-    #     # database
-    #     cursor.execute('''SELECT count(*) FROM module_files
-    #     WHERE module_ident = %s''', (new_module_ident,))
-    #     assert(cursor.fetchone()[0] == 0)
-    #
-    #     # Make sure there's no fulltext index info
-    #     cursor.execute('''SELECT count(*)
-    #     FROM modulefti WHERE module_ident = %s''',
-    #                    (new_module_ident,))
-    #     assert(cursor.fetchone()[0] == 0)
-    #
-    #     # Copy files for m42119 except *.html and *.cnxml
-    #     cursor.execute('''
-    #     SELECT f.file, m.filename, f.media_type
-    #     FROM module_files m JOIN files f ON m.fileid = f.fileid
-    #     WHERE m.module_ident = 3 AND m.filename NOT LIKE '%.html'
-    #     AND m.filename NOT LIKE '%.cnxml'
-    #     ''')
-    #
-    #     for data, filename, media_type in cursor.fetchall():
-    #         sha1 = hashlib.new('sha1', data[:]).hexdigest()
-    #         cursor.execute("SELECT fileid from files where sha1 = %s",
-    #                        (sha1,))
-    #         try:
-    #             fileid = cursor.fetchone()[0]
-    #         except TypeError:
-    #             cursor.execute('''INSERT INTO files (file, media_type)
-    #             VALUES (%s, %s)
-    #             RETURNING fileid''', (data, media_type,))
-    #             fileid = cursor.fetchone()[0]
-    #         cursor.execute('''
-    #         INSERT INTO module_files (module_ident, fileid, filename)
-    #         VALUES (%s, %s, %s)''', (new_module_ident, fileid, filename,))
-    #
-    #     # Insert index.cnxml.html only after adding all the other files
-    #     cursor.execute('''
-    #     SELECT fileid
-    #     FROM module_files
-    #     WHERE module_ident = 3 AND filename = 'index.cnxml.html'
-    #     ''')
-    #     fileid = cursor.fetchone()[0]
-    #     cursor.execute('''
-    #     INSERT INTO module_files (module_ident, fileid, filename)
-    #         SELECT %s, %s, m.filename
-    #         FROM module_files m
-    #         WHERE m.module_ident = 3 AND m.filename = 'index.cnxml.html' ''',
-    #                    (new_module_ident, fileid,))
-    #
-    #     # Test that html abstract is generated
-    #     cursor.execute('''SELECT abstract, html FROM abstracts
-    #         WHERE abstractid = 20802''')
-    #     old_abstract, html = cursor.fetchone()
-    #     assert(old_abstract == abstract)
-    #     assert(
-    #         """Image: <span data-type="media"><img src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg" data-media-type="image/jpeg" alt=""/></span>""" in html)
-    #
-    #     # Get the index.html.cnxml generated by the trigger
-    #     cursor.execute('''SELECT file, filename
-    #     FROM module_files m JOIN files f ON m.fileid = f.fileid
-    #     WHERE module_ident = %s AND filename LIKE %s ''',
-    #                    (new_module_ident, '%.cnxml'))
-    #     index_cnxmls = cursor.fetchall()
-    #
-    #     # Test that we generated index.html.cnxml and index.cnxml
-    #     #   for new_module_ident
-    #     assert(len(index_cnxmls) == 2)
-    #     assert(sorted([fn for f, fn in index_cnxmls]) ==
-    #                      ['index.cnxml', 'index.html.cnxml'])
-    #     # Test that the index.html.cnxml contains cnxml
-    #     cnxml = index_cnxmls[0][0][:]
-    #     assert('<document' in cnxml)
-    #
-    #     # Test that the inserted index.cnxml.html was processed for fulltext search
-    #     cursor.execute('''SELECT module_idx, fulltext
-    #     FROM modulefti WHERE module_ident = %s''',
-    #                    (new_module_ident,))
-    #     idx, fulltext = cursor.fetchall()[0]
-    #     assert(len(idx) == 3556)
-    #     assert('Introduction to Science and the Realm of Physics, '
-    #                   'Physical Quantities, and Units' in fulltext)
+        # Insert abstract with cnxml
+        cursor.execute('''\
+        INSERT INTO abstracts
+        (abstractid, abstract)
+        VALUES
+        (20802, 'Here is my <emphasis>string</emphasis> summary.')
+        ''')
 
-#     @testing.db_connect
-#     def test_module_files_overwrite_index_html(self, cursor):
-#         # Insert a new version of an existing module
-#         cursor.execute('''
-#         INSERT INTO modules
-#         (moduleid, portal_type, version, name, created, revised, authors, maintainers, licensors,  abstractid, stateid, licenseid, doctype, submitter, submitlog, language, parent)
-#         VALUES (
-#         'm42119', 'Module', '1.2', 'New Version', '2013-09-13 15:10:43.000000+02' ,
-#         '2013-09-13 15:10:43.000000+02', NULL, NULL, NULL, 1, NULL, 11, '', NULL, '',
-#         'en', NULL) RETURNING module_ident''')
-#
-#         new_module_ident = cursor.fetchone()[0]
-#
-#         # Make sure there are no module files for new_module_ident in the
-#         # database
-#         cursor.execute('''SELECT count(*) FROM module_files
-#         WHERE module_ident = %s''', (new_module_ident,))
-#         self.assertEqual(cursor.fetchone()[0], 0)
-#
-#         # Create index.cnxml.html to make sure module files trigger will
-#         # NOT overwrite it
-#         cursor.execute('ALTER TABLE module_files DISABLE TRIGGER ALL')
-#         custom_content = 'abcd'
-#         cursor.execute('''
-#             INSERT INTO files (file, media_type)
-#             VALUES (%s, 'text/html') RETURNING fileid''',
-#                        [custom_content])
-#         fileid = cursor.fetchone()[0]
-#         cursor.execute('''INSERT INTO module_files
-#             (module_ident, fileid, filename)
-#             VALUES (%s, %s, 'index.cnxml.html')''',
-#                        [new_module_ident, fileid])
-#         cursor.execute('ALTER TABLE module_files ENABLE TRIGGER ALL')
-#
-#         # Copy files for m42119 except *.html and index.cnxml
-#         cursor.execute('''
-#         SELECT f.file, m.filename, f.media_type
-#         FROM module_files m JOIN files f ON m.fileid = f.fileid
-#         WHERE m.module_ident = 3 AND m.filename NOT LIKE '%.html'
-#         AND m.filename != 'index.cnxml'
-#         ''')
-#
-#         for data, filename, media_type in cursor.fetchall():
-#             sha1 = hashlib.new('sha1', data[:]).hexdigest()
-#             cursor.execute("SELECT fileid from files where sha1 = %s",
-#                            (sha1,))
-#             try:
-#                 fileid = cursor.fetchone()[0]
-#             except TypeError:
-#                 cursor.execute('''INSERT INTO files (file, media_type)
-#                 VALUES (%s, %s)
-#                 RETURNING fileid''', (data, media_type,))
-#                 fileid = cursor.fetchone()[0]
-#             cursor.execute('''
-#             INSERT INTO module_files (module_ident, fileid, filename)
-#             VALUES (%s, %s, %s)''', (new_module_ident, fileid, filename))
-#
-#         # Insert index.cnxml only after adding all the other files
-#         cursor.execute('''
-#         SELECT fileid
-#         FROM module_files
-#         WHERE module_ident = 3 AND filename = 'index.cnxml'
-#         ''')
-#         fileid = cursor.fetchone()[0]
-#         cursor.execute('''
-#         INSERT INTO module_files (module_ident, fileid, filename)
-#             SELECT %s, %s, m.filename
-#             FROM module_files m JOIN files f ON m.fileid = f.fileid
-#             WHERE m.module_ident = 3 AND m.filename = 'index.cnxml' ''',
-#                        (new_module_ident, fileid,))
-#
-#         # Get the index.cnxml.html generated by the trigger
-#         cursor.execute('''SELECT file
-#         FROM module_files m JOIN files f ON m.fileid = f.fileid
-#         WHERE module_ident = %s AND filename = 'index.cnxml.html' ''',
-#                        (new_module_ident,))
-#         index_htmls = cursor.fetchall()
-#
-#         # Test that we DID NOT generate an index.cnxml.html for new_module_ident
-#         self.assertEqual(len(index_htmls), 1)
-#         # Test that the index.cnxml.html contains the custom content.
-#         html = index_htmls[0][0][:]
-#         self.assertEqual(custom_content, html)
-#
+        # Insert a new version of an existing module
+        cursor.execute('''\
+        INSERT INTO modules
+            (moduleid, portal_type, version, name, created, revised, authors,
+             maintainers, licensors,  abstractid, stateid, licenseid, doctype,
+             submitter, submitlog, language, parent)
+        VALUES (
+            'm42119', 'Module', '1.2', 'New Version',
+            '2013-09-13 15:10:43.000000+02', '2013-09-13 15:10:43.000000+02',
+            NULL, NULL, NULL, 20802, NULL, 11, '', NULL, '', 'en', NULL)
+        RETURNING module_ident''')
+
+        new_module_ident = cursor.fetchone()[0]
+
+        # Make sure there are no module files for new_module_ident in the
+        # database
+        cursor.execute('''SELECT count(*) FROM module_files
+        WHERE module_ident = %s''', (new_module_ident,))
+        assert(cursor.fetchone()[0] == 0)
+
+        # Make sure there's no fulltext index info
+        cursor.execute('''SELECT count(*)
+        FROM modulefti WHERE module_ident = %s''',
+                       (new_module_ident,))
+        assert(cursor.fetchone()[0] == 0)
+
+        # Copy files for m42119 except *.html and index.cnxml
+        cursor.execute('''\
+        SELECT f.file, m.filename, f.media_type
+        FROM module_files m JOIN files f ON m.fileid = f.fileid
+        WHERE m.module_ident = 3 AND m.filename NOT LIKE '%.html'
+        AND m.filename != 'index.cnxml'
+        ''')
+
+        for data, filename, media_type in cursor.fetchall():
+            sha1 = hashlib.new('sha1', data[:]).hexdigest()
+            cursor.execute("SELECT fileid from files where sha1 = %s",
+                           (sha1,))
+            try:
+                fileid = cursor.fetchone()[0]
+            except TypeError:
+                cursor.execute('''INSERT INTO files (file, media_type)
+                VALUES (%s, %s)
+                RETURNING fileid''', (data, media_type,))
+                fileid = cursor.fetchone()[0]
+            cursor.execute('''\
+            INSERT INTO module_files (module_ident, fileid, filename)
+            VALUES (%s, %s, %s)''',
+                           (new_module_ident, fileid, filename,))
+
+        # Insert index.cnxml only after adding all the other files
+        cursor.execute('''\
+        SELECT fileid
+        FROM module_files
+        WHERE module_ident = 3 AND filename = 'index.cnxml'
+        ''')
+        fileid = cursor.fetchone()[0]
+        cursor.execute('''\
+        INSERT INTO module_files (module_ident, fileid, filename)
+            SELECT %s, %s, m.filename
+            FROM module_files m
+            WHERE m.module_ident = 3 AND m.filename = 'index.cnxml' ''',
+                       (new_module_ident, fileid,))
+
+        # Test that html abstract is generated
+        cursor.execute('''SELECT abstract, html FROM abstracts
+            WHERE abstractid = 20802''')
+        abstract, html = cursor.fetchone()
+        assert(abstract ==
+               'Here is my <emphasis>string</emphasis> summary.')
+        assert('Here is my <strong>string</strong> summary.' in html)
+
+        # Get the index.cnxml.html generated by the trigger
+        cursor.execute('''SELECT file
+        FROM module_files m JOIN files f ON m.fileid = f.fileid
+        WHERE module_ident = %s AND filename = 'index.cnxml.html' ''',
+                       (new_module_ident,))
+        index_htmls = cursor.fetchall()
+
+        # Test that we generated exactly one index.cnxml.html for
+        # new_module_ident
+        assert(len(index_htmls) == 1)
+        # Test that the index.cnxml.html contains html
+        html = index_htmls[0][0][:]
+        assert('<html' in html)
+
+        # Test that the generated index.cnxml.html was processed for
+        # fulltext search
+        cursor.execute('''SELECT module_idx, fulltext
+        FROM modulefti WHERE module_ident = %s''',
+                       (new_module_ident,))
+        idx, fulltext = cursor.fetchall()[0]
+        assert(len(idx) == 3545)
+        assert('Introduction to Science and the Realm of Physics, '
+               'Physical Quantities, and Units' in fulltext)
+        use_cases.empty_all_tables(cursor)
+
+    @testing.db_connect
+    def test_module_files_from_html(self, cursor):
+        use_cases.empty_all_tables(cursor)
+        file_data = os.path.join(DATA_DIRECTORY, 'data.sql')
+        use_cases.add_all_data(cursor, file_data)
+
+        # Insert abstract with cnxml -- (this is tested elsewhere)
+        # This also tests for when a abstract has a resource. The transfomr
+        #   happens within when the add_module_file trigger is executed.
+        #   This means the resouces should be available.
+        abstract = ('Image: <media><image mime-type="image/jpeg"'
+                    ' src="Figure_01_00_01.jpg" /></media>')
+        cursor.execute("INSERT INTO abstracts (abstractid, abstract) "
+                       "VALUES (20802, %s)",
+                       (abstract,))
+
+        # Insert a new version of an existing module
+        cursor.execute('''
+        INSERT INTO modules
+            (moduleid, portal_type, version, name, created, revised, authors,
+            maintainers, licensors,  abstractid, stateid, licenseid, doctype,
+            submitter, submitlog, language, parent)
+        VALUES (
+            'm42119', 'Module', '1.2', 'New Version',
+            '2013-09-13 15:10:43.000000+02', '2013-09-13 15:10:43.000000+02',
+            NULL, NULL, NULL, 20802, NULL, 12, '', NULL, '', 'en', NULL)
+        RETURNING module_ident''')
+        new_module_ident = cursor.fetchone()[0]
+
+        # Make sure there are no module files for new_module_ident in the
+        # database
+        cursor.execute('''SELECT count(*) FROM module_files
+        WHERE module_ident = %s''', (new_module_ident,))
+        assert(cursor.fetchone()[0] == 0)
+
+        # Make sure there's no fulltext index info
+        cursor.execute('''SELECT count(*)
+        FROM modulefti WHERE module_ident = %s''',
+                       (new_module_ident,))
+        assert(cursor.fetchone()[0] == 0)
+
+        # Copy files for m42119 except *.html and *.cnxml
+        cursor.execute('''
+        SELECT f.file, m.filename, f.media_type
+        FROM module_files m JOIN files f ON m.fileid = f.fileid
+        WHERE m.module_ident = 3 AND m.filename NOT LIKE '%.html'
+        AND m.filename NOT LIKE '%.cnxml'
+        ''')
+
+        for data, filename, media_type in cursor.fetchall():
+            sha1 = hashlib.new('sha1', data[:]).hexdigest()
+            cursor.execute("SELECT fileid from files where sha1 = %s",
+                           (sha1,))
+            try:
+                fileid = cursor.fetchone()[0]
+            except TypeError:
+                cursor.execute('''INSERT INTO files (file, media_type)
+                VALUES (%s, %s)
+                RETURNING fileid''', (data, media_type,))
+                fileid = cursor.fetchone()[0]
+            cursor.execute('''
+            INSERT INTO module_files (module_ident, fileid, filename)
+            VALUES (%s, %s, %s)''', (new_module_ident, fileid, filename,))
+
+        # Insert index.cnxml.html only after adding all the other files
+        cursor.execute('''
+        SELECT fileid
+        FROM module_files
+        WHERE module_ident = 3 AND filename = 'index.cnxml.html'
+        ''')
+        fileid = cursor.fetchone()[0]
+        cursor.execute('''
+        INSERT INTO module_files (module_ident, fileid, filename)
+            SELECT %s, %s, m.filename
+            FROM module_files m
+            WHERE m.module_ident = 3 AND m.filename = 'index.cnxml.html' ''',
+                       (new_module_ident, fileid,))
+
+        # Test that html abstract is generated
+        cursor.execute('''SELECT abstract, html FROM abstracts
+            WHERE abstractid = 20802''')
+        old_abstract, html = cursor.fetchone()
+        assert(old_abstract == abstract)
+        assert(('Image: <span data-type="media"><img src="/resources/'
+                'd47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg"'
+                ' data-media-type="image/jpeg" alt=""/></span>') in html)
+
+        # Get the index.html.cnxml generated by the trigger
+        cursor.execute("""SELECT file, filename
+                        FROM module_files m JOIN files f ON m.fileid = f.fileid
+                        WHERE module_ident = %s AND filename LIKE %s;""",
+                       (new_module_ident, '%.cnxml'))
+        index_cnxmls = cursor.fetchall()
+
+        # Test that we generated index.html.cnxml and index.cnxml
+        #   for new_module_ident
+        assert(len(index_cnxmls) == 2)
+        assert(sorted([fn for f, fn in index_cnxmls]) ==
+               ['index.cnxml', 'index.html.cnxml'])
+        # Test that the index.html.cnxml contains cnxml
+        cnxml = index_cnxmls[0][0][:]
+        assert('<document' in cnxml)
+
+        # Test that the inserted index.cnxml.html was processed for fulltext
+        # search
+        cursor.execute('''SELECT module_idx, fulltext
+        FROM modulefti WHERE module_ident = %s''',
+                       (new_module_ident,))
+        idx, fulltext = cursor.fetchall()[0]
+        assert(len(idx) == 3556)
+        assert('Introduction to Science and the Realm of Physics, '
+               'Physical Quantities, and Units' in fulltext)
+        use_cases.empty_all_tables(cursor)
+
+    @testing.db_connect
+    def test_module_files_overwrite_index_html(self, cursor):
+        use_cases.empty_all_tables(cursor)
+        file_data = os.path.join(DATA_DIRECTORY, 'data.sql')
+        use_cases.add_all_data(cursor, file_data)
+
+        # Insert a new version of an existing module
+        cursor.execute('''
+        INSERT INTO modules
+            (moduleid, portal_type, version, name, created, revised, authors,
+             maintainers, licensors,  abstractid, stateid, licenseid, doctype,
+             submitter, submitlog, language, parent)
+        VALUES (
+            'm42119', 'Module', '1.2', 'New Version',
+            '2013-09-13 15:10:43.000000+02', '2013-09-13 15:10:43.000000+02',
+            NULL, NULL, NULL, 1, NULL, 11, '', NULL, '', 'en', NULL)
+        RETURNING module_ident''')
+
+        new_module_ident = cursor.fetchone()[0]
+
+        # Make sure there are no module files for new_module_ident in the
+        # database
+        cursor.execute('''SELECT count(*) FROM module_files
+        WHERE module_ident = %s''', (new_module_ident,))
+        assert(cursor.fetchone()[0] == 0)
+
+        # Create index.cnxml.html to make sure module files trigger will
+        # NOT overwrite it
+        cursor.execute('ALTER TABLE module_files DISABLE TRIGGER ALL')
+        custom_content = 'abcd'
+        cursor.execute('''
+            INSERT INTO files (file, media_type)
+            VALUES (%s, 'text/html') RETURNING fileid''',
+                       [custom_content])
+        fileid = cursor.fetchone()[0]
+        cursor.execute('''INSERT INTO module_files
+            (module_ident, fileid, filename)
+            VALUES (%s, %s, 'index.cnxml.html')''',
+                       [new_module_ident, fileid])
+        cursor.execute('ALTER TABLE module_files ENABLE TRIGGER ALL')
+
+        # Copy files for m42119 except *.html and index.cnxml
+        cursor.execute('''
+        SELECT f.file, m.filename, f.media_type
+        FROM module_files m JOIN files f ON m.fileid = f.fileid
+        WHERE m.module_ident = 3 AND m.filename NOT LIKE '%.html'
+        AND m.filename != 'index.cnxml'
+        ''')
+
+        for data, filename, media_type in cursor.fetchall():
+            sha1 = hashlib.new('sha1', data[:]).hexdigest()
+            cursor.execute("SELECT fileid from files where sha1 = %s",
+                           (sha1,))
+            try:
+                fileid = cursor.fetchone()[0]
+            except TypeError:
+                cursor.execute('''INSERT INTO files (file, media_type)
+                VALUES (%s, %s)
+                RETURNING fileid''', (data, media_type,))
+                fileid = cursor.fetchone()[0]
+            cursor.execute('''
+            INSERT INTO module_files (module_ident, fileid, filename)
+            VALUES (%s, %s, %s)''', (new_module_ident, fileid, filename))
+
+        # Insert index.cnxml only after adding all the other files
+        cursor.execute('''
+        SELECT fileid
+        FROM module_files
+        WHERE module_ident = 3 AND filename = 'index.cnxml'
+        ''')
+        fileid = cursor.fetchone()[0]
+        cursor.execute('''
+        INSERT INTO module_files (module_ident, fileid, filename)
+            SELECT %s, %s, m.filename
+            FROM module_files m JOIN files f ON m.fileid = f.fileid
+            WHERE m.module_ident = 3 AND m.filename = 'index.cnxml' ''',
+                       (new_module_ident, fileid,))
+
+        # Get the index.cnxml.html generated by the trigger
+        cursor.execute('''SELECT file
+        FROM module_files m JOIN files f ON m.fileid = f.fileid
+        WHERE module_ident = %s AND filename = 'index.cnxml.html' ''',
+                       (new_module_ident,))
+        index_htmls = cursor.fetchall()
+
+        # Test that we DID NOT generate an index.cnxml.html for
+        # new_module_ident
+        assert(len(index_htmls) == 1)
+        # Test that the index.cnxml.html contains the custom content.
+        html = index_htmls[0][0][:]
+        assert(custom_content == html)
+        use_cases.empty_all_tables(cursor)
+
     @testing.db_connect
     def test_collated_fulltext_indexing_triggers(self, cursor):
         """Verify that inserting a collated file association builds
@@ -1064,8 +1015,10 @@ class TestModulePublishTriggerTestCase:
         use_cases.add_module(cursor, moduleid='m2', returning='module_ident')
         module2_ident = cursor.fetchone()[0]
 
-        cursor.execute("""INSERT INTO collated_file_associations (context, item, fileid)
-                       VALUES(%s,%s,108)""", (module1_ident, module2_ident, ))
+        cursor.execute("""INSERT INTO collated_file_associations
+                          (context, item, fileid)
+                          VALUES(%s,%s,108)""",
+                       (module1_ident, module2_ident, ))
         # Verify that the inserted file has been indexed
         cursor.execute('SELECT length(module_idx) FROM collated_fti '
                        'WHERE context=%s AND item=%s',
@@ -1088,102 +1041,154 @@ class TestModulePublishTriggerTestCase:
         cursor.execute("""INSERT INTO document_controls (uuid)
         VALUES ('e79ffde3-7fb4-4af3-9ec8-df648b391597'::uuid)""")
 
-        #creat a bunch of modules and a collection
-        use_cases.add_collection(cursor, moduleid='col11406', name='College Physics',
+        # populate modules tables
+        use_cases.add_collection(cursor, moduleid='col11406',
                                  uuid='e79ffde3-7fb4-4af3-9ec8-df648b391597',
-                                 version='1.7', major_version=7, minor_version=1,
-                                returning='module_ident')
+                                 name='College Physics', version='1.7',
+                                 major_version=7, minor_version=1,
+                                 returning='module_ident')
         collection_ident = cursor.fetchone()[0]
         use_cases.add_module(cursor, moduleid='m42955', name='Preface',
                              version='1.7', returning='module_ident')
         module_ident_0 = cursor.fetchone()[0]
 
-        use_cases.add_module(cursor, portal_type='SubCollection', moduleid='subcol',
-                             name='Introduction: The Nature of Science and Physics',
-                             returning='module_ident')
+        use_cases.add_module(
+            cursor, portal_type='SubCollection', moduleid='subcol',
+            name='Introduction: The Nature of Science and Physics',
+            returning='module_ident')
         subcol_ident_1 = cursor.fetchone()[0]
-        cursor.execute("UPDATE modules SET version=null WHERE module_ident=%s;", (subcol_ident_1,))
-        use_cases.add_module(cursor, moduleid='m42119', version='1.3',
-            name='Introduction to Science and the Realm of Physics, Physical Quantities, and Units',
+        cursor.execute("""UPDATE modules SET version=null
+                          WHERE module_ident=%s;""", (subcol_ident_1,))
+        use_cases.add_module(
+            cursor, moduleid='m42119', version='1.3',
+            name=('Introduction to Science and the Realm of Physics, '
+                  'Physical Quantities, and Units'),
             returning='module_ident')
         module_ident_1_1 = cursor.fetchone()[0]
-        use_cases.add_module(cursor, moduleid='m42092', version='1.4',
+        use_cases.add_module(
+            cursor, moduleid='m42092', version='1.4',
             name='Physics: An Introduction', returning='module_ident')
         module_ident_1_2 = cursor.fetchone()[0]
-        use_cases.add_module(cursor, moduleid='m42091', version='1.6',
+        use_cases.add_module(
+            cursor, moduleid='m42091', version='1.6',
             name='Physical Quantities and Units', returning='module_ident')
         module_ident_1_3 = cursor.fetchone()[0]
-        use_cases.add_module(cursor, moduleid='m42120', version='1.7',
-            name='Accuracy, Precision, and Significant Figures', returning='module_ident')
+        use_cases.add_module(
+            cursor, moduleid='m42120', version='1.7',
+            name='Accuracy, Precision, and Significant Figures',
+            returning='module_ident')
         module_ident_1_4 = cursor.fetchone()[0]
-        use_cases.add_module(cursor, moduleid='m42121', version='1.5',
+        use_cases.add_module(
+            cursor, moduleid='m42121', version='1.5',
             name='Approximation', returning='module_ident')
         module_ident_1_5 = cursor.fetchone()[0]
 
-
-        use_cases.add_module(cursor, portal_type='SubCollection', moduleid='subcol',
-                             name="Further Applications of Newton's Laws: Friction, Drag, and Elasticity",
-                             returning='module_ident')
+        use_cases.add_module(
+            cursor, portal_type='SubCollection', moduleid='subcol',
+            name=("Further Applications of Newton's Laws:"
+                  " Friction, Drag, and Elasticity"),
+            returning='module_ident')
         subcol_ident_2 = cursor.fetchone()[0]
-        cursor.execute("UPDATE modules SET version=null WHERE module_ident=%s;", (subcol_ident_2,))
-        use_cases.add_module(cursor, moduleid='m42138', version='1.2',
+        cursor.execute("""UPDATE modules SET version=null
+                          WHERE module_ident=%s;""", (subcol_ident_2,))
+        use_cases.add_module(
+            cursor, moduleid='m42138', version='1.2',
             name='Introduction: Further Applications of Newton’s Laws',
             returning='module_ident')
         module_ident_2_1 = cursor.fetchone()[0]
-        use_cases.add_module(cursor, moduleid='m42139', version='1.5',
+        use_cases.add_module(
+            cursor, moduleid='m42139', version='1.5',
             name='Friction', returning='module_ident')
         module_ident_2_2 = cursor.fetchone()[0]
-        use_cases.add_module(cursor, moduleid='m42080', version='1.6',
+        use_cases.add_module(
+            cursor, moduleid='m42080', version='1.6',
             name='Drag Forces', returning='module_ident')
         module_ident_2_3 = cursor.fetchone()[0]
-        use_cases.add_module(cursor, moduleid='m42081', version='1.8',
+        use_cases.add_module(
+            cursor, moduleid='m42081', version='1.8',
             name='Elasticity: Stress and Strain', returning='module_ident')
         module_ident_2_4 = cursor.fetchone()[0]
 
-        use_cases.add_module(cursor, moduleid='m42699', version='1.3',
+        use_cases.add_module(
+            cursor, moduleid='m42699', version='1.3',
             name='Atomic Masses', returning='module_ident')
         module_ident_3 = cursor.fetchone()[0]
-        use_cases.add_module(cursor, moduleid='m42702', version='1.2',
+        use_cases.add_module(
+            cursor, moduleid='m42702', version='1.2',
             name='Selected Radioactive Isotopes', returning='module_ident')
         module_ident_4 = cursor.fetchone()[0]
-        use_cases.add_module(cursor, moduleid='m42720', version='1.5',
+        use_cases.add_module(
+            cursor, moduleid='m42720', version='1.5',
             name='Useful Information', returning='module_ident')
         module_ident_5 = cursor.fetchone()[0]
-        use_cases.add_module(cursor, moduleid='m42709', version='1.5',
-            name='Glossary of Key Symbols and Notation', returning='module_ident')
+        use_cases.add_module(
+            cursor, moduleid='m42709', version='1.5',
+            name='Glossary of Key Symbols and Notation',
+            returning='module_ident')
         module_ident_6 = cursor.fetchone()[0]
 
-        #put them all in a tree
-        use_cases.add_tree(cursor, documentid=collection_ident, title='College Physics', returning='nodeid')
+        # Create a tree
+        use_cases.add_tree(cursor, documentid=collection_ident,
+                           title='College Physics', returning='nodeid')
         collection_node = cursor.fetchone()[0]
 
-        use_cases.add_tree(cursor, parent_id=collection_node ,documentid=module_ident_0, childorder=0, title='Preface')
-        use_cases.add_tree(cursor, parent_id=collection_node ,documentid=module_ident_3, childorder=3, title='Atomic Masses')
-        use_cases.add_tree(cursor, parent_id=collection_node ,documentid=module_ident_4, childorder=4, title='Selected Radioactive Isotopes')
-        use_cases.add_tree(cursor, parent_id=collection_node ,documentid=module_ident_5, childorder=5, title='Useful Information')
-        use_cases.add_tree(cursor, parent_id=collection_node ,documentid=module_ident_6, childorder=6, title='Glossary of Key Symbols and Notation')
+        use_cases.add_tree(
+            cursor, parent_id=collection_node,
+            documentid=module_ident_0, childorder=0, title='Preface')
+        use_cases.add_tree(
+            cursor, parent_id=collection_node, documentid=module_ident_3,
+            childorder=3, title='Atomic Masses')
+        use_cases.add_tree(
+            cursor, parent_id=collection_node, documentid=module_ident_4,
+            childorder=4, title='Selected Radioactive Isotopes')
+        use_cases.add_tree(
+            cursor, parent_id=collection_node, documentid=module_ident_5,
+            childorder=5, title='Useful Information')
+        use_cases.add_tree(
+            cursor, parent_id=collection_node, documentid=module_ident_6,
+            childorder=6, title='Glossary of Key Symbols and Notation')
 
-        use_cases.add_tree(cursor, parent_id=collection_node ,documentid=subcol_ident_1, childorder=1, title='Introduction: The Nature of Science and Physics', returning='nodeid')
+        use_cases.add_tree(
+            cursor, parent_id=collection_node, documentid=subcol_ident_1,
+            childorder=1, returning='nodeid',
+            title='Introduction: The Nature of Science and Physics',)
         subcol_node_1 = cursor.fetchone()[0]
-        use_cases.add_tree(cursor, parent_id=subcol_node_1 ,documentid=module_ident_1_1, childorder=0, title='Introduction to Science and the Realm of Physics, Physical Quantities, and Units')
-        use_cases.add_tree(cursor, parent_id=subcol_node_1 ,documentid=module_ident_1_2, childorder=1, title='Physics: An Introduction')
-        use_cases.add_tree(cursor, parent_id=subcol_node_1 ,documentid=module_ident_1_3, childorder=2, title='Physical Quantities and Units')
-        use_cases.add_tree(cursor, parent_id=subcol_node_1 ,documentid=module_ident_1_4, childorder=3, title='Accuracy, Precision, and Significant Figures')
-        use_cases.add_tree(cursor, parent_id=subcol_node_1 ,documentid=module_ident_1_5, childorder=4, title='Approximation')
+        use_cases.add_tree(
+            cursor, parent_id=subcol_node_1, documentid=module_ident_1_1,
+            childorder=0, title=('Introduction to Science and the Realm of '
+                                 'Physics, Physical Quantities, and Units'))
+        use_cases.add_tree(
+            cursor, parent_id=subcol_node_1, documentid=module_ident_1_2,
+            childorder=1, title='Physics: An Introduction')
+        use_cases.add_tree(
+            cursor, parent_id=subcol_node_1, documentid=module_ident_1_3,
+            childorder=2, title='Physical Quantities and Units')
+        use_cases.add_tree(
+            cursor, parent_id=subcol_node_1, documentid=module_ident_1_4,
+            childorder=3, title='Accuracy, Precision, and Significant Figures')
+        use_cases.add_tree(
+            cursor, parent_id=subcol_node_1, documentid=module_ident_1_5,
+            childorder=4, title='Approximation')
 
-        use_cases.add_tree(cursor, parent_id=collection_node ,documentid=subcol_ident_2, childorder=2, title="Further Applications of Newton's Laws: Friction, Drag, and Elasticity", returning='nodeid')
+        use_cases.add_tree(
+            cursor, parent_id=collection_node, documentid=subcol_ident_2,
+            childorder=2, title=("Further Applications of Newton's Laws: "
+                                 "Friction, Drag, and Elasticity"),
+            returning='nodeid')
         subcol_node_2 = cursor.fetchone()[0]
-        use_cases.add_tree(cursor, parent_id=subcol_node_2 ,documentid=module_ident_2_1, childorder=0, title='Introduction: Further Applications of Newton\u2019s Laws')
-        use_cases.add_tree(cursor, parent_id=subcol_node_2 ,documentid=module_ident_2_2, childorder=1, title='Friction')
-        use_cases.add_tree(cursor, parent_id=subcol_node_2 ,documentid=module_ident_2_3, childorder=2, title='Drag Forces')
-        use_cases.add_tree(cursor, parent_id=subcol_node_2 ,documentid=module_ident_2_4, childorder=3, title='Elasticity: Stress and Strain')
-
-        cursor.execute("SELECT * from trees;")
-        for i in cursor.fetchall():
-            print(i)
-        cursor.execute("SELECT portal_type, version from modules;")
-        for i in cursor.fetchall():
-            print(i)
+        use_cases.add_tree(
+            cursor, parent_id=subcol_node_2, documentid=module_ident_2_1,
+            childorder=0, title=('Introduction: Further Applications of'
+                                 ' Newton\u2019s Laws'))
+        use_cases.add_tree(
+            cursor, parent_id=subcol_node_2, documentid=module_ident_2_2,
+            childorder=1, title='Friction')
+        use_cases.add_tree(
+            cursor, parent_id=subcol_node_2, documentid=module_ident_2_3,
+            childorder=2, title='Drag Forces')
+        use_cases.add_tree(
+            cursor, parent_id=subcol_node_2, documentid=module_ident_2_4,
+            childorder=3, title='Elasticity: Stress and Strain')
 
         expected_tree = {
             u'id': u'col11406',
@@ -1247,7 +1252,7 @@ class TestModulePublishTriggerTestCase:
                 'e79ffde3-7fb4-4af3-9ec8-df648b391597', '7.1')::json
         """)
         tree = cursor.fetchone()[0]
-        assert(expected_tree == tree)
+        assert(expected_tree == json.loads(tree))
 
     @unittest.skip("Not implemented")
     def test_blank_abstract(self, cursor):
@@ -1269,6 +1274,7 @@ class TestUpdateLatestTriggerTestCase:
         pass
 
     def resetTables(self, cursor):
+        cursor.execute("DELETE FROM moduletags;")
         cursor.execute("DELETE FROM modules;")
 
     @testing.db_connect
@@ -1288,8 +1294,10 @@ class TestUpdateLatestTriggerTestCase:
         use_cases.add_module(cursor, stateid=1, returning='module_ident, uuid')
         module_ident, uuid = cursor.fetchone()
 
-        # FIXME the stateid for this insert was originally 2 but that is no longer a valid state id
-        use_cases.add_module(cursor, stateid=1, uuid=uuid, name='Changed name of m1',
+        # FIXME the stateid for this insert was originally 2
+        # but that is no longer a valid state id
+        use_cases.add_module(cursor, stateid=1, uuid=uuid,
+                             name='Changed name of m1',
                              returning='module_ident, uuid')
         module_ident, uuid = cursor.fetchone()
 
@@ -1306,12 +1314,15 @@ class TestUpdateLatestTriggerTestCase:
         use_cases.add_module(cursor, stateid=1, returning='module_ident, uuid')
         module_ident, uuid = cursor.fetchone()
 
-        # FIXME the stateid for this insert was originally 3 but that is no longer a valid state id
-        use_cases.add_module(cursor, stateid=5, name='Changed name of m1 again',
+        # FIXME the stateid for this insert was originally 3
+        # but that is no longer a valid state id
+        use_cases.add_module(cursor, stateid=5,
+                             name='Changed name of m1 again',
                              uuid=uuid, returning='module_ident, uuid')
         module_ident, uuid = cursor.fetchone()
 
-        # FIXME the stateid for this insert was originally 2 but that is no longer a valid state id
+        # FIXME the stateid for this insert was originally 2
+        # but that is no longer a valid state id
         use_cases.add_module(cursor, stateid=4, name='Changed name of m1',
                              uuid=uuid, returning='module_ident, uuid')
 
@@ -1332,6 +1343,7 @@ class TestLegacyCompatTriggerTestCase:
     def resetTables(self, cursor):
         cursor.execute("DELETE FROM document_acl;")
         cursor.execute("DELETE FROM document_controls;")
+        cursor.execute("DELETE FROM moduletags;")
         cursor.execute("DELETE FROM modules;")
         cursor.execute("DELETE FROM persons;")
         cursor.execute("DELETE FROM users;")
@@ -1346,31 +1358,32 @@ class TestLegacyCompatTriggerTestCase:
 
         # Insert a new module.
         cursor.execute("""\
-        INSERT INTO modules
-          (uuid, major_version, minor_version, moduleid,
-           module_ident, portal_type, name, created, revised, language,
-           submitter, submitlog,
-           abstractid, licenseid, parent, parentauthors,
-           authors, maintainers, licensors,
-           google_analytics, buylink,
-           stateid, doctype)
-        VALUES
-          (DEFAULT, DEFAULT, DEFAULT, DEFAULT,
-           DEFAULT, 'Module', 'Plug into the collective conscious',
-           '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
-           'publisher', 'published',
-           %s, 11, DEFAULT, DEFAULT,
-           '{smoo, fred}', DEFAULT, '{smoo, fred}',
-           DEFAULT, DEFAULT,
-           DEFAULT, ' ')
-        RETURNING
-          moduleid, major_version, minor_version, version""", (abstract_id,))
+            INSERT INTO modules
+              (uuid, major_version, minor_version, moduleid,
+               module_ident, portal_type, name, created, revised, language,
+               submitter, submitlog,
+               abstractid, licenseid, parent, parentauthors,
+               authors, maintainers, licensors,
+               google_analytics, buylink,
+               stateid, doctype)
+            VALUES
+              (DEFAULT, DEFAULT, DEFAULT, DEFAULT,
+               DEFAULT, 'Module', 'Plug into the collective conscious',
+               '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
+               'publisher', 'published',
+               %s, 11, DEFAULT, DEFAULT,
+               '{smoo, fred}', DEFAULT, '{smoo, fred}',
+               DEFAULT, DEFAULT,
+               DEFAULT, ' ')
+            RETURNING
+              moduleid, major_version, minor_version, version
+            """, (abstract_id,))
         moduleid, major_ver, minor_ver, ver = cursor.fetchone()
 
         # Check the fields where correctly assigned.
         assert(moduleid == 'm10000')
         assert(major_ver == 1)
-        assert(minor_ver == None)
+        assert(minor_ver is None)
         assert(ver == '1.1')
 
     @testing.db_connect
@@ -1385,25 +1398,26 @@ class TestLegacyCompatTriggerTestCase:
 
         # Insert a new collection.
         cursor.execute("""\
-        INSERT INTO modules
-          (uuid, major_version, minor_version,
-           module_ident, portal_type, name, created, revised, language,
-           submitter, submitlog,
-           abstractid, licenseid, parent, parentauthors,
-           authors, maintainers, licensors,
-           google_analytics, buylink,
-           stateid, doctype)
-        VALUES
-          (DEFAULT, DEFAULT, DEFAULT,
-           DEFAULT, 'Collection', 'Plug into the collective conscious',
-           '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
-           'publisher', 'published',
-           %s, 11, DEFAULT, DEFAULT,
-           '{smoo, fred}', DEFAULT, '{smoo, fred}',
-           DEFAULT, DEFAULT,
-           DEFAULT, ' ')
-        RETURNING
-          moduleid, major_version, minor_version, version""", (abstract_id, ))
+            INSERT INTO modules
+              (uuid, major_version, minor_version,
+               module_ident, portal_type, name, created, revised, language,
+               submitter, submitlog,
+               abstractid, licenseid, parent, parentauthors,
+               authors, maintainers, licensors,
+               google_analytics, buylink,
+               stateid, doctype)
+            VALUES
+              (DEFAULT, DEFAULT, DEFAULT,
+               DEFAULT, 'Collection', 'Plug into the collective conscious',
+               '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
+               'publisher', 'published',
+               %s, 11, DEFAULT, DEFAULT,
+               '{smoo, fred}', DEFAULT, '{smoo, fred}',
+               DEFAULT, DEFAULT,
+               DEFAULT, ' ')
+            RETURNING
+              moduleid, major_version, minor_version, version
+        """, (abstract_id, ))
         moduleid, major_ver, minor_ver, ver = cursor.fetchone()
 
         # Check the fields where correctly assigned.
@@ -1425,49 +1439,51 @@ class TestLegacyCompatTriggerTestCase:
         expected_moduleid = 'm{}'.format(id_num)  # m10101
         # Insert a new module to base a revision on.
         cursor.execute("""\
-        INSERT INTO modules
-          (uuid, major_version, minor_version, moduleid,
-           module_ident, portal_type, name, created, revised, language,
-           submitter, submitlog,
-           abstractid, licenseid, parent, parentauthors,
-           authors, maintainers, licensors,
-           google_analytics, buylink,
-           stateid, doctype)
-        VALUES
-          (DEFAULT, DEFAULT, DEFAULT, DEFAULT,
-           DEFAULT, 'Module', 'Plug into the collective conscious',
-           '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
-           'publisher', 'published',
-           %s, 11, DEFAULT, DEFAULT,
-           '{smoo, fred}', DEFAULT, '{smoo, fred}',
-           DEFAULT, DEFAULT,
-           DEFAULT, ' ')
-        RETURNING
-          uuid, moduleid, major_version, minor_version, version""", (abstract_id,))
+            INSERT INTO modules
+              (uuid, major_version, minor_version, moduleid,
+               module_ident, portal_type, name, created, revised, language,
+               submitter, submitlog,
+               abstractid, licenseid, parent, parentauthors,
+               authors, maintainers, licensors,
+               google_analytics, buylink,
+               stateid, doctype)
+            VALUES
+              (DEFAULT, DEFAULT, DEFAULT, DEFAULT,
+               DEFAULT, 'Module', 'Plug into the collective conscious',
+               '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
+               'publisher', 'published',
+               %s, 11, DEFAULT, DEFAULT,
+               '{smoo, fred}', DEFAULT, '{smoo, fred}',
+               DEFAULT, DEFAULT,
+               DEFAULT, ' ')
+            RETURNING
+              uuid, moduleid, major_version, minor_version, version;
+            """, (abstract_id,))
         uuid_, moduleid, major_ver, minor_ver, ver = cursor.fetchone()
         assert(moduleid == expected_moduleid)
 
         # Now insert the revision.
         cursor.execute("""\
-        INSERT INTO modules
-          (uuid, major_version, minor_version, moduleid,
-           module_ident, portal_type, name, created, revised, language,
-           submitter, submitlog,
-           abstractid, licenseid, parent, parentauthors,
-           authors, maintainers, licensors,
-           google_analytics, buylink,
-           stateid, doctype)
-        VALUES
-          (%s, 2, DEFAULT, %s,
-           DEFAULT, 'Module', 'Plug into the collective conscious',
-           '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
-           'publisher', 'published',
-           %s, 11, DEFAULT, DEFAULT,
-           '{smoo, fred}', DEFAULT, '{smoo, fred}',
-           DEFAULT, DEFAULT,
-           DEFAULT, ' ')
-        RETURNING
-          uuid, moduleid, major_version, minor_version, version""", (uuid_, moduleid, abstract_id,))
+            INSERT INTO modules
+              (uuid, major_version, minor_version, moduleid,
+               module_ident, portal_type, name, created, revised, language,
+               submitter, submitlog,
+               abstractid, licenseid, parent, parentauthors,
+               authors, maintainers, licensors,
+               google_analytics, buylink,
+               stateid, doctype)
+            VALUES
+              (%s, 2, DEFAULT, %s,
+               DEFAULT, 'Module', 'Plug into the collective conscious',
+               '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
+               'publisher', 'published',
+               %s, 11, DEFAULT, DEFAULT,
+               '{smoo, fred}', DEFAULT, '{smoo, fred}',
+               DEFAULT, DEFAULT,
+               DEFAULT, ' ')
+            RETURNING
+              uuid, moduleid, major_version, minor_version, version
+            """, (uuid_, moduleid, abstract_id,))
         res = cursor.fetchone()
         rev_uuid_, rev_moduleid, rev_major_ver, rev_minor_ver, rev_ver = res
 
@@ -1475,7 +1491,7 @@ class TestLegacyCompatTriggerTestCase:
         assert(rev_moduleid == expected_moduleid)
         assert(ver == '1.1')
         assert(rev_major_ver == 2)
-        assert(rev_minor_ver == None)
+        assert(rev_minor_ver is None)
         assert(rev_ver == '1.2')
 
     @testing.db_connect
@@ -1491,49 +1507,51 @@ class TestLegacyCompatTriggerTestCase:
         expected_moduleid = 'col{}'.format(id_num)  # col10101
         # Insert a new module to base a revision on.
         cursor.execute("""\
-        INSERT INTO modules
-          (uuid, major_version, minor_version, moduleid,
-           module_ident, portal_type, name, created, revised, language,
-           submitter, submitlog,
-           abstractid, licenseid, parent, parentauthors,
-           authors, maintainers, licensors,
-           google_analytics, buylink,
-           stateid, doctype)
-        VALUES
-          (DEFAULT, DEFAULT, DEFAULT, DEFAULT,
-           DEFAULT, 'Collection', 'Plug into the collective conscious',
-           '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
-           'publisher', 'published',
-           %s, 11, DEFAULT, DEFAULT,
-           '{smoo, fred}', DEFAULT, '{smoo, fred}',
-           DEFAULT, DEFAULT,
-           DEFAULT, ' ')
-        RETURNING
-          uuid, moduleid, major_version, minor_version, version""", (abstract_id,))
+            INSERT INTO modules
+              (uuid, major_version, minor_version, moduleid,
+               module_ident, portal_type, name, created, revised, language,
+               submitter, submitlog,
+               abstractid, licenseid, parent, parentauthors,
+               authors, maintainers, licensors,
+               google_analytics, buylink,
+               stateid, doctype)
+            VALUES
+              (DEFAULT, DEFAULT, DEFAULT, DEFAULT,
+               DEFAULT, 'Collection', 'Plug into the collective conscious',
+               '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
+               'publisher', 'published',
+               %s, 11, DEFAULT, DEFAULT,
+               '{smoo, fred}', DEFAULT, '{smoo, fred}',
+               DEFAULT, DEFAULT,
+               DEFAULT, ' ')
+            RETURNING
+              uuid, moduleid, major_version, minor_version, version
+            """, (abstract_id,))
         uuid_, moduleid, major_ver, minor_ver, ver = cursor.fetchone()
         assert(moduleid == expected_moduleid)
 
         # Now insert the revision.
         cursor.execute("""\
-        INSERT INTO modules
-          (uuid, major_version, minor_version, moduleid,
-           module_ident, portal_type, name, created, revised, language,
-           submitter, submitlog,
-           abstractid, licenseid, parent, parentauthors,
-           authors, maintainers, licensors,
-           google_analytics, buylink,
-           stateid, doctype)
-        VALUES
-          (%s, 2, 1, %s,
-           DEFAULT, 'Collection', 'Plug into the collective conscious',
-           '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
-           'publisher', 'published',
-           %s, 11, DEFAULT, DEFAULT,
-           '{smoo, fred}', DEFAULT, '{smoo, fred}',
-           DEFAULT, DEFAULT,
-           DEFAULT, ' ')
-        RETURNING
-          uuid, moduleid, major_version, minor_version, version""", (uuid_, moduleid, abstract_id,))
+            INSERT INTO modules
+              (uuid, major_version, minor_version, moduleid,
+               module_ident, portal_type, name, created, revised, language,
+               submitter, submitlog,
+               abstractid, licenseid, parent, parentauthors,
+               authors, maintainers, licensors,
+               google_analytics, buylink,
+               stateid, doctype)
+            VALUES
+              (%s, 2, 1, %s,
+               DEFAULT, 'Collection', 'Plug into the collective conscious',
+               '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
+               'publisher', 'published',
+               %s, 11, DEFAULT, DEFAULT,
+               '{smoo, fred}', DEFAULT, '{smoo, fred}',
+               DEFAULT, DEFAULT,
+               DEFAULT, ' ')
+            RETURNING
+              uuid, moduleid, major_version, minor_version, version
+            """, (uuid_, moduleid, abstract_id,))
         res = cursor.fetchone()
         rev_uuid_, rev_moduleid, rev_major_ver, rev_minor_ver, rev_ver = res
 
@@ -1579,27 +1597,28 @@ class TestLegacyCompatTriggerTestCase:
             portal_type = mid.startswith('m') and 'Module' or 'Collection'
             # Insert a new module to base a revision on.
             cursor.execute("""\
-            INSERT INTO modules
-              (uuid, major_version, minor_version, moduleid,
-               module_ident, portal_type, name, created, revised, language,
-               submitter, submitlog,
-               abstractid, licenseid, parent, parentauthors,
-               authors, maintainers, licensors,
-               google_analytics, buylink,
-               stateid, doctype)
-            VALUES
-              (DEFAULT, DEFAULT, DEFAULT, DEFAULT,
-               DEFAULT, %s, %s,
-               '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
-               'publisher', 'published',
-               %s, 11, DEFAULT, DEFAULT,
-               '{smoo, fred}', DEFAULT, '{smoo, fred}',
-               DEFAULT, DEFAULT,
-               DEFAULT, ' ')
-            RETURNING
-              module_ident, uuid, moduleid, major_version, minor_version, version
-            """, (portal_type, "title for {}".format(mid), abstract_id,))
-            ident, uuid_, moduleid, major_ver, minor_ver, ver = cursor.fetchone()
+                INSERT INTO modules
+                  (uuid, major_version, minor_version, moduleid,
+                   module_ident, portal_type, name, created, revised, language,
+                   submitter, submitlog,
+                   abstractid, licenseid, parent, parentauthors,
+                   authors, maintainers, licensors,
+                   google_analytics, buylink,
+                   stateid, doctype)
+                VALUES
+                  (DEFAULT, DEFAULT, DEFAULT, DEFAULT,
+                   DEFAULT, %s, %s,
+                   '2012-02-28T11:37:30', '2012-02-28T11:37:30', 'en-us',
+                   'publisher', 'published',
+                   %s, 11, DEFAULT, DEFAULT,
+                   '{smoo, fred}', DEFAULT, '{smoo, fred}',
+                   DEFAULT, DEFAULT,
+                   DEFAULT, ' ')
+                RETURNING
+                  module_ident, uuid, moduleid, major_version,
+                  minor_version, version
+                """, (portal_type, "title for {}".format(mid), abstract_id,))
+            ident, uuid_, moduleid, maj_ver, min_ver, ver = cursor.fetchone()
             assert(moduleid == mid)
 
             if portal_type == 'Collection':
@@ -1613,7 +1632,6 @@ class TestLegacyCompatTriggerTestCase:
                 root_node_id = cursor.fetchone()[0]
                 # Insert the tree for the collections.
                 for i, sub_mid in enumerate(entries[:2]):
-                    decendents = entries[2:]
                     args = (root_node_id, sub_mid, sub_mid, i,)
                     cursor.execute("""\
                     INSERT INTO trees
@@ -1622,7 +1640,8 @@ class TestLegacyCompatTriggerTestCase:
                        title, childorder, latest)
                     VALUES
                       (DEFAULT, %s,
-                       (select module_ident from latest_modules where moduleid = %s),
+                       (select module_ident from latest_modules
+                        where moduleid = %s),
                        %s, %s, DEFAULT)""", args)
 
         # Now insert a revision.
@@ -1654,7 +1673,7 @@ class TestLegacyCompatTriggerTestCase:
         # Check the fields where correctly assigned.
         assert(rev_moduleid == expected_m_one_id)
         assert(rev_major_ver == 2)
-        assert(rev_minor_ver == None)
+        assert(rev_minor_ver is None)
         assert(rev_ver == '1.2')
 
         # Lastly check that no republications took place.
@@ -1668,7 +1687,7 @@ class TestLegacyCompatTriggerTestCase:
         expected_counts = {
             'Module': 3,
             'Collection': 2,
-            }
+        }
         assert(counts == expected_counts)
 
     @testing.db_connect
@@ -1710,7 +1729,7 @@ class TestLegacyCompatTriggerTestCase:
         try:
             controls_uuid, controls_license_id = cursor.fetchone()
         except TypeError:
-            assert( false), "the document_controls entry was not made."
+            assert(False), "the document_controls entry was not made."
 
         # Check the values match
         assert(uuid_ == controls_uuid)
@@ -1737,8 +1756,10 @@ class TestLegacyCompatTriggerTestCase:
           ('ruins', NULL, 'Legacy', 'Ruins', 'Legacy Ruins')""")
         # Insert one existing user into the users shadow table.
         cursor.execute("""\
-        INSERT INTO users (username, first_name, last_name, full_name, is_moderated)
-        VALUES ('cnxcap', 'College', 'Physics', 'OSC Physics Maintainer', 't')""")
+            INSERT INTO users (username, first_name, last_name,
+                               full_name, is_moderated)
+            VALUES ('cnxcap', 'College', 'Physics',
+                    'OSC Physics Maintainer', 't')""")
         # Insert a new legacy module.
         cursor.execute("""\
         INSERT INTO modules
@@ -1771,8 +1792,10 @@ class TestLegacyCompatTriggerTestCase:
         user_records = cursor.fetchall()
 
         # Check for the upsert.
-        assert(user_records[0] == ('legacy', 'Legacy', 'User', 'Legacy User',))
-        assert(user_records[1] == ('ruins', 'Legacy', 'Ruins', 'Legacy Ruins',))
+        assert(user_records[0] ==
+               ('legacy', 'Legacy', 'User', 'Legacy User',))
+        assert(user_records[1] ==
+               ('ruins', 'Legacy', 'Ruins', 'Legacy Ruins',))
 
     @testing.db_connect
     def test_update_user_update(self, cursor):
@@ -1780,7 +1803,8 @@ class TestLegacyCompatTriggerTestCase:
         """
         self.resetTables(cursor)
         # Insert the legacy persons records.
-        #   This person would have registered on legacy already, so we insert them there too.
+        #   This person would have registered on legacy already,
+        #   so we insert them there too.
         cursor.execute("""\
             INSERT INTO persons
             (personid, firstname, surname, fullname)
@@ -1812,7 +1836,8 @@ class TestLegacyCompatTriggerTestCase:
         rewrite_user_record = cursor.fetchone()
 
         # Check for the update.
-        assert(rewrite_user_record == ('cnxcap', 'Univeristy', 'Maths', 'OSC Maths Maintainer'))
+        assert(rewrite_user_record ==
+               ('cnxcap', 'Univeristy', 'Maths', 'OSC Maths Maintainer'))
 
     @testing.db_connect
     def test_new_moduleoptionalroles_user_insert(self, cursor):
@@ -1840,8 +1865,10 @@ class TestLegacyCompatTriggerTestCase:
           ('ruins', NULL, 'Legacy', 'Ruins', 'Legacy Ruins')""")
         # Insert one existing user into the users shadow table.
         cursor.execute("""\
-        INSERT INTO users (username, first_name, last_name, full_name, is_moderated)
-        VALUES ('cnxcap', 'College', 'Physics', 'OSC Physics Maintainer', 't')""")
+        INSERT INTO users
+            (username, first_name, last_name, full_name, is_moderated)
+        VALUES
+            ('cnxcap', 'College', 'Physics', 'OSC Physics Maintainer', 't')""")
         # Insert a new legacy module.
         cursor.execute("""\
         INSERT INTO modules
@@ -1885,4 +1912,5 @@ class TestLegacyCompatTriggerTestCase:
         assert(user_records[1] == ('legacy', 'Legacy', 'User', 'Legacy User',))
         # The ruins user will be a newly inserted record, copied from
         #   the persons record.
-        assert(user_records[2] == ('ruins', 'Legacy', 'Ruins', 'Legacy Ruins',))
+        assert(user_records[2] ==
+               ('ruins', 'Legacy', 'Ruins', 'Legacy Ruins',))
