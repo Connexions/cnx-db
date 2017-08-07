@@ -184,6 +184,7 @@ def add_all_data(cursor, data_file):
 
     with open(data_file, 'rb') as fb:
         cursor.execute(fb.read())
+        fb.close()
 
     return None
 
