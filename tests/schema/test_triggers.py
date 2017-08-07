@@ -72,6 +72,8 @@ class TestPostPublication:
         assert payload['timestamp']
 
 
+@pytest.mark.skipif(testing.is_py3(),
+                    reason="triggers are only python2.x compat")
 class TestModulePublishTriggerTestCase:
     """Tests for the postgresql triggers when a module is published
     """
@@ -509,7 +511,6 @@ class TestModulePublishTriggerTestCase:
         assert(major == 13)
         assert(minor is None)
 
-    @unittest.skip("Not implemented")
     @testing.db_connect
     def test_module(self, cursor):
         use_cases.empty_all_tables(cursor)
@@ -680,7 +681,6 @@ INSERT INTO trees (parent_id, documentid, is_collated)
             assert(old_node[5] == new_tree[i][5])  # latest
         use_cases.empty_all_tables(cursor)
 
-    @unittest.skip("Not implemented")
     @testing.db_connect
     def test_module_files_from_cnxml(self, cursor):
         use_cases.empty_all_tables(cursor)
@@ -792,7 +792,6 @@ INSERT INTO trees (parent_id, documentid, is_collated)
                'Physical Quantities, and Units' in fulltext)
         use_cases.empty_all_tables(cursor)
 
-    @unittest.skip("Not implemented")
     @testing.db_connect
     def test_module_files_from_html(self, cursor):
         use_cases.empty_all_tables(cursor)
@@ -907,7 +906,6 @@ INSERT INTO trees (parent_id, documentid, is_collated)
                'Physical Quantities, and Units' in fulltext)
         use_cases.empty_all_tables(cursor)
 
-    @unittest.skip("Not implemented")
     @testing.db_connect
     def test_module_files_overwrite_index_html(self, cursor):
         use_cases.empty_all_tables(cursor)
@@ -1267,6 +1265,8 @@ INSERT INTO trees (parent_id, documentid, is_collated)
         self.assertIn("Blank entry", caught_exception.exception.message)
 
 
+@pytest.mark.skipif(testing.is_py3(),
+                    reason="triggers are only python2.x compat")
 class TestUpdateLatestTriggerTestCase:
     """Test case for updating the latest_modules table
     """
@@ -1334,6 +1334,8 @@ class TestUpdateLatestTriggerTestCase:
                        (uuid, ))
 
 
+@pytest.mark.skipif(testing.is_py3(),
+                    reason="triggers are only python2.x compat")
 class TestLegacyCompatTriggerTestCase:
     """Test the legacy compotibilty trigger that fills in legacy data
     coming from contemporary publications.
