@@ -1,8 +1,8 @@
 CREATE OR REPLACE FUNCTION update_latest() RETURNS trigger AS '
 BEGIN
   IF (TG_OP = ''INSERT'' OR TG_OP = ''UPDATE'') AND
-          NEW.revised >= ((SELECT revised FROM modules
-              WHERE uuid = NEW.uuid ORDER BY revised DESC LIMIT 1)
+          NEW.revised >= ((SELECT revised FROM latest_modules
+              WHERE uuid = NEW.uuid  ORDER BY revised DESC LIMIT 1)
               UNION ALL VALUES (NEW.revised) LIMIT 1) AND
           NEW.stateid = 1 THEN
       DELETE FROM latest_modules WHERE moduleid = NEW.moduleid OR uuid = NEW.uuid;
