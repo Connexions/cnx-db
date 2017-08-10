@@ -7,6 +7,12 @@ addons:
 before_install:
   - make lint
 
+  # Remove cnx-archive from the test requirements
+  - sed -i '/cnx-archive/ D' requirements/test.txt
+  # Install the coverage utility and codecov reporting utility
+  - pip install -r requirements/test.txt
+  - pip install codecov
+
   - sudo apt-get update
   # remove zope.interface installed from aptitude
   - sudo apt-get purge python-zope.interface
@@ -31,12 +37,8 @@ before_install:
   - git clone https://github.com/Connexions/cnx-archive.git
   - cd cnx-archive && python setup.py install && cd ..
   - cd cnx-db
-
-  # Install the coverage utility and codecov reporting utility
-  - pip install -r requirements/test.txt
-  - pip install codecov
 install:
-  - pip install .
+  - python setup.py install
 before_script:
   # Set up postgres roles
   - sudo -u postgres psql -d postgres -c "CREATE USER tester WITH SUPERUSER PASSWORD 'tester';"
