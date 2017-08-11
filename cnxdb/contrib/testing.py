@@ -2,8 +2,12 @@
 import functools
 import os
 import sys
+import re
 
 import psycopg2
+import psycopg2.extras
+
+from uuid import uuid4
 
 
 _DEFAULT_CONNECTION_SETTINGS = {
@@ -13,6 +17,112 @@ _DEFAULT_CONNECTION_SETTINGS = {
     'host': 'localhost',
     'port': '5432',
 }
+
+
+class FakePlpy(object):
+    @staticmethod
+    def prepare(stmt, param_types):
+        return FakePlpyPlan(stmt)
+
+    @staticmethod
+    def execute(plan, args, rows=None):
+        return plan.execute(args, rows=rows)
+
+
+fake_plpy = FakePlpy()
+
+
+class FakePlpyPlan(object):
+    def __init__(self, stmt):
+        self.stmt = re.sub(
+            '\$([0-9]+)', lambda m: '%(param_{})s'.format(m.group(1)), stmt)
+
+    def execute(self, args, rows=None):
+        connect = db_connection_factory()
+        with connect() as db_conn:
+            with db_conn.cursor(
+                    cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+                params = {}
+                for i, value in enumerate(args):
+                    params['param_{}'.format(i + 1)] = value
+                cursor.execute(self.stmt, params)
+                try:
+                    results = cursor.fetchall()
+                    if rows is not None:
+                        results = results[:rows]
+                    return results
+                except psycopg2.ProgrammingError as e:
+                    if e.message != 'no results to fetch':
+                        raise
+
+
+def plpy_connect(method):
+    """Decorator for plpythonu trigger methods that need to use the database
+
+    Example::
+
+    @plpy_connect
+    def setUp(self, plpy):
+        some_sql = "SELECT TRUE"
+        plpy.execute(some_sql)
+        # some other code
+
+    """
+    @functools.wraps(method)
+    def wrapped(self, *args, **kwargs):
+        connect = db_connection_factory()
+        with connect() as db_connection:
+            with db_connection.cursor(
+                    cursor_factory=psycopg2.extras.DictCursor) as cursor:
+                plpy = PlPy(cursor)
+                psycopg2.extras.register_default_json(globally=False,
+                                                      loads=lambda x: x)
+                return method(self, plpy, *args, **kwargs)
+    return wrapped
+
+
+class PlPy(object):
+    """Class to wrap access to DB in plpy style api"""
+
+    def __init__(self, cursor):
+        """Set up the cursor and plan store"""
+        self._cursor = cursor
+        self._plans = {}
+
+    def execute(self, query, args=None, rows=None):
+        """Execute a query or plan, with interpolated args"""
+
+        if query in self._plans:
+            args_fmt = self._plans[query]
+            self._cursor.execute('EXECUTE "{}"({})'.format(query, args_fmt),
+                                 args)
+        else:
+            self._cursor.execute(query, args)
+
+        if self._cursor.description is not None:
+            if rows is None:
+                res = self._cursor.fetchall()
+            else:
+                res = self._cursor.fetchmany(rows)
+        else:
+            res = None
+        return res
+
+    def prepare(self, query, args=None):
+        """"Prepare a plan, with optional placeholders for EXECUTE"""
+
+        plan = str(uuid4())
+        if args:
+            argstr = str(args).replace("'", '')
+            if len(args) < 2:
+                argstr = argstr.replace(',', '')
+            self._cursor.execute('PREPARE "{}"{} AS {}'.format(plan, argstr,
+                                                               query))
+        else:
+            self._cursor.execute('PREPARE "{}" AS {}'.format(plan, query))
+
+        self._plans[plan] = ', '.join(('%s',) * len(args))
+        return plan
 
 
 def parse_connection_string_to_parts(connection_string):
@@ -107,4 +217,9 @@ __all__ = (
     'is_db_local',
     'is_py3',
     'is_venv',
+    'fake_plpy',
+    'plpy_connect',
+    'FakePlpy',
+    'FakePlpyPlan',
+    'PlPy'
 )

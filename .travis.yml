@@ -7,6 +7,12 @@ addons:
 before_install:
   - make lint
 
+  # Remove cnx-archive from the test requirements
+  - sed -i '/cnx-archive/ D' requirements/test.txt
+  # Install the coverage utility and codecov reporting utility
+  - pip install -r requirements/test.txt
+  - pip install codecov
+
   - sudo apt-get update
   # remove zope.interface installed from aptitude
   - sudo apt-get purge python-zope.interface
@@ -17,15 +23,23 @@ before_install:
   - sudo apt-get install libxml2-dev libxslt-dev postgresql-server-dev-9.4
   - git clone https://github.com/petere/plxslt.git
   - cd plxslt && sudo make && sudo make install && cd ..
+  # * Install cnxepub
+  - cd ..
+  - git clone https://github.com/Connexions/cnx-epub.git
+  - cd cnx-epub && python setup.py install && cd ..
+  # * Install cnxquerygrammar
+  - git clone https://github.com/Connexions/cnx-query-grammar.git
+  - cd cnx-query-grammar && python setup.py install && cd ..
   # * Install rhaptos.cnxmlutils
-  # - git clone https://github.com/Connexions/rhaptos.cnxmlutils.git
-  # - cd rhaptos.cnxmlutils && python setup.py install && cd ..
+  - git clone https://github.com/Connexions/rhaptos.cnxmlutils.git
+  - cd rhaptos.cnxmlutils && python setup.py install && cd ..
+  # * Install cnx-cnxml-transforms
+  - git clone https://github.com/Connexions/cnx-cnxml-transforms.git
+  - cd cnx-cnxml-transforms && python setup.py install && cd ..
+  - cd cnx-db
 
-  # Install the coverage utility and codecov reporting utility
-  - pip install -r requirements/test.txt
-  - pip install codecov
 install:
-  - pip install .
+  - python setup.py install
 before_script:
   # Set up postgres roles
   - sudo -u postgres psql -d postgres -c "CREATE USER tester WITH SUPERUSER PASSWORD 'tester';"
