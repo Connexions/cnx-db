@@ -111,42 +111,42 @@ CREATE TRIGGER post_publication_trigger
 CREATE OR REPLACE FUNCTION republish_module ()
   RETURNS trigger
 AS $$
-  from cnxarchive.database import republish_module_trigger
+  from cnxdb.triggers import republish_module_trigger
   return republish_module_trigger(plpy, TD)
 $$ LANGUAGE plpythonu;
 
 CREATE OR REPLACE FUNCTION assign_moduleid_default ()
   RETURNS TRIGGER
 AS $$
-  from cnxarchive.database import assign_moduleid_default_trigger
+  from cnxdb.triggers import assign_moduleid_default_trigger
   return assign_moduleid_default_trigger(plpy, TD)
 $$ LANGUAGE plpythonu;
 
 CREATE OR REPLACE FUNCTION assign_version_default ()
   RETURNS TRIGGER
 AS $$
-  from cnxarchive.database import assign_version_default_trigger
+  from cnxdb.triggers import assign_version_default_trigger
   return assign_version_default_trigger(plpy, TD)
 $$ LANGUAGE plpythonu;
 
 CREATE OR REPLACE FUNCTION assign_uuid_default ()
   RETURNS TRIGGER
 AS $$
-  from cnxarchive.database import assign_document_controls_default_trigger
+  from cnxdb.triggers import assign_document_controls_default_trigger
   return assign_document_controls_default_trigger(plpy, TD)
 $$ LANGUAGE plpythonu;
 
 CREATE OR REPLACE FUNCTION upsert_document_acl ()
   RETURNS TRIGGER
 AS $$
-  from cnxarchive.database import upsert_document_acl_trigger
+  from cnxdb.triggers import upsert_document_acl_trigger
   return upsert_document_acl_trigger(plpy, TD)
 $$ LANGUAGE plpythonu;
 
 CREATE OR REPLACE FUNCTION upsert_user_shadow ()
   RETURNS TRIGGER
 AS $$
-  from cnxarchive.database import upsert_users_from_legacy_publication_trigger
+  from cnxdb.triggers import upsert_users_from_legacy_publication_trigger
   return upsert_users_from_legacy_publication_trigger(plpy, TD)
 $$ LANGUAGE plpythonu;
 
@@ -180,7 +180,7 @@ CREATE TRIGGER module_version_default
 CREATE OR REPLACE FUNCTION optional_roles_user_insert ()
   RETURNS TRIGGER
 AS $$
-  from cnxarchive.database import insert_users_for_optional_roles_trigger
+  from cnxdb.triggers import insert_users_for_optional_roles_trigger
   return insert_users_for_optional_roles_trigger(plpy, TD)
 $$ LANGUAGE plpythonu;
 
@@ -222,7 +222,7 @@ CREATE TRIGGER update_files_sha1
 CREATE OR REPLACE FUNCTION add_module_file ()
   RETURNS trigger
 AS $$
-  from cnxarchive.database import add_module_file
+  from cnxdb.triggers import add_module_file
   return add_module_file(plpy, TD)
 $$ LANGUAGE plpythonu;
 
@@ -235,14 +235,14 @@ CREATE OR REPLACE FUNCTION rebake()
  LANGUAGE plpgsql
 AS $$
 BEGIN
-  UPDATE modules SET stateid = 5 
+  UPDATE modules SET stateid = 5
     WHERE module_ident = NEW.module_ident;
   RETURN NEW;
 END;
 $$;
 
 CREATE TRIGGER ruleset_trigger
-  AFTER INSERT OR UPDATE ON module_files FOR EACH ROW 
+  AFTER INSERT OR UPDATE ON module_files FOR EACH ROW
   WHEN (new.filename = 'ruleset.css'::text)
   EXECUTE PROCEDURE rebake();
 
