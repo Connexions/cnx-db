@@ -64,7 +64,7 @@ END;
 
 
 def down(cursor):
-    cursor.exeucte("""\
+    cursor.execute("""\
 CREATE OR REPLACE FUNCTION update_latest() RETURNS trigger AS '
 BEGIN
   IF (TG_OP = ''INSERT'' OR TG_OP = ''UPDATE'') AND
