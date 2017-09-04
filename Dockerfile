@@ -48,7 +48,7 @@ ENV DB_NAME=repository
 ENV POSTGRES_USER=rhaptos_admin
 
 # This is a hook into the postgres:* container to do database init
-COPY .dockerfiles/initdb.d/* /docker-entrypoint-initdb.d/init.sh
+COPY .dockerfiles/initdb.d/* /docker-entrypoint-initdb.d/
 
 # Use PIP_FIND_LINKS environment variable to point to specific packages
 #   (e.g. PIP_FIND_LINKS="https://packages.cnx.org/dist/")
