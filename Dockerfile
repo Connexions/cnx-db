@@ -33,7 +33,7 @@ WORKDIR /src/
 
 RUN set -x \
     && pip install -U pip setuptools wheel \
-    && pip install -r /tmp/requirements/tests.txt \
+    && pip install -r /tmp/requirements/test.txt \
     && pip install -r /tmp/requirements/deploy.txt \
                    -r /tmp/requirements/main.txt \
     && pip install -e . \
