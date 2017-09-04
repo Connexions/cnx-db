@@ -34,7 +34,7 @@ else
 	python3 -m venv $(VENV_EXTRA_ARGS) $(STATEDIR)/env
 endif
 	# Upgrade tooling requirements
-	$(BINDIR)/python -m pip install --upgrade pip setuptools wheel tox
+	$(BINDIR)/python -m pip install --upgrade pip wheel tox setuptools
 
 	# Install requirements
 	$(BINDIR)/python -m pip install $(foreach req,$(_REQUIREMENTS_FILES),-r $(req))
