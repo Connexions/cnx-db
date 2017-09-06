@@ -36,6 +36,7 @@ RUN set -x \
     && pip install -r /tmp/requirements/test.txt \
     && pip install -r /tmp/requirements/deploy.txt \
                    -r /tmp/requirements/main.txt \
+    && pip uninstall -y cnx-db || echo "cnx-db is not installed, continuing..." \
     && pip install -e . \
     && find /usr/local -type f -name '*.pyc' -name '*.pyo' -delete \
     && rm -rf ~/.cache/
