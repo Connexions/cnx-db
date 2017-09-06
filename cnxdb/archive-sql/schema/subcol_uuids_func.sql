@@ -1,8 +1,8 @@
 CREATE OR REPLACE FUNCTION public.subcol_uuids(uuid uuid, version text) RETURNS VOID
  LANGUAGE sql
 AS $function$
-WITH RECURSIVE t(node, title, path,value, depth, corder, is_collated) AS (
-    SELECT nodeid, title, ARRAY[nodeid], documentid, 1, ARRAY[childorder],
+WITH RECURSIVE t(node, title, path, documentid, parent, depth, corder, is_collated) AS (
+    SELECT nodeid, title, ARRAY[nodeid], documentid, NULL::integer, 1, ARRAY[childorder],
            is_collated
     FROM trees tr, modules m
     WHERE m.uuid = $1 AND
@@ -11,20 +11,19 @@ WITH RECURSIVE t(node, title, path,value, depth, corder, is_collated) AS (
       tr.parent_id IS NULL AND
       tr.is_collated = False
 UNION ALL
-    SELECT c1.nodeid, c1.title, t.path || ARRAY[c1.nodeid], c1.documentid, t.depth+1, t.corder || ARRAY[c1.childorder], c1.is_collated /* Recursion */
+    SELECT c1.nodeid, c1.title, t.path || ARRAY[c1.nodeid], c1.documentid, t.documentid, t.depth+1, t.corder || ARRAY[c1.childorder], c1.is_collated /* Recursion */
     FROM trees c1 JOIN t ON (c1.parent_id = t.node)
     WHERE not nodeid = any (t.path) AND t.is_collated = c1.is_collated
 )
 INSERT INTO document_controls (uuid)
 
 SELECT
-    uuid5($1::uuid, t.title)
+    uuid5(m.uuid::uuid, t.title)
+    FROM t JOIN modules m on m.module_ident = t.parent WHERE t.documentid IS NULL and not exists (select 1 from document_controls where
+        uuid = uuid5(m.uuid::uuid, t.title));
 
-FROM t WHERE t.value IS NULL AND not exists (select 1 from document_controls where uuid = uuid5($1::uuid, t.title))
-    WINDOW w as (ORDER BY corder) order by corder;
-
-WITH RECURSIVE t(node, title, path,value, depth, corder, is_collated) AS (
-    SELECT nodeid, title, ARRAY[nodeid], documentid, 1, ARRAY[childorder],
+WITH RECURSIVE t(node, title, path, documentid, parent, depth, corder, is_collated) AS (
+    SELECT nodeid, title, ARRAY[nodeid], documentid, NULL::integer, 1, ARRAY[childorder],
            is_collated
     FROM trees tr, modules m
     WHERE m.uuid = $1 AND
@@ -33,7 +32,7 @@ WITH RECURSIVE t(node, title, path,value, depth, corder, is_collated) AS (
       tr.parent_id IS NULL AND
       tr.is_collated = False
 UNION ALL
-    SELECT c1.nodeid, c1.title, t.path || ARRAY[c1.nodeid], c1.documentid, t.depth+1, t.corder || ARRAY[c1.childorder], c1.is_collated /* Recursion */
+    SELECT c1.nodeid, c1.title, t.path || ARRAY[c1.nodeid], c1.documentid, t.documentid, t.depth+1, t.corder || ARRAY[c1.childorder], c1.is_collated /* Recursion */
     FROM trees c1 JOIN t ON (c1.parent_id = t.node)
     WHERE not nodeid = any (t.path) AND t.is_collated = c1.is_collated
 )
@@ -66,7 +65,7 @@ SELECT
     t.node,
     'SubCollection',
     'col' || nextval('collectionid_seq'),
-    uuid5($1::uuid, t.title),
+    uuid5(m.uuid::uuid, t.title),
     m.version,
     t.title,
     m.created,
@@ -87,12 +86,11 @@ SELECT
     m.minor_version,
     m.print_style
 
-FROM t, modules m WHERE value IS NULL and m.uuid = $1 and module_version(m.major_version, m.minor_version) = $2
-    and not exists (select 1 from modules where uuid = uuid5($1::uuid, t.title) and module_version(major_version, minor_version) = $2)
-    WINDOW w AS (ORDER BY corder) ORDER BY corder; 
+FROM t join modules m on m.module_ident = t.parent WHERE t.documentid IS NULL
+    and not exists (select 1 from modules where uuid = uuid5(m.uuid::uuid, t.title) and module_version(major_version, minor_version) = $2);
 
-WITH RECURSIVE t(node, title, path,value, depth, corder, is_collated) AS (
-    SELECT nodeid, title, ARRAY[nodeid], documentid, 1, ARRAY[childorder],
+WITH RECURSIVE t(node, title, path, documentid, parent, depth, corder, is_collated) AS (
+    SELECT nodeid, title, ARRAY[nodeid], documentid, NULL::integer, 1, ARRAY[childorder],
            is_collated
     FROM trees tr, modules m
     WHERE m.uuid = $1 AND
@@ -101,13 +99,13 @@ WITH RECURSIVE t(node, title, path,value, depth, corder, is_collated) AS (
       tr.parent_id IS NULL AND
       tr.is_collated = False
 UNION ALL
-    SELECT c1.nodeid, c1.title, t.path || ARRAY[c1.nodeid], c1.documentid, t.depth+1, t.corder || ARRAY[c1.childorder], c1.is_collated /* Recursion */
+    SELECT c1.nodeid, c1.title, t.path || ARRAY[c1.nodeid], c1.documentid, t.documentid, t.depth+1, t.corder || ARRAY[c1.childorder], c1.is_collated /* Recursion */
     FROM trees c1 JOIN t ON (c1.parent_id = t.node)
     WHERE not nodeid = any (t.path) AND t.is_collated = c1.is_collated
 )
 UPDATE trees
     set documentid = module_ident 
-    FROM t, modules m WHERE nodeid = t.node AND t.value IS NULL and nodeid::text = m.doctype;
+    FROM t, modules m WHERE nodeid = t.node AND t.documentid IS NULL and nodeid::text = m.doctype;
 
 $function$
 
