@@ -119,6 +119,7 @@ def init_venv(connection_string):
                 cursor.execute("CREATE SCHEMA venv")
                 try:
                     cursor.execute("SAVEPOINT session_preload")
+                    cursor.execute("LOAD 'session_exec.so'")
                     cursor.execute("ALTER DATABASE \"{}\" SET "
                                    "session_preload_libraries ="
                                    "'session_exec'".format(db_name))
@@ -135,6 +136,12 @@ def init_venv(connection_string):
                                        "postgresql.conf and restart")
                     else:  # pragma: no cover
                         raise
+                except psycopg2.OperationalError as e:  # pragma: no cover
+                    if 'could not access file "session_exec' in e.message:
+                        cursor.execute("ROLLBACK TO SAVEPOINT "
+                                       "session_preload")
+                        logger.error("session_exec not found")
+                    raise
 
                 cursor.execute("ALTER DATABASE \"{}\" "
                                "SET session_exec.login_name = "
