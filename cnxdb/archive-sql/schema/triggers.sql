@@ -236,7 +236,7 @@ CREATE OR REPLACE FUNCTION rebake()
 AS $$
 BEGIN
   UPDATE modules SET stateid = 5 
-    WHERE module_ident = NEW.module_ident;
+    WHERE module_ident = NEW.module_ident and stateid not in (5, 6);
   RETURN NEW;
 END;
 $$;
