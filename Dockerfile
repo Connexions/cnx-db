@@ -33,9 +33,10 @@ WORKDIR /src/
 
 RUN set -x \
     && pip install -U pip setuptools wheel \
-    && pip install -r /tmp/requirements/tests.txt \
+    && pip install -r /tmp/requirements/test.txt \
     && pip install -r /tmp/requirements/deploy.txt \
                    -r /tmp/requirements/main.txt \
+    && pip uninstall -y cnx-db || echo "cnx-db is not installed, continuing..." \
     && pip install -e . \
     && find /usr/local -type f -name '*.pyc' -name '*.pyo' -delete \
     && rm -rf ~/.cache/
@@ -48,7 +49,7 @@ ENV DB_NAME=repository
 ENV POSTGRES_USER=rhaptos_admin
 
 # This is a hook into the postgres:* container to do database init
-COPY .dockerfiles/initdb.d/* /docker-entrypoint-initdb.d/init.sh
+COPY .dockerfiles/initdb.d/* /docker-entrypoint-initdb.d/
 
 # Use PIP_FIND_LINKS environment variable to point to specific packages
 #   (e.g. PIP_FIND_LINKS="https://packages.cnx.org/dist/")

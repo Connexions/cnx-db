@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+import os
 import psycopg2
 import pytest
 
@@ -50,7 +51,8 @@ def db_wipe(db_connection_string, request, db_cursor_without_db_init):
 def db_init(db_connection_string):
     """Initializes the database"""
     from cnxdb.init.main import init_db
-    init_db(db_connection_string, True)
+    venv = os.getenv('AS_VENV_IMPORTABLE', 'true').lower() == 'true'
+    init_db(db_connection_string, venv)
 
 
 @pytest.fixture
