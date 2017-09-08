@@ -6,6 +6,21 @@
 
    - feature message
 
+0.9.0
+-----
+
+- Add AS_VENV_IMPORTABLE env variable to the pytest db_init fixture.
+- Fix load session_exec.so in init_venv before using it.
+- Fix order of dependency installation to account for the current circular dependence with cnx-archive.
+- Fix quoting within the container's initdb script
+- Add docker entrypoint script to load database dump.
+- Fix Dockerfile initdb.d COPY command.
+- Fix requirements filename change in Dockerfile
+- Fix rebake trigger to do nothing when the content is already in a bakable state.
+- Lock latest_modules when running update_latest where two or more inserts may happen at the same time.
+- Fix update_latest trigger to account for multiple minor versions where one or more may have failed during baking.
+- Add sql queries for getting books containing a page.
+
 0.8.0
 -----
 
