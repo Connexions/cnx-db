@@ -69,7 +69,7 @@ def down(cursor):
     cursor.execute("""UPDATE trees t SET documentid = NULL
                       WHERE documentid is not NULL
                       AND NOT EXISTS (SELECT 1 FROM modules m
-                            WHERE m.module_ident = t.documentid""")
+                            WHERE m.module_ident = t.documentid)""")
 
 
 def should_run(cursor):
