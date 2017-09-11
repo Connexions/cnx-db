@@ -14,7 +14,7 @@ import psycopg2
 
 # While the collxml files we process potentially contain many of these
 # namespaces, I take advantage of the fact that almost none of the
-# localnames (tags names) acutally overlap. The one case that does (title)
+# localnames (tags names) actually overlap. The one case that does (title)
 # actually works in our favor, since we want to treat it the same anyway.
 
 ns = {"cnx": "http://cnx.rice.edu/cnxml",
@@ -38,6 +38,44 @@ NODE_TITLE_UPD = "UPDATE trees SET title = %s FROM modules WHERE nodeid = %s "\
     "AND (documentid IS NULL "\
     "OR (documentid = module_ident AND name != %s))"
 
+NODE_TITLE_DOC_UPD = "UPDATE trees set title = %s, documentid = %s where nodeid = %s"
+FIND_SAME_SUBCOL = "SELECT m.module_ident from modules m join modules c on m.uuid = uuid5(c.uuid, %s) where m.name = %s  and m.version = %s and c.moduleid = %s and c.version = %s"
+FIND_SUBCOL_IDS="SELECT m.moduleid from modules m join modules c on m.uuid = uuid5(c.uuid, %s) where m.name = %s and c.moduleid = %s"
+SUBCOL_ACL="""
+INSERT INTO document_controls (uuid, licenseid)
+SELECT uuid5(m.uuid, %s), dc.licenseid
+FROM document_controls dc join modules m on  dc.uuid = m.uuid 
+WHERE moduleid = %s and version = %s """
+SUBCOL_INS="""
+INSERT into modules (portal_type, moduleid, name, uuid,
+    abstractid, version, created, revised,
+    licenseid, submitter, submitlog, stateid,
+    parent, language, doctype,
+    authors, maintainers, licensors, parentauthors,
+    major_version, minor_version, print_style)
+SELECT 'SubCollection', 'col'||nextval('collectionid_seq'), %s, uuid5(uuid, %s),
+    abstractid, version, created, revised,
+    licenseid, submitter, submitlog, stateid,
+    parent, language, doctype,
+    authors, maintainers, licensors, parentauthors,
+    major_version, minor_version, print_style
+FROM modules WHERE moduleid = %s and version = %s  RETURNING module_ident"""
+
+SUBCOL_NEW_VERSION="""
+INSERT into modules (portal_type, moduleid, name, uuid,
+    abstractid, version, created, revised,
+    licenseid, submitter, submitlog, stateid,
+    parent, language, doctype,
+    authors, maintainers, licensors, parentauthors,
+    major_version, minor_version, print_style)
+SELECT 'SubCollection', %s, %s, uuid5(uuid, %s),
+    abstractid, version, created, revised,
+    licenseid, submitter, submitlog, stateid,
+    parent, language, doctype,
+    authors, maintainers, licensors, parentauthors,
+    major_version, minor_version, print_style
+FROM modules WHERE moduleid = %s and version = %s  RETURNING module_ident"""
+
 con = psycopg2.connect('dbname=repository')
 cur = con.cursor()
 
@@ -57,8 +95,24 @@ def _do_insert(pid, cid, oid=0, ver=0):
     return nodeid
 
 
-def _do_update(title, nid):
-    cur.execute(NODE_TITLE_UPD, (title, nid, title))
+def _get_subcol(title,oid,ver):
+    res = cur.execute(FIND_SAME_SUBCOL, (title, oid, ver))
+    if not res.nrows():
+        res = cur.execute(FIND_SUBCOL_IDS, (title, oid))
+        if not res.nrows():
+            cur.execute(SUBCOL_ACL, (title, oid, ver))
+            res = cur.execute(SUBCOL_INS, (title, oid, ver))
+        else:
+            res = cur.execute(SUBCOL_NEW_VERSION,
+                     (title, oid, ver, res[0]['moduleid']))
+    return res[0]["module_ident"]
+
+
+def _do_update(title, nid, docid):
+    if docid:
+        cur.execute(NODE_TITLE_DOC_UPD, (title, docid, nid))
+    else:
+        cur.execute(NODE_TITLE_UPD, (title,nid))
 
 
 class ModuleHandler(sax.ContentHandler):
@@ -75,6 +129,7 @@ class ModuleHandler(sax.ContentHandler):
         self.title = u''
         self.nodeid = 0
         self.derivedfrom = [None]
+        self.titled = [None]
 
     def startElementNS(self, (uri, localname), qname, attrs):
         """Handle element."""
@@ -82,6 +137,7 @@ class ModuleHandler(sax.ContentHandler):
         self.tag = localname
 
         if localname == 'module':
+            self.titled.append(localname)
             self.childorder[-1] += 1
             nodeid = _do_insert(self.parents[-1], self.childorder[-1],
                                 attrs[(None, "document")],
@@ -91,7 +147,7 @@ class ModuleHandler(sax.ContentHandler):
                 self.nodeid = nodeid
 
         elif localname == 'subcollection':
-            # TODO insert a metadata record into modules table for subcol.
+            self.titled.append(localname)
             self.childorder[-1] += 1
             nodeid = _do_insert(self.parents[-1], self.childorder[-1])
             if nodeid:
@@ -114,8 +170,12 @@ class ModuleHandler(sax.ContentHandler):
             self.version = self.map[localname]
         elif localname == 'title' and not self.derivedfrom[-1]:
             self.title = self.map[localname]
-            if self.parents[-1]:  # current node is a subcollection or module
-                _do_update(self.title.encode('utf-8'), self.nodeid)
+            if self.titled[-1] in ('subcollection', 'module'):
+                my_title  = self.title.encode('utf-8')
+                mod_id = None
+                if self.titled[-1] == 'subcollection': #  we are in a subcollection
+                    mod_id = _get_subcol(self.title.encode('utf-8'), self.contentid, self.version)
+                _do_update(my_title, self.nodeid, mod_id)
 
         elif localname == 'derived-from':
             self.derivedfrom.pop()
@@ -135,6 +195,9 @@ class ModuleHandler(sax.ContentHandler):
             # either colletion or subcollection
             self.parents.pop()
             self.childorder.pop()
+
+        elif localname in ('module', 'subcollection'):
+            self.titled.pop()
 
 
 parser = sax.make_parser()
