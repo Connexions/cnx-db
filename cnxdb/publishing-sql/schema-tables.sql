@@ -119,5 +119,5 @@ CREATE TABLE document_baking_result_associations (
   "result_id" UUID NOT NULL,
   "created" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY ("module_ident", "result_id"),
-  FOREIGN KEY ("module_ident") REFERENCES modules ("module_ident")
+  FOREIGN KEY ("module_ident") REFERENCES modules ("module_ident") ON DELETE CASCADE
 );

@@ -44,3 +44,14 @@ CREATE UNIQUE INDEX similarities_objectid_version_idx ON similarities (objectid,
 create index latest_modules_title_idx on latest_modules (upper(title_order(name)));
 
 CREATE INDEX modules_strip_html_name_trgm_gin ON modules USING gin(strip_html(name) gin_trgm_ops);
+
+
+-- These indexes are in support of deletion of things from modules, such as CompositeModules when rebaking
+CREATE INDEX collated_file_associations_context_fkey ON collated_file_associations (context);
+CREATE INDEX collated_file_associations_item_fkey ON collated_file_associations (item);
+CREATE INDEX collated_fti_context_fkey ON collated_fti (context);
+CREATE INDEX collated_fti_item_fkey ON collated_fti (item);
+CREATE INDEX collated_fti_lexemes_context_fkey ON collated_fti_lexemes (context);
+CREATE INDEX collated_fti_lexemes_item_fkey ON collated_fti_lexemes (item);
+CREATE INDEX document_hits_documentid_fkey ON document_hits (documentid);
+CREATE INDEX moduletags_module_ident_fkey ON moduletags (module_ident);
