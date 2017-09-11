@@ -185,13 +185,13 @@ CREATE TABLE "keywords" (
 CREATE TABLE "modulekeywords" (
 	"module_ident" integer NOT NULL,
 	"keywordid" integer NOT NULL,
-	FOREIGN KEY (module_ident) REFERENCES "modules" DEFERRABLE,
+	FOREIGN KEY (module_ident) REFERENCES modules (module_ident) ON DELETE CASCADE DEFERRABLE,
 	FOREIGN KEY (keywordid) REFERENCES "keywords" DEFERRABLE
 );
 
 CREATE TABLE module_files (
-    module_ident integer references modules,
-    fileid integer references files,
+    module_ident integer REFERENCES modules ON DELETE CASCADE,
+    fileid integer REFERENCES files,
     filename text
 );
 
@@ -214,7 +214,7 @@ CREATE TABLE tags (
 CREATE TABLE moduletags (
     module_ident integer,
     tagid integer,
-    FOREIGN KEY (module_ident) REFERENCES modules(module_ident) DEFERRABLE,
+    FOREIGN KEY (module_ident) REFERENCES modules (module_ident) ON DELETE CASCADE DEFERRABLE,
     FOREIGN KEY (tagid) REFERENCES tags(tagid) DEFERRABLE
 );
 
@@ -275,9 +275,9 @@ CREATE TABLE collated_file_associations (
   context INTEGER,
   item INTEGER,
   fileid INTEGER,
-  FOREIGN KEY (fileid) REFERENCES files (fileid),
-  FOREIGN KEY (context) REFERENCES modules (module_ident),
-  FOREIGN KEY (item) REFERENCES modules (module_ident),
+  FOREIGN KEY (fileid) REFERENCES files (fileid) ON DELETE CASCADE,
+  FOREIGN KEY (context) REFERENCES modules (module_ident) ON DELETE CASCADE,
+  FOREIGN KEY (item) REFERENCES modules (module_ident) on DELETE CASCADE,
   -- primary key allows for a single collection and module association
   PRIMARY KEY (context, item)
 );
