@@ -8,6 +8,12 @@ first_commit=$(git log --format='%h' --reverse FETCH_HEAD.. | head -1)
 # keep track of which commit we are at, so we can go back to it later
 current_commit=$(git log --format='%h' | head -1)
 
+if [ -z "$first_commit" ]
+then
+    echo Nothing to check.
+    exit
+fi
+
 # checkout the branch point
 git checkout $first_commit^
 pip install .
