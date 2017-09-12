@@ -18,8 +18,13 @@ def up(cursor):
 
     with open_here('../archive-sql/schema/shred_collxml.sql', 'rb') as f:
         cursor.execute(f.read())
+    cursor.execute('drop function shred_collxml(text)')
+    cursor.execute('drop function shred_collxml(int)')
+    cursor.execute('drop function shred_collxml(int,int)')
 
 
 def down(cursor):
     with open_here('shred_collxml_20170912134157_pre.sql', 'rb') as f:
         cursor.execute(f.read())
+    cursor.execute('drop function shred_collxml(text, integer)')
+    cursor.execute('drop function shred_collxml(integer, integer, bool)')
