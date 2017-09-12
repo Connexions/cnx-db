@@ -22,8 +22,8 @@ pip install .
 pip install 'db-migrator>=1.0.0'
 
 # set up the database
-sudo -u postgres dropdb testing
-sudo -u postgres createdb -O tester testing
+dropdb -U postgres testing
+createdb -U postgres -O tester testing
 cnx-db init -d testing -U tester
 dbmigrator --db-connection-string='dbname=testing user=tester' init
 
@@ -52,8 +52,8 @@ fi
 pg_dump -s 'dbname=testing user=tester' >rolled_back_schema.sql
 
 # reset database
-sudo -u postgres dropdb testing
-sudo -u postgres createdb -O tester testing
+dropdb -U postgres testing
+createdb -U postgres -O tester testing
 cnx-db init -d testing -U tester
 dbmigrator --db-connection-string='dbname=testing user=tester' init
 
