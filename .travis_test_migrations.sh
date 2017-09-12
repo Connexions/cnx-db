@@ -22,8 +22,8 @@ pip install .
 pip install 'db-migrator>=1.0.0'
 
 # set up the database
-sudo -u postgres dropdb testing
-sudo -u postgres createdb -O tester testing
+dropdb -U postgres testing
+createdb -U postgres -O tester testing
 cnx-db init -d testing -U tester
 dbmigrator --db-connection-string='dbname=testing user=tester' init
 
@@ -52,27 +52,27 @@ fi
 pg_dump -s 'dbname=testing user=tester' >rolled_back_schema.sql
 
 # reset database
-sudo -u postgres dropdb testing
-sudo -u postgres createdb -O tester testing
+dropdb -U postgres testing
+createdb -U postgres -O tester testing
 cnx-db init -d testing -U tester
 dbmigrator --db-connection-string='dbname=testing user=tester' init
 
 pg_dump -s 'dbname=testing user=tester' >new_schema.sql
 
 # check schema
-rollback=$(diff -u old_schema.sql rolled_back_schema.sql || true)
-migration=$(diff -u new_schema.sql migrated_schema.sql || true)
+rollback=$(diff -wu old_schema.sql rolled_back_schema.sql || true)
+migration=$(diff -wu new_schema.sql migrated_schema.sql || true)
 
 if [ -n "$rollback" ]
 then
     echo "Rollback test failed:"
-    diff -u old_schema.sql rolled_back_schema.sql || true
+    diff -wu old_schema.sql rolled_back_schema.sql || true
 fi
 
 if [ -n "$migration" ]
 then
     echo "Migration test failed:"
-    diff -u new_schema.sql migrated_schema.sql || true
+    diff -wu new_schema.sql migrated_schema.sql || true
 fi
 
 if [ -z "$rollback" -a -z "$migration" ]
