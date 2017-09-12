@@ -41,7 +41,7 @@ script:
   # This is the same as `python setup.py test` with a coverage wrapper.
   - py.test
   # Test migrations
-  - ./.travis_test_migrations.sh
+  - script/ci_test_migrations.sh
 after_success:
   # Report test coverage to codecov.io
   - codecov

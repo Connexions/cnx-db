@@ -5,8 +5,8 @@ set -e
 git fetch origin master
 first_commit=$(git log --format='%h' --reverse FETCH_HEAD.. | head -1)
 
-# keep track of which commit we are at, so we can go back to it later
-current_commit=$(git log --format='%h' | head -1)
+# keep track of which branch we are on, so we can go back to it later
+current_branch=$(git symbolic-ref --short HEAD)
 
 if [ -z "$first_commit" ]
 then
@@ -31,7 +31,7 @@ dbmigrator --db-connection-string='dbname=testing user=tester' init
 pg_dump -s 'dbname=testing user=tester' >old_schema.sql
 
 # go back to the branch HEAD
-git checkout $current_commit
+git checkout $current_branch
 pip install .
 
 # check the number of migrations that are going to run
@@ -58,6 +58,11 @@ cnx-db init -d testing -U tester
 dbmigrator --db-connection-string='dbname=testing user=tester' init
 
 pg_dump -s 'dbname=testing user=tester' >new_schema.sql
+
+# Put dev environment back, if not on Travis
+if [ -z "$CI" ]
+    pip install -e .
+fi
 
 # check schema
 rollback=$(diff -wu old_schema.sql rolled_back_schema.sql || true)
