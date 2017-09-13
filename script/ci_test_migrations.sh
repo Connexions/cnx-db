@@ -5,8 +5,13 @@ set -e
 git fetch origin master
 first_commit=$(git log --format='%h' --reverse FETCH_HEAD.. | head -1)
 
-# keep track of which commit we are at, so we can go back to it later
-current_commit=$(git log --format='%h' | head -1)
+# keep track of which branch we are on, so we can go back to it later
+if [ -z "$CI" ]
+then
+    current_commit=$(git symbolic-ref --short HEAD)
+else
+    current_commit=$(git log --format='%h' | head -1)
+fi
 
 if [ -z "$first_commit" ]
 then
@@ -58,6 +63,12 @@ cnx-db init -d testing -U tester
 dbmigrator --db-connection-string='dbname=testing user=tester' init
 
 pg_dump -s 'dbname=testing user=tester' >new_schema.sql
+
+# Put dev environment back, if not on Travis
+if [ -z "$CI" ]
+then
+    pip install -e .
+fi
 
 # check schema
 rollback=$(diff -wu old_schema.sql rolled_back_schema.sql || true)
