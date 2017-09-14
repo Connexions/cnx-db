@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
-
 from contextlib import contextmanager
+
+from dbmigrator import super_user
 
 
 @contextmanager
@@ -15,16 +16,17 @@ def open_here(filepath, *args, **kwargs):
 
 
 def up(cursor):
-
-    with open_here('../archive-sql/schema/shred_collxml.sql', 'rb') as f:
-        cursor.execute(f.read())
-    cursor.execute('drop function shred_collxml(text)')
-    cursor.execute('drop function shred_collxml(int)')
-    cursor.execute('drop function shred_collxml(int,int)')
+    with super_user() as super_cursor:
+        with open_here('../archive-sql/schema/shred_collxml.sql', 'rb') as f:
+            super_cursor.execute(f.read())
+        super_cursor.execute('drop function shred_collxml(text)')
+        super_cursor.execute('drop function shred_collxml(int)')
+        super_cursor.execute('drop function shred_collxml(int,int)')
 
 
 def down(cursor):
-    with open_here('shred_collxml_20170912134157_pre.sql', 'rb') as f:
-        cursor.execute(f.read())
-    cursor.execute('drop function shred_collxml(text, integer)')
-    cursor.execute('drop function shred_collxml(integer, integer, bool)')
+    with super_user() as super_cursor:
+        with open_here('shred_collxml_20170912134157_pre.sql', 'rb') as f:
+            super_cursor.execute(f.read())
+        super_cursor.execute('drop function shred_collxml(text, integer)')
+        super_cursor.execute('drop function shred_collxml(integer, integer, bool)')
