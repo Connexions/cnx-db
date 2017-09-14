@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 
 
+from dbmigrator import super_user
+
+
 # Uncomment should_run if this is a repeat migration
 # def should_run(cursor):
 #     # TODO return True if migration should run
 
 
 def up(cursor):
-    # TODO migration code
-
-    cursor.execute('''
+    with super_user() as super_cursor:
+        super_cursor.execute('''
 CREATE OR REPLACE FUNCTION subcol_uuids(uuid uuid, version text) RETURNS VOID
  LANGUAGE sql
 AS $function$
@@ -126,7 +128,8 @@ $function$
 
 def down(cursor):
     # rollback to broken function def
-    cursor.execute('''
+    with super_user() as super_cursor:
+        super_cursor.execute('''
 CREATE OR REPLACE FUNCTION subcol_uuids(uuid uuid, version text)
  RETURNS void
  LANGUAGE sql
