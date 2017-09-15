@@ -42,7 +42,7 @@ def up(cursor):
         ON DELETE CASCADE;
 
         ALTER TABLE collated_file_associations DROP CONSTRAINT
-        collated_file_associations_fileid_fkey;
+        IF EXISTS collated_file_associations_fileid_fkey;
 
         ALTER TABLE collated_file_associations ADD FOREIGN KEY
         (fileid) REFERENCES files(fileid)
@@ -180,7 +180,7 @@ def down(cursor):
         (item) REFERENCES modules(module_ident);
 
         ALTER TABLE collated_file_associations DROP CONSTRAINT
-        collated_file_associations_fileid_fkey;
+        IF EXISTS collated_file_associations_fileid_fkey;
 
         ALTER TABLE collated_file_associations ADD FOREIGN KEY
         (fileid) REFERENCES files(fileid)
