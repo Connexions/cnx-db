@@ -6,6 +6,19 @@
 
    - feature message
 
+0.10.0
+------
+
+- Add query to get latest version of the content (#64)
+- Use super user to replace plpythonu function in migration (#62)
+- Add migration to transform cnxml->html (#59)
+- Add delete cascade and indexes for foreign keys (#58)
+- Add data migration to update index.cnxml (#61)
+- Add trigger for duplicating rulset.css for derived copies (#56)
+- Add subcollection uuid data migration (#54)
+- Fix minor versions and current_modules view (#49)
+- Add xpath queries (#40)
+
 0.9.0
 -----
 
