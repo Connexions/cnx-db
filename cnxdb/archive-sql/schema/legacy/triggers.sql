@@ -46,6 +46,7 @@ IF NOT FOUND THEN
             FROM module_files
             WHERE module_ident = NEW.parent AND filename = 'ruleset.css' ;
 END IF;
+RETURN NULL;
 END;
 $function$;
 
