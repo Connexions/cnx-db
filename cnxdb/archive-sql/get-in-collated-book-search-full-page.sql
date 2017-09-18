@@ -45,6 +45,7 @@ WHERE
  cft.module_idx @@ plainto_tsquery(%(search_term)s) AND 
  m.uuid = (%(page_uuid)s) AND
  cft.context = book.module_ident AND
+ cfa.context = book.module_ident AND
  book.uuid = (%(uuid)s) AND
  module_version(book.major_version, book.minor_version) = %(version)s
 ORDER BY
