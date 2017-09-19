@@ -6,6 +6,13 @@
 
    - feature message
 
+0.10.1
+------
+
+- Fix in-collated-book page search sql query (#68)
+- Add a matching migration for the double-trigger-when-rebaking fix (#69)
+- Fix derived_book_ruleset sql function by returning a value (#67 #66)
+
 0.10.0
 ------
 
