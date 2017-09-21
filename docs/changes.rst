@@ -6,6 +6,12 @@
 
    - feature message
 
+0.10.2
+------
+
+- Use postgres super user in migrations that require it (#71)
+- Correct errors in subcol uuid migration associated with an empty batch (#70)
+
 0.10.1
 ------
 
