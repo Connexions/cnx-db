@@ -30,16 +30,9 @@ def up(cursor):
 
     num_todo = len(anon_subcols)
     logger.info('Books to add chapter uuids: {}'.format(num_todo))
-
-    if num_todo > 10:
-        batch_size = int(num_todo / 10)
-    else:
-        batch_size = num_todo
-
-    if batch_size > 10:
-        batch_size = 10
-
+    batch_size = 10
     logger.info('Batch size: {}'.format(batch_size))
+
     start = time.time()
     guesstimate = 7 * num_todo
     guess_complete = guesstimate + start
@@ -47,6 +40,7 @@ def up(cursor):
                 '"{}" ({})'.format(time.ctime(guess_complete),
                                    timedelta(0, guesstimate)))
     num_complete = 0
+    elapsed = 0
     for batch in _batcher(anon_subcols, batch_size):
         for book in batch:
             cursor.execute("SELECT subcol_uuids(%s, %s)", book)
