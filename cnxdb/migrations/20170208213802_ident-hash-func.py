@@ -3,6 +3,8 @@ import os
 
 from contextlib import contextmanager
 
+from dbmigrator import super_user
+
 
 @contextmanager
 def open_here(filepath, *args, **kwargs):
@@ -15,9 +17,9 @@ def open_here(filepath, *args, **kwargs):
 
 
 def up(cursor):
-
-    with open_here('../archive-sql/schema/functions.sql', 'rb') as f:
-        cursor.execute(f.read())
+    with super_user() as super_cursor:
+        with open_here('../archive-sql/schema/functions.sql', 'rb') as f:
+            super_cursor.execute(f.read())
 
     cursor.execute("""
 CREATE INDEX modules_ident_hash on modules(ident_hash(uuid, major_version, minor_version));
@@ -25,7 +27,8 @@ CREATE INDEX modules_short_ident_hash on modules(short_ident_hash(uuid, major_ve
 
 
 def down(cursor):
-    # TODO rollback code
-
-    cursor.execute('drop function ident_hash(uuid, int, int) CASCADE')
-    cursor.execute('drop function short_ident_hash(uuid, int, int) CASCADE')
+    with super_user() as super_cursor:
+        super_cursor.execute(
+            'drop function ident_hash(uuid, int, int) CASCADE')
+        super_cursor.execute(
+            'drop function short_ident_hash(uuid, int, int) CASCADE')
