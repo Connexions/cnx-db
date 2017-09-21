@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from dbmigrator import super_user
+
 
 def up(cursor):
-    cursor.execute("""\
+    with super_user() as super_cursor:
+        super_cursor.execute("""\
 CREATE OR REPLACE FUNCTION strip_html(html_text TEXT)
   RETURNS text
 AS $$
@@ -13,4 +16,5 @@ $$ LANGUAGE plpythonu IMMUTABLE;
 
 
 def down(cursor):
-    cursor.execute("DROP FUNCTION IF EXISTS strip_html(TEXT)")
+    with super_user() as super_cursor:
+        super_cursor.execute("DROP FUNCTION IF EXISTS strip_html(TEXT)")
