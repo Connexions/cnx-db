@@ -306,3 +306,9 @@ CREATE TABLE default_print_style_recipes (
       -- a string to further identify what version recipe (commit hash?)
   FOREIGN KEY (fileid) REFERENCES files (fileid)
 );
+
+CREATE TABLE featured_books (
+    uuid uuid NOT NULL,
+    major_version integer,
+    minor_version integer);
+
