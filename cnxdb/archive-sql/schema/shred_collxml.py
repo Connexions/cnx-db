@@ -55,13 +55,13 @@ WHERE nodeid = %s"""
 SUBCOL_INS="""
 INSERT into modules (portal_type, moduleid, name, uuid,
     abstractid, version, created, revised,
-    licenseid, submitter, submitlog, stateid,
+    licenseid, submitter, submitlog,
     parent, language, doctype,
     authors, maintainers, licensors, parentauthors,
     major_version, minor_version, print_style)
 SELECT 'SubCollection', 'col'||nextval('collectionid_seq'), %s, uuid5(uuid, %s),
     abstractid, version, created, revised,
-    licenseid, submitter, submitlog, stateid,
+    licenseid, submitter, submitlog,
     parent, language, doctype,
     authors, maintainers, licensors, parentauthors,
     major_version, minor_version, print_style
@@ -71,13 +71,13 @@ WHERE nodeid = %s RETURNING module_ident"""
 SUBCOL_NEW_VERSION="""
 INSERT into modules (portal_type, moduleid, name, uuid,
     abstractid, version, created, revised,
-    licenseid, submitter, submitlog, stateid,
+    licenseid, submitter, submitlog,
     parent, language, doctype,
     authors, maintainers, licensors, parentauthors,
     major_version, minor_version, print_style)
 SELECT 'SubCollection', %s, %s, uuid5(uuid, %s),
     abstractid, version, created, revised,
-    licenseid, submitter, submitlog, stateid,
+    licenseid, submitter, submitlog,
     parent, language, doctype,
     authors, maintainers, licensors, parentauthors,
     major_version, minor_version, print_style
