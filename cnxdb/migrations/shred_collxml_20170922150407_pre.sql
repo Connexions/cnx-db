@@ -67,13 +67,13 @@ WHERE nodeid = $2""", ("text","int"))
 SUBCOL_INS=plpy.prepare("""
 INSERT into modules (portal_type, moduleid, name, uuid,
     abstractid, version, created, revised,
-    licenseid, submitter, submitlog,
+    licenseid, submitter, submitlog, stateid,
     parent, language, doctype,
     authors, maintainers, licensors, parentauthors,
     major_version, minor_version, print_style)
 SELECT 'SubCollection', 'col'||nextval('collectionid_seq'), $1, uuid5(uuid, $1),
     abstractid, version, created, revised,
-    licenseid, submitter, submitlog,
+    licenseid, submitter, submitlog, stateid,
     parent, language, doctype,
     authors, maintainers, licensors, parentauthors,
     major_version, minor_version, print_style
@@ -83,13 +83,13 @@ WHERE nodeid = $2  RETURNING module_ident""", ("text","int"))
 SUBCOL_NEW_VERSION=plpy.prepare("""
 INSERT into modules (portal_type, moduleid, name, uuid,
     abstractid, version, created, revised,
-    licenseid, submitter, submitlog,
+    licenseid, submitter, submitlog, stateid,
     parent, language, doctype,
     authors, maintainers, licensors, parentauthors,
     major_version, minor_version, print_style)
 SELECT 'SubCollection', $3, $1, uuid5(uuid, $1),
     abstractid, version, created, revised,
-    licenseid, submitter, submitlog,
+    licenseid, submitter, submitlog, stateid,
     parent, language, doctype,
     authors, maintainers, licensors, parentauthors,
     major_version, minor_version, print_style
