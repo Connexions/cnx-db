@@ -6,6 +6,12 @@
 
    - feature message
 
+0.10.3
+------
+
+- Fix to ignore stateid when copying subcollections to avoid adding
+  subcollections to the post-publication queue (#73)
+
 0.10.2
 ------
 
