@@ -69,7 +69,6 @@ CREATE OR REPLACE FUNCTION count_collated_lexemes(myident integer, bookident int
             where item = myident and context = bookident and lexeme = substr(s,2,length(s)-2)
 $_$;
 
-ALTER FUNCTION count_collated_lexemes(myident integer, bookident integer, mysearch text) OWNER TO reedstrm;
 
 CREATE OR REPLACE FUNCTION count_lexemes(myident integer, mysearch text) RETURNS bigint
     LANGUAGE sql STABLE
