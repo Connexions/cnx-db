@@ -4,6 +4,23 @@ CREATE OR REPLACE FUNCTION "comma_cat" (text,text) RETURNS text AS 'select case 
 
 CREATE OR REPLACE FUNCTION "semicomma_cat" (text,text) RETURNS text AS 'select case WHEN $2 is NULL or $2 = '''' THEN $1 WHEN $1 is NULL or $1 = '''' THEN $2 ELSE $1 || '';--;'' || $2 END' LANGUAGE 'sql';
 
+CREATE OR REPLACE FUNCTION sha1(file text)
+ RETURNS text
+ LANGUAGE plpythonu
+ IMMUTABLE STRICT
+AS $function$
+import hashlib
+return hashlib.new('sha1', file).hexdigest()
+$function$;
+
+CREATE OR REPLACE FUNCTION sha1(f bytea)
+ RETURNS text
+ LANGUAGE plpythonu
+AS $function$
+import hashlib
+return hashlib.new('sha1',f).hexdigest()
+$function$;
+
 CREATE OR REPLACE FUNCTION title_order(text) RETURNS text AS $$
 begin
 if lower(substr($1, 1, 4)) = 'the ' then
