@@ -2,7 +2,6 @@
 
 
 def up(cursor):
-    cursor.execute("DROP FUNCTION IF EXISTS derived_book_ruleset() CASCADE")
     cursor.execute("""CREATE OR REPLACE FUNCTION derived_book_ruleset()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -16,7 +15,6 @@ IF NOT FOUND THEN
             FROM module_files
             WHERE module_ident = NEW.parent AND filename = 'ruleset.css' ;
 END IF;
-RETURN NULL;
 END;
 $function$ """)
 
@@ -32,4 +30,4 @@ WHEN (NEW.portal_type = 'Collection'
 
 
 def down(cursor):
-    cursor.execute("DROP FUNCTION IF EXISTS derived_book_ruleset() CASCADE")
+    cursor.execute("DROP FUNCTION derived_book_ruleset() CASCADE")
