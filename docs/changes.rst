@@ -6,6 +6,16 @@
 
    - feature message
 
+0.10.4
+------
+
+- Revert changes to triggers for derived content
+
+  - Remove fix for derived_book_ruleset sql function by returning
+    a value (#67)
+  - Remove addition of trigger for duplicating rulset.css for derived
+    copies (#56)
+
 0.10.3
 ------
 
