@@ -96,6 +96,7 @@ INSERT INTO abstracts
 VALUES (1, 'test')""")
             db_cursor.execute("""\
 ALTER TABLE modules DISABLE TRIGGER USER;
+ALTER TABLE latest_modules DISABLE TRIGGER USER;
 ALTER TABLE modules ENABLE TRIGGER update_latest_version;""")
             db_cursor.execute("""\
 INSERT INTO latest_modules (moduleid, version, name, \
