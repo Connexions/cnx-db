@@ -36,13 +36,23 @@ def parse_connection_string_to_parts(connection_string):
     return dict(map(lambda x: x.split('='), connection_string.split()))
 
 
+@deprecate("please use cnxdb.contrib.testing.get_db_url")
 def get_connection_string_parts():
     """Retrieves the connection string as dictionary key values."""
     parts = {}
     [parts.setdefault(k, v) for k, v in _DEFAULT_CONNECTION_SETTINGS.items()]
-    connection_string = os.environ.get('TESTING_CONNECTION_STRING', None)
-    if connection_string is not None:
+
+    db_url = get_db_url()
+    if db_url is None:
+        connection_string = os.environ.get('TESTING_CONNECTION_STRING', None)
+        if connection_string is None:
+            raise RuntimeError('Must supply either DB_URL '
+                               'or TESTING_CONNECTION_STRING')
         parts.update(parse_connection_string_to_parts(connection_string))
+    else:
+        from cnxdb.connection.util import url_to_libpq_dsn
+        dsn = url_to_libpq_dsn(db_url)
+        parts.update(parse_connection_string_to_parts(dsn))
     return parts
 
 
