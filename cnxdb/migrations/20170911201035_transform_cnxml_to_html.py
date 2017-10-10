@@ -49,6 +49,7 @@ def up(cursor):
     module_idents = tuple([i[1] for i in to_transform])
 
     # Check if datamigrations.index_cnxml_html exists, else create it
+    cursor.execute("CREATE SCHEMA IF NOT EXISTS datamigrations")
     cursor.execute("""\
 CREATE TABLE IF NOT EXISTS datamigrations.index_cnxml_html
     ( LIKE module_files )""")

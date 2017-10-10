@@ -22,8 +22,6 @@ CREATE UNIQUE INDEX lastest_modules_short_id_idx on latest_modules (short_id(uui
 CREATE INDEX fti_idx ON modulefti USING gist (module_idx);
 CREATE INDEX collated_fti_idx ON collated_fti USING gist (module_idx);
 
-CREATE INDEX modulefti_lexemes_module_ident on modulefti_lexemes (module_ident);
-CREATE INDEX collated_fti_lexemes_context_item_idx on collated_fti_lexemes (context, item);
 CREATE INDEX moduletags_module_ident_idx on moduletags (module_ident);
 
 CREATE INDEX keywords_upword_idx ON keywords  (upper(word));
@@ -51,7 +49,5 @@ CREATE INDEX collated_file_associations_context_fkey ON collated_file_associatio
 CREATE INDEX collated_file_associations_item_fkey ON collated_file_associations (item);
 CREATE INDEX collated_fti_context_fkey ON collated_fti (context);
 CREATE INDEX collated_fti_item_fkey ON collated_fti (item);
-CREATE INDEX collated_fti_lexemes_context_fkey ON collated_fti_lexemes (context);
-CREATE INDEX collated_fti_lexemes_item_fkey ON collated_fti_lexemes (item);
 CREATE INDEX document_hits_documentid_fkey ON document_hits (documentid);
 CREATE INDEX moduletags_module_ident_fkey ON moduletags (module_ident);

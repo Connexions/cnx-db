@@ -151,28 +151,12 @@ CREATE TABLE "modulefti" (
 	FOREIGN KEY (module_ident) REFERENCES modules ON DELETE CASCADE
 );
 
-CREATE TABLE "modulefti_lexemes" (
-	"module_ident" integer,
-	"lexeme" text,
-    "positions" int[],
-	FOREIGN KEY (module_ident) REFERENCES modules ON DELETE CASCADE
-);
-
 CREATE TABLE "collated_fti" (
 	"item" integer,
 	"context" integer,
 	"module_idx" tsvector,
     "fulltext" text,
     PRIMARY KEY ("item", "context"),
-	FOREIGN KEY (item) REFERENCES modules (module_ident) ON DELETE CASCADE,
-	FOREIGN KEY (context) REFERENCES modules (module_ident) ON DELETE CASCADE
-);
-
-CREATE TABLE "collated_fti_lexemes" (
-	"item" integer,
-	"context" integer,
-	"lexeme" text,
-    "positions" int[],
 	FOREIGN KEY (item) REFERENCES modules (module_ident) ON DELETE CASCADE,
 	FOREIGN KEY (context) REFERENCES modules (module_ident) ON DELETE CASCADE
 );
