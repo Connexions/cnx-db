@@ -246,9 +246,14 @@ CREATE TRIGGER ruleset_trigger
   WHEN (new.filename = 'ruleset.css'::text)
   EXECUTE PROCEDURE rebake();
 
--- recipe maintenace triggers
+-- default_recipe maintenace triggers
 
-CREATE OR REPLACE FUNCTION update_default_recipes() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION update_default_recipes() RETURNS trigger AS
+-- When a new recipe is inserted (or old one updated) make sure the
+-- default_recipe table is appropriately updated
+-- be careful to not allow changing a recipe that is the current recipe for
+-- a baked book
+$$
 BEGIN
   IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') AND
           NEW.revised >= ((SELECT revised FROM print_style_recipes
@@ -286,7 +291,13 @@ CREATE TRIGGER update_default_recipes
   EXECUTE PROCEDURE update_default_recipes();
 
 
-CREATE OR REPLACE FUNCTION delete_from_default_recipes() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION delete_from_default_recipes() RETURNS trigger AS
+-- Trigger function for handling deletes from print_style_recipes
+-- If the recipe is in use (there is a book that has been cooked with that recipe),
+-- do not allow delete.
+-- If the recipe was the newest of its label, remove it from default_recipes, but
+-- replace it with the next newest, if any
+$$
 BEGIN
   PERFORM 1 FROM modules where recipe = OLD.fileid;
   IF FOUND THEN
