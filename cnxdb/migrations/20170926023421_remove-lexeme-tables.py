@@ -19,31 +19,31 @@ def up(cursor):
         SELECT SUM(nentry)::bigint FROM lexemes, words WHERE word @@ plainto_tsquery(qwords);
         $_$;
 
-    ALTER TABLE modulefti_lexemes DROP CONSTRAINT modulefti_lexemes_module_ident_fkey;
+    ALTER TABLE IF EXISTS modulefti_lexemes DROP CONSTRAINT IF EXISTS modulefti_lexemes_module_ident_fkey;
 
-    ALTER TABLE collated_fti_lexemes DROP CONSTRAINT collated_fti_lexemes_context_fkey;
+    ALTER TABLE IF EXISTS collated_fti_lexemes DROP CONSTRAINT IF EXISTS collated_fti_lexemes_context_fkey;
 
-    ALTER TABLE collated_fti_lexemes DROP CONSTRAINT collated_fti_lexemes_item_fkey;
+    ALTER TABLE IF EXISTS collated_fti_lexemes DROP CONSTRAINT IF EXISTS collated_fti_lexemes_item_fkey;
 
-    DROP INDEX collated_fti_lexemes_item_fkey;
+    DROP INDEX IF EXISTS collated_fti_lexemes_item_fkey;
 
-    DROP INDEX collated_fti_lexemes_context_fkey;
+    DROP INDEX IF EXISTS collated_fti_lexemes_context_fkey;
 
-    DROP INDEX collated_fti_lexemes_context_item_idx;
+    DROP INDEX IF EXISTS collated_fti_lexemes_context_item_idx;
 
-    DROP TRIGGER index_fulltext_lexeme ON modulefti;
+    DROP TRIGGER IF EXISTS index_fulltext_lexeme ON modulefti;
 
-    DROP TRIGGER index_collated_fulltext_lexeme ON collated_fti;
+    DROP TRIGGER IF EXISTS index_collated_fulltext_lexeme ON collated_fti;
 
-    DROP INDEX modulefti_lexemes_module_ident;
+    DROP INDEX IF EXISTS modulefti_lexemes_module_ident;
 
-    DROP TABLE collated_fti_lexemes;
+    DROP TABLE IF EXISTS collated_fti_lexemes;
 
-    DROP TABLE modulefti_lexemes;
+    DROP TABLE IF EXISTS modulefti_lexemes;
 
-    DROP FUNCTION index_fulltext_lexeme_update_trigger();
+    DROP FUNCTION IF EXISTS index_fulltext_lexeme_update_trigger();
 
-    DROP FUNCTION index_collated_fulltext_lexeme_update_trigger();
+    DROP FUNCTION IF EXISTS index_collated_fulltext_lexeme_update_trigger();
     """)
 
 
