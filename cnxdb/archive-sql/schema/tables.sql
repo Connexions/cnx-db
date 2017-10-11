@@ -278,6 +278,10 @@ CREATE TABLE print_style_recipes (
       -- future may have 'pdf' or other cases
   revised TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
       -- time of upload to the archive db
+  title TEXT,
+      -- long human understandable name for print style (for menus, etc.)
+  commit_id text,
+      -- a string to further identify what version recipe (commit hash?)
   FOREIGN KEY (fileid) REFERENCES files (fileid),
   PRIMARY KEY (print_style, tag)
       -- allow a recipe per each version of print_style
@@ -296,5 +300,9 @@ CREATE TABLE default_print_style_recipes (
       -- default recipe for this particular print_style 
   recipe_type TEXT,
   revised TIMESTAMP WITH TIME ZONE NOT NULL,
+  title TEXT,
+      -- long human understandable name for print style (for menus, etc.)
+  commit_id text,
+      -- a string to further identify what version recipe (commit hash?)
   FOREIGN KEY (fileid) REFERENCES files (fileid)
 );

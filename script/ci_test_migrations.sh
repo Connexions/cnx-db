@@ -40,10 +40,13 @@ git checkout $current_commit
 pip install .
 
 # check the number of migrations that are going to run
-steps=$(dbmigrator --db-connection-string='dbname=testing user=tester' list | grep False | wc -l)
+applied_before=$(dbmigrator --db-connection-string='dbname=testing user=tester' list | awk 'NF>3 {applied+=1}; END {print applied}')
 
 # run the migrations
 dbmigrator --db-connection-string='dbname=testing user=tester' migrate --run-deferred
+
+applied_after=$(dbmigrator --db-connection-string='dbname=testing user=tester' list | awk 'NF>3 {applied+=1}; END {print applied}')
+steps=$((applied_after-applied_before))
 
 # store the schema
 pg_dump -s 'dbname=testing user=tester' >migrated_schema.sql
