@@ -266,7 +266,7 @@ BEGIN
       UPDATE default_print_style_recipes SET
         fileid=NEW.fileid,
         recipe_type=NEW.recipe_type,
-        NEW.revised)
+        revised=NEW.revised
         WHERE print_style=NEW.print_style AND tag=NEW.tag;
   END IF;
 
