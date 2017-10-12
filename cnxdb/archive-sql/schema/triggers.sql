@@ -2,7 +2,7 @@ CREATE OR REPLACE FUNCTION update_latest() RETURNS trigger AS '
 BEGIN
   IF (TG_OP = ''INSERT'' OR TG_OP = ''UPDATE'') AND
           ARRAY [NEW.major_version, NEW.minor_version] >= (SELECT ARRAY [major_version, minor_version]
-            FROM latest_modules WHERE uuid = NEW.uuid ) AND
+            FROM latest_modules WHERE uuid = NEW.uuid UNION ALL SELECT ARRAY[0, NULL] LIMIT 1) AND
           NEW.stateid = 1 THEN
       LOCK TABLE latest_modules IN SHARE ROW EXCLUSIVE MODE;
       DELETE FROM latest_modules WHERE moduleid = NEW.moduleid OR uuid = NEW.uuid;
