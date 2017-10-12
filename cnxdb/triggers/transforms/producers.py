@@ -15,7 +15,7 @@ from .converters import (
     DEFAULT_XMLPARSER,
     cnxml_to_html, cnxml_to_full_html,
     html_to_cnxml, html_to_full_cnxml,
-    )
+)
 from .resolvers import resolve_cnxml_urls, resolve_html_urls
 
 
@@ -25,13 +25,13 @@ __all__ = (
     'produce_cnxml_for_module', 'produce_html_for_module',
     'transform_abstract_to_cnxml', 'transform_abstract_to_html',
     'transform_module_content',
-    )
+)
 
 
 TRANSFORM_TYPES = {
     'cnxml2html': (cnxml_to_full_html, resolve_cnxml_urls, 'text/html',),
     'html2cnxml': (html_to_full_cnxml, resolve_html_urls, 'text/xml',),
-    }
+}
 
 
 class MissingDocumentOrSource(Exception):
