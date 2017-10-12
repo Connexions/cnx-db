@@ -74,7 +74,8 @@ class AbstractToHtmlTestCase(unittest.TestCase):
                        "  WHERE abstractid = %s;",
                        (abstractid,))
         html = cursor.fetchone()[0]
-        expected = '<p>A link to the <a href="http://example.com">outside world</a>.</p>'
+        expected = ('<p>A link to the <a href="http://example.com">'
+                    'outside world</a>.</p>')
         self.assertTrue(html.find(expected) >= 0)
 
     @testing.db_connect
@@ -136,7 +137,8 @@ class AbstractToHtmlTestCase(unittest.TestCase):
         # Case to ensure the reference resolution for resources.
         # This test requires a document_ident in order match with
         #   a module_files record.
-        abstract = 'Image: <media><image mime-type="image/jpeg" src="Figure_01_00_01.jpg" /></media>'
+        abstract = ('Image: <media><image mime-type="image/jpeg" '
+                    'src="Figure_01_00_01.jpg" /></media>')
         cursor.execute("INSERT INTO abstracts (abstract) VALUES (%s) "
                        "RETURNING abstractid", (abstract,))
         abstractid = cursor.fetchone()[0]
@@ -169,7 +171,10 @@ INSERT INTO module_files (module_ident, fileid, filename)
                        (abstractid,))
         html_abstract = cursor.fetchone()[0]
         self.assertIn(
-            """Image: <span data-type="media"><img src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg" data-media-type="image/jpeg" alt=""/></span>""",
+            ('Image: <span data-type="media"><img '
+             'src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/'
+             'Figure_01_00_01.jpg" data-media-type="image/jpeg" '
+             'alt=""/></span>'),
             html_abstract)
 
 
@@ -411,7 +416,9 @@ class AbstractToCnxmlTestCase(unittest.TestCase):
                        "  WHERE abstractid = %s;",
                        (abstractid,))
         abstract = cursor.fetchone()[0]
-        expected = 'A number list: <list list-type="bulleted"><item>one</item><item>two</item><item>three</item></list>'
+        expected = ('A number list: <list list-type="bulleted">'
+                    '<item>one</item><item>two</item>'
+                    '<item>three</item></list>')
         self.assertIn(expected, abstract)
 
     @testing.db_connect
@@ -438,7 +445,8 @@ class AbstractToCnxmlTestCase(unittest.TestCase):
                        "  WHERE abstractid = %s;",
                        (abstractid,))
         abstract = cursor.fetchone()[0]
-        expected = '<para>A link to the <link url="http://example.com">outside world</link>.</para>'
+        expected = ('<para>A link to the <link url="http://example.com">'
+                    'outside world</link>.</para>')
         self.assertIn(expected, abstract)
 
     @testing.db_connect
@@ -629,7 +637,8 @@ class ModuleToCnxmlTestCase(unittest.TestCase):
         # Check the error message
         self.assertEqual(
             e.exception.message,
-            "One of ('index.html.cnxml', 'index.cnxml') already exists for document 2")
+            ("One of ('index.html.cnxml', 'index.cnxml') "
+             "already exists for document 2"))
 
         # Assert index.cnxml.html is not deleted
         cursor.execute("SELECT fileid FROM files "
@@ -665,7 +674,8 @@ class ModuleToCnxmlTestCase(unittest.TestCase):
         # Check the error message
         self.assertEqual(
             e.exception.message,
-            "One of ('index.html.cnxml', 'index.cnxml') already exists for document 2")
+            ("One of ('index.html.cnxml', 'index.cnxml') "
+             "already exists for document 2"))
 
         # Assert index.cnxml.html is not deleted
         cursor.execute("SELECT fileid FROM files "

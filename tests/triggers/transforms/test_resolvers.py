@@ -47,11 +47,17 @@ class HtmlReferenceResolutionTestCase(unittest.TestCase):
             content, bad_refs = self.target(content, testing.fake_plpy, ident)
 
         # Read the content for the reference changes.
-        expected_img_ref = '<img src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg" data-media-type="image/jpg" alt="The spiral galaxy Andromeda is shown."/>'
+        expected_img_ref = (
+            '<img src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/'
+            'Figure_01_00_01.jpg" data-media-type="image/jpg" '
+            'alt="The spiral galaxy Andromeda is shown."/>')
         self.assertIn(expected_img_ref, content)
-        expected_internal_ref = '<a href="/contents/209deb1f-1a46-4369-9e0d-18674cf58a3e@7">'
+        expected_internal_ref = (
+            '<a href="/contents/209deb1f-1a46-4369-9e0d-18674cf58a3e@7">')
         self.assertIn(expected_internal_ref, content)
-        expected_resource_ref = '<a href="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg">'
+        expected_resource_ref = (
+            '<a href="/resources/'
+            'd47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg">')
         self.assertIn(expected_resource_ref, content)
 
     @testing.db_connect
@@ -67,8 +73,11 @@ class HtmlReferenceResolutionTestCase(unittest.TestCase):
 
         self.assertEqual(sorted(bad_refs), [
             "Invalid reference value: document=3, reference=/m",
-            "Missing resource with filename 'InquiryQuestions.svg', moduleid None version None.: document=3, reference=InquiryQuestions.svg",
-            "Unable to find a reference to 'm43540' at version 'None'.: document=3, reference=/m43540",
+            ("Missing resource with filename 'InquiryQuestions.svg', "
+             "moduleid None version None.: document=3, "
+             "reference=InquiryQuestions.svg"),
+            ("Unable to find a reference to 'm43540' at version 'None'.: "
+             "document=3, reference=/m43540"),
         ])
         self.assertIn('<a href="/m">', content)
 
@@ -110,16 +119,18 @@ class HtmlReferenceResolutionTestCase(unittest.TestCase):
             <source src="Figure_01_00_01.jpg" type="audio/mpeg"/>
         </audio>
     </body>
-</html>''')
+</html>''')  # noqa: E501
 
         html, bad_references = self.target(html,
                                            testing.fake_plpy,
                                            document_ident=3)
         cursor.connection.commit()
 
-        self.assertEqual(bad_references, [
-            "Missing resource with filename 'PhET_Icon.png', moduleid m42092 version 1.3.: document=3, reference=PhET_Icon.png",
-        ])
+        self.assertEqual(
+            bad_references,
+            [("Missing resource with filename 'PhET_Icon.png', "
+              "moduleid m42092 version 1.3.: document=3, "
+              "reference=PhET_Icon.png")])
         self.assertMultiLineEqual(html, '''\
 <html xmlns="http://www.w3.org/1999/xhtml">
     <body>
@@ -155,7 +166,7 @@ class HtmlReferenceResolutionTestCase(unittest.TestCase):
             <source src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg" type="audio/mpeg"/>
         </audio>
     </body>
-</html>''')
+</html>''')  # noqa: E501
 
     @testing.db_connect
     def test_get_resource_info(self, cursor):
@@ -168,34 +179,39 @@ class HtmlReferenceResolutionTestCase(unittest.TestCase):
                                      testing.fake_plpy, 3)
 
         # Test file not found
-        self.assertRaises(ReferenceNotFound, resolver.get_resource_info,
-                          'PhET_Icon.png')
+        self.assertRaises(
+            ReferenceNotFound,
+            resolver.get_resource_info,
+            'PhET_Icon.png')
 
         # Test getting a file in module 3
-        self.assertEqual(resolver.get_resource_info('Figure_01_00_01.jpg'),
-                         {'hash': 'd47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9', 'id': 6})
+        self.assertEqual(
+            resolver.get_resource_info('Figure_01_00_01.jpg'),
+            {'hash': 'd47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9', 'id': 6})
 
         # Test file not found outside of module 3
-        self.assertRaises(ReferenceNotFound, resolver.get_resource_info,
-                          'PhET_Icon.png', document_id='m42955')
+        self.assertRaises(
+            ReferenceNotFound,
+            resolver.get_resource_info,
+            'PhET_Icon.png', document_id='m42955')
 
         # Test getting a file in another module
-        self.assertEqual(resolver.get_resource_info('PhET_Icon.png',
-                                                    document_id='m42092'),
-                         {'hash': '075500ad9f71890a85fe3f7a4137ac08e2b7907c',
-                          'id': 23})
+        self.assertEqual(
+            resolver.get_resource_info('PhET_Icon.png', document_id='m42092'),
+            {'hash': '075500ad9f71890a85fe3f7a4137ac08e2b7907c', 'id': 23})
 
         # Test file not found with version
-        self.assertRaises(ReferenceNotFound, resolver.get_resource_info,
-                          'PhET_Icon.png', document_id='m42092',
-                          version='1.3')
+        self.assertRaises(
+            ReferenceNotFound,
+            resolver.get_resource_info,
+            'PhET_Icon.png', document_id='m42092', version='1.3')
 
         # Test getting a file with version
-        self.assertEqual(resolver.get_resource_info('PhET_Icon.png',
-                                                    document_id='m42092',
-                                                    version='1.4'),
-                         {'hash': '075500ad9f71890a85fe3f7a4137ac08e2b7907c',
-                          'id': 23})
+        self.assertEqual(
+            resolver.get_resource_info('PhET_Icon.png',
+                                       document_id='m42092',
+                                       version='1.4'),
+            {'hash': '075500ad9f71890a85fe3f7a4137ac08e2b7907c', 'id': 23})
 
     def test_parse_reference(self):
         from cnxdb.triggers.transforms.resolvers import (
@@ -353,7 +369,9 @@ class CnxmlReferenceResolutionTestCase(unittest.TestCase):
             parse_reference('http://legacy.cnx.org/content/m48897/latest'),
             (None, ()))
         self.assertEqual(
-            parse_reference('http://legacy.cnx.org/content/m48897/latest?collection=col11441/latest'),
+            parse_reference(
+                ('http://legacy.cnx.org/content/m48897/latest?'
+                 'collection=col11441/latest')),
             (None, (),))
 
         # Matching documents
@@ -525,9 +543,15 @@ class CnxmlReferenceResolutionTestCase(unittest.TestCase):
         content, bad_refs = self.target(content, testing.fake_plpy, ident)
 
         self.assertEqual(sorted(bad_refs), [
-            "Invalid reference value: document=3, reference=/contents/42ae45b/hello-world",
-            "Missing resource with hash: 0f3da0de61849a47f77543c383d1ac621b25e6e0: document=3, reference=None",
-            "Unable to find a reference to 'c44477a6-1278-433a-ba1e-5a21c8bab191' at version 'None'.: document=3, reference=/contents/c44477a6-1278-433a-ba1e-5a21c8bab191@12",
+            ("Invalid reference value: document=3, "
+             "reference=/contents/42ae45b/hello-world"),
+            ("Missing resource with hash: "
+             "0f3da0de61849a47f77543c383d1ac621b25e6e0: "
+             "document=3, reference=None"),
+            ("Unable to find a reference to "
+             "'c44477a6-1278-433a-ba1e-5a21c8bab191' at version 'None'.: "
+             "document=3, reference=/contents/"
+             "c44477a6-1278-433a-ba1e-5a21c8bab191@12"),
         ])
         # invalid ref still in the content?
         self.assertIn('<link url="/contents/42ae45b/hello-world">', content)
@@ -549,7 +573,8 @@ class CnxmlReferenceResolutionTestCase(unittest.TestCase):
 
         # Test getting a file in module 3
         self.assertEqual(
-            resolver.get_resource_filename('d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9'),
+            resolver.get_resource_filename(
+                'd47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9'),
             'Figure_01_00_01.jpg')
 
         # Test file not found outside of module 3
@@ -560,11 +585,13 @@ class CnxmlReferenceResolutionTestCase(unittest.TestCase):
         # Test getting a file in another module
         resolver.document_ident = 4
         self.assertEqual(
-            resolver.get_resource_filename('075500ad9f71890a85fe3f7a4137ac08e2b7907c'),
+            resolver.get_resource_filename(
+                '075500ad9f71890a85fe3f7a4137ac08e2b7907c'),
             'PhET_Icon.png')
 
         # Test getting a file without an ident.
         resolver.document_ident = None
         self.assertEqual(
-            resolver.get_resource_filename('075500ad9f71890a85fe3f7a4137ac08e2b7907c'),
+            resolver.get_resource_filename(
+                '075500ad9f71890a85fe3f7a4137ac08e2b7907c'),
             'PhET_Icon.png')
