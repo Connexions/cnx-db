@@ -6,10 +6,10 @@
 # See LICENCE.txt for details.
 # ###
 """Resolver methods for fixing up references in transformed documents."""
-
-import re
 import inspect
 import json
+import re
+import sys
 
 from lxml import etree
 
@@ -21,7 +21,11 @@ __all__ = (
     'MODULE_REFERENCE', 'RESOURCE_REFERENCE',
     'DOCUMENT_REFERENCE', 'BINDER_REFERENCE',
     'resolve_cnxml_urls', 'resolve_html_urls',
-    )
+)
+
+
+if sys.version_info > (3,):
+    basestring = str
 
 
 LEGACY_PATH_REFERENCE_REGEX = re.compile(
@@ -382,7 +386,7 @@ class CnxmlToHtmlReferenceResolver(BaseReferenceResolver):
             '//html:object/html:embed': 'src',
             '//html:source': 'src',
             '//html:span': 'data-src',
-            }
+        }
 
         for xpath, attr in media_xpath.iteritems():
             for elem in self.apply_xpath(xpath):
@@ -639,7 +643,7 @@ class HtmlToCnxmlReferenceResolver(BaseReferenceResolver):
             '//c:flash': ('src',),
             '//c:download': ('src',),
             '//c:labview': ('src',),
-            }
+        }
 
         for xpath, attrs in media_xpath.iteritems():
             for elem in self.apply_xpath(xpath):
