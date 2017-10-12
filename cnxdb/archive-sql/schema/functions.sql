@@ -198,3 +198,7 @@ CREATE OR REPLACE FUNCTION short_ident_hash(uuid uuid, major integer, minor inte
  IMMUTABLE
 AS $function$ select short_id(uuid) || '@' || concat_ws('.', major, minor) $function$;
 
+CREATE OR REPLACE FUNCTION plainto_or_tsquery (TEXT) RETURNS tsquery AS $$
+  SELECT to_tsquery( regexp_replace( $1, E'[\\s\'|:&()!]+','|','g') );
+$$ LANGUAGE SQL STRICT IMMUTABLE;
+
