@@ -5,8 +5,6 @@
 # Public License version 3 (AGPLv3).
 # See LICENCE.txt for details.
 # ###
-import os
-import io
 import unittest
 
 from psycopg2 import Binary
@@ -110,7 +108,7 @@ class AbstractToHtmlTestCase(unittest.TestCase):
 
     def test_failure_on_nonexistent_document(self):
         # Case to ensure failure the requested document doesn't exist.
-        document_ident, abstractid = 50, 50
+        document_ident = 50
 
         with self.assertRaises(ValueError) as caught_exception:
             self.call_target(document_ident)
@@ -130,7 +128,7 @@ class AbstractToHtmlTestCase(unittest.TestCase):
         cursor.connection.commit()
 
         from cnxdb.triggers.transforms.producers import MissingAbstract
-        with self.assertRaises(MissingAbstract) as caught_exception:
+        with self.assertRaises(MissingAbstract):
             self.call_target(document_ident)
 
     @testing.db_connect
@@ -228,7 +226,7 @@ class ModuleToHtmlTestCase(unittest.TestCase):
     def test_success(self, cursor):
         # Case to test for a successful tranformation of a module from
         #   cnxml to html.
-        ident, filename = 2, 'index.cnxml'  # m42955
+        ident = 2  # m42955
 
         # Delete module_ident 2 index.cnxml.html
         cursor.execute("DELETE FROM module_files WHERE module_ident = 2 "
@@ -375,8 +373,8 @@ class ModuleToHtmlTestCase(unittest.TestCase):
         from lxml.etree import XMLSyntaxError
         self.assertTrue(isinstance(exception, XMLSyntaxError))
         self.assertEqual(
-                exception.message,
-                u"Failed to parse QName 'md:tit47:', line 11, column 12")
+            exception.message,
+            u"Failed to parse QName 'md:tit47:', line 11, column 12")
 
 
 # ############### #
@@ -472,7 +470,7 @@ class AbstractToCnxmlTestCase(unittest.TestCase):
 
     def test_failure_on_nonexistent_document(self):
         # Case to ensure failure the requested document doesn't exist.
-        document_ident, abstractid = 50, 50
+        document_ident = 50
 
         with self.assertRaises(ValueError) as caught_exception:
             self.call_target(document_ident)
@@ -492,7 +490,7 @@ class AbstractToCnxmlTestCase(unittest.TestCase):
         cursor.connection.commit()
 
         from cnxdb.triggers.transforms.producers import MissingAbstract
-        with self.assertRaises(MissingAbstract) as caught_exception:
+        with self.assertRaises(MissingAbstract):
             self.call_target(document_ident)
 
 
@@ -549,7 +547,7 @@ class ModuleToCnxmlTestCase(unittest.TestCase):
     @testing.db_connect
     def test_success(self, cursor):
         # Case to test for a successful tranformation of a module
-        ident, filename = 2, 'index.cnxml.html'  # m42955
+        ident = 2  # m42955
 
         # Delete module_ident 2 index.cnxml.html
         cursor.execute("DELETE FROM module_files WHERE module_ident = 2 "

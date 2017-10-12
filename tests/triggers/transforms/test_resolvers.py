@@ -21,7 +21,7 @@ class HtmlReferenceResolutionTestCase(unittest.TestCase):
 
     def setUp(self):
         settings = testing.integration_test_settings()
-        config = pyramid_testing.setUp(settings=settings)
+        pyramid_testing.setUp(settings=settings)
         self.fixture.setUp()
 
     def tearDown(self):
@@ -58,7 +58,6 @@ class HtmlReferenceResolutionTestCase(unittest.TestCase):
     def test_reference_not_parseable(self, cursor):
         ident = 3
         from cnxdb.triggers.transforms.converters import cnxml_to_full_html
-        import glob
         content_filepath = os.path.join(testing.DATA_DIRECTORY,
                                         'm45070.cnxml')
         with open(content_filepath, 'r') as fb:
@@ -70,7 +69,7 @@ class HtmlReferenceResolutionTestCase(unittest.TestCase):
             "Invalid reference value: document=3, reference=/m",
             "Missing resource with filename 'InquiryQuestions.svg', moduleid None version None.: document=3, reference=InquiryQuestions.svg",
             "Unable to find a reference to 'm43540' at version 'None'.: document=3, reference=/m43540",
-            ])
+        ])
         self.assertIn('<a href="/m">', content)
 
     @testing.db_connect
@@ -120,7 +119,7 @@ class HtmlReferenceResolutionTestCase(unittest.TestCase):
 
         self.assertEqual(bad_references, [
             "Missing resource with filename 'PhET_Icon.png', moduleid m42092 version 1.3.: document=3, reference=PhET_Icon.png",
-            ])
+        ])
         self.assertMultiLineEqual(html, '''\
 <html xmlns="http://www.w3.org/1999/xhtml">
     <body>
@@ -163,7 +162,7 @@ class HtmlReferenceResolutionTestCase(unittest.TestCase):
         from cnxdb.triggers.transforms.resolvers import (
             CnxmlToHtmlReferenceResolver as ReferenceResolver,
             ReferenceNotFound,
-            )
+        )
 
         resolver = ReferenceResolver(io.BytesIO('<html></html>'),
                                      testing.fake_plpy, 3)
@@ -202,7 +201,7 @@ class HtmlReferenceResolutionTestCase(unittest.TestCase):
         from cnxdb.triggers.transforms.resolvers import (
             MODULE_REFERENCE, RESOURCE_REFERENCE,
             parse_legacy_reference as parse_reference,
-            )
+        )
 
         self.assertEqual(
             parse_reference('/m12345'),
@@ -317,7 +316,7 @@ class CnxmlReferenceResolutionTestCase(unittest.TestCase):
 
     def setUp(self):
         settings = testing.integration_test_settings()
-        config = pyramid_testing.setUp(settings=settings)
+        pyramid_testing.setUp(settings=settings)
         self.fixture.setUp()
 
     def tearDown(self):
@@ -340,7 +339,7 @@ class CnxmlReferenceResolutionTestCase(unittest.TestCase):
             DOCUMENT_REFERENCE, BINDER_REFERENCE,
             RESOURCE_REFERENCE,
             parse_html_reference as parse_reference,
-            )
+        )
 
         title = "Something about nothing"
         id = '49f43184-728f-445f-b669-abda618ab8f4'
@@ -529,7 +528,7 @@ class CnxmlReferenceResolutionTestCase(unittest.TestCase):
             "Invalid reference value: document=3, reference=/contents/42ae45b/hello-world",
             "Missing resource with hash: 0f3da0de61849a47f77543c383d1ac621b25e6e0: document=3, reference=None",
             "Unable to find a reference to 'c44477a6-1278-433a-ba1e-5a21c8bab191' at version 'None'.: document=3, reference=/contents/c44477a6-1278-433a-ba1e-5a21c8bab191@12",
-            ])
+        ])
         # invalid ref still in the content?
         self.assertIn('<link url="/contents/42ae45b/hello-world">', content)
 
@@ -539,7 +538,7 @@ class CnxmlReferenceResolutionTestCase(unittest.TestCase):
         from cnxdb.triggers.transforms.resolvers import (
             HtmlToCnxmlReferenceResolver as ReferenceResolver,
             ReferenceNotFound,
-            )
+        )
 
         resolver = ReferenceResolver(io.BytesIO('<html></html>'),
                                      testing.fake_plpy, 3)
