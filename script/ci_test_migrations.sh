@@ -39,6 +39,12 @@ pg_dump -s 'dbname=testing user=tester' >old_schema.sql
 git checkout $current_commit
 pip install .
 
+# mark all the repeat, deferred migrations as not applied (to make the
+# calculation of the number of migrations to rollback easier)
+dbmigrator --db-connection-string='dbname=testing user=tester' list | \
+    awk '/deferred\*/ {print $1}' | \
+    while read timestamp; do dbmigrator --db-connection-string='dbname=testing user=tester' mark -f $timestamp; done
+
 # check the number of migrations that are going to run
 applied_before=$(dbmigrator --db-connection-string='dbname=testing user=tester' list | awk 'NF>3 {applied+=1}; END {print applied}')
 
