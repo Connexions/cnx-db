@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 import os
 
+import psycopg2
 import pytest
 from sqlalchemy import create_engine
 
@@ -102,15 +103,13 @@ def db_cursor_without_db_init(db_engines):
 _db_cursor__first_run = True
 
 
-@pytest.fixture
-def db_cursor(db_engines):
-    """Creates a database connection and cursor"""
+def _maybe_init_database(db_engines):
+    """Initializes the database if it isn't already initialized"""
     global _db_cursor__first_run
 
     conn = db_engines['super'].raw_connection()
     with conn.cursor() as cursor:
         tables = get_database_table_names(cursor)
-    conn.close()
     # Use the database if it exists, otherwise initialize it
     if _db_cursor__first_run:
         _db_wipe(db_engines['super'])
@@ -118,11 +117,33 @@ def db_cursor(db_engines):
         _db_cursor__first_run = False
     elif 'modules' not in tables:
         db_init(db_engines)
+    conn.close()
+
+
+@pytest.fixture
+def db_cursor(db_engines):
+    """Creates a database connection and cursor"""
+    _maybe_init_database(db_engines)
 
     # Create a new connection to activate the virtual environment
     # as it would normally be used.
     conn = db_engines['common'].raw_connection()
     cursor = conn.cursor()
+    yield cursor
+    cursor.close()
+    conn.close()
+
+
+@pytest.fixture
+def db_dict_cursor(db_engines, db_settings):
+    """Creates a database connection and cursor that outputs a dict"""
+    _maybe_init_database(db_engines)
+
+    # Create a new connection to activate the virtual environment
+    # as it would normally be used.
+    # FIXME use db_engines instead of psycopg2
+    conn = psycopg2.connect(db_settings['db.common.url'])
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     yield cursor
     cursor.close()
     conn.close()
