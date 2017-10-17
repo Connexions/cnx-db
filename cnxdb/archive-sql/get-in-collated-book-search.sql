@@ -26,15 +26,15 @@ SELECT
 m.uuid,
 m.major_version as version,
 ts_headline(COALESCE(t.title, m.name),
-plainto_or_tsquery(%(search_term)s),
+plainto{combiner}_tsquery(%(search_term)s),
 E'StartSel="<span class=""q-match"">", StopSel="</span>", MaxFragments=0, HighlightAll=TRUE'
 ) as title,
 ts_headline(fulltext,
-plainto_or_tsquery(%(search_term)s),
+plainto{combiner}_tsquery(%(search_term)s),
 E'StartSel="<span class=""q-match"">", StopSel="</span>", MaxFragments=1, MaxWords=20, MinWords=15,'
 ) as snippet,
 count_collated_lexemes(cft.item, cft.context, %(search_term)s) as matches,
-ts_rank_cd(cft.module_idx, plainto_or_tsquery(%(search_term)s)) AS rank
+ts_rank_cd(cft.module_idx, plainto{combiner}_tsquery(%(search_term)s)) AS rank
 FROM
  collated_fti cft join
  modules m on cft.item = m.module_ident join
@@ -42,7 +42,7 @@ FROM
 
 WHERE
  cft.context = t.docs[1] AND
- cft.module_idx @@ plainto_or_tsquery(%(search_term)s)
+ cft.module_idx @@ plainto{combiner}_tsquery(%(search_term)s)
 ORDER BY
  rank DESC,
  t.path
