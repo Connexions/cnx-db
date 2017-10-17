@@ -52,6 +52,7 @@ class FauxPlPyPlan(object):
         for i, value in enumerate(args):
             params['param_{}'.format(i + 1)] = value
         self._cursor.execute(self.stmt, params)
+        self._cursor.connection.commit()
         try:
             results = self._cursor.fetchall()
             if rows is not None:
