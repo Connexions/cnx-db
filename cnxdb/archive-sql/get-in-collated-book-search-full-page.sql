@@ -26,15 +26,15 @@ SELECT
 m.uuid,
 m.major_version as version,
 ts_headline(COALESCE(t.title, m.name),
-plainto_or_tsquery(%(search_term)s),
+plainto{combiner}_tsquery(%(search_term)s),
 E'StartSel="<span class=""q-match"">", StopSel="</span>", MaxFragments=0, HighlightAll=TRUE'
 ),
 ts_headline(
 convert_from(f.file, 'utf8'),
-plainto_or_tsquery(%(search_term)s),
+plainto{combiner}_tsquery(%(search_term)s),
 E'StartSel="<mtext class=""q-match"">", StopSel="</mtext>", MaxFragments=0, HighlightAll=TRUE'
 ),
-ts_rank_cd(cft.module_idx, plainto_or_tsquery(%(search_term)s)) AS rank
+ts_rank_cd(cft.module_idx, plainto{combiner}_tsquery(%(search_term)s)) AS rank
 FROM
  t left join modules m on t.value = m.module_ident
         join collated_fti cft on cft.item = m.module_ident
@@ -42,7 +42,7 @@ FROM
         join files f on cfa.fileid = f.fileid,
  modules AS book
 WHERE
- cft.module_idx @@ plainto_or_tsquery(%(search_term)s) AND 
+ cft.module_idx @@ plainto{combiner}_tsquery(%(search_term)s) AND 
  m.uuid = (%(page_uuid)s) AND
  cft.context = book.module_ident AND
  cfa.context = book.module_ident AND
