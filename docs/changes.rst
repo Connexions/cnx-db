@@ -6,6 +6,21 @@
 
    - feature message
 
+0.11.0
+------
+
+- In book search to provide query_type parameterization for AND vs OR queries (#87)
+- Fix number of migrations to rollback in ci_test_migrations.sh
+- get only the highest version for each book a page is in, return full ident_hash, as well as authors. Put same-as-page-authors first, since this is likely to be the orginal book the page was published in.  Returned as list of hashes in page content-extras
+- Correct project testing requirements to also use main.txt (#85)
+- Fix update latest trigger not adding new modules
+- make in book search OR terms, rather than AND them
+- do not use timestamps to determine latest content (#75)
+- Add migration for print_style_recipes (#80)
+- Make lexeme removal migration idempotent (#82)
+- Fix print_style_recipe trigger definition to align with the migration (#81)
+- Provide book full text search (#78)
+
 0.10.4
 ------
 
