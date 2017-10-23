@@ -21,3 +21,10 @@ docs/_build
 ############
 .coverage
 htmlcov/
+
+# ci_test_migrations.sh artifacts #
+###################################
+migrated_schema.sql
+new_schema.sql
+old_schema.sql
+rolled_back_schema.sql
