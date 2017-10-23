@@ -31,7 +31,7 @@ def test_db_init_called_twice(db_engines):
     from cnxdb.init.exceptions import DBSchemaInitialized
     try:
         init_db(db_engines['super'])
-    except DBSchemaInitialized as exc:
+    except DBSchemaInitialized:
         pass
     else:
         assert False, "the initialization check failed"
