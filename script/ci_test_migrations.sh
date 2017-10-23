@@ -2,7 +2,18 @@
 
 set -e
 
-git fetch origin master
+if [ -z "$CI" ]
+then
+    GIT_QUIET='-q'
+    PIP_QUIET='-qqq'
+    DBMIGRATOR_QUIET='--quiet'
+else
+    GIT_QUIET=''
+    PIP_QUIET=''
+    DBMIGRATOR_QUIET=''
+fi
+
+git fetch $GIT_QUIET origin master
 first_commit=$(git log --format='%h' --reverse FETCH_HEAD.. | head -1)
 
 # keep track of which branch we are on, so we can go back to it later
@@ -20,11 +31,11 @@ then
 fi
 
 # checkout the branch point
-git checkout $first_commit^
-pip install .
+git checkout $GIT_QUIET $first_commit^
+pip install $PIP_QUIET .
 
 # install db-migrator and cnx-db
-pip install 'db-migrator>=1.0.0'
+pip install $PIP_QUIET 'db-migrator>=1.0.0'
 
 export DB_URL='postgresql://tester:tester@localhost:5432/testing'
 
@@ -32,28 +43,28 @@ export DB_URL='postgresql://tester:tester@localhost:5432/testing'
 dropdb -U postgres testing
 createdb -U postgres -O tester testing
 cnx-db init
-dbmigrator --db-connection-string="$DB_URL" init
+dbmigrator $DBMIGRATOR_QUIET --db-connection-string="$DB_URL" init
 
 # store the schema
 pg_dump -s 'dbname=testing user=tester' >old_schema.sql
 
 # go back to the branch HEAD
-git checkout $current_commit
-pip install .
+git checkout $GIT_QUIET $current_commit
+pip install $PIP_QUIET .
 
 # mark all the repeat, deferred migrations as not applied (to make the
 # calculation of the number of migrations to rollback easier)
-dbmigrator --db-connection-string="$DB_URL" list | \
+dbmigrator $DBMIGRATOR_QUIET --db-connection-string="$DB_URL" list | \
     awk '/deferred\*/ {print $1}' | \
-    while read timestamp; do dbmigrator --db-connection-string="$DB_URL" mark -f $timestamp; done
+    while read timestamp; do dbmigrator $DBMIGRATOR_QUIET --db-connection-string="$DB_URL" mark -f $timestamp; done
 
 # check the number of migrations that are going to run
-applied_before=$(dbmigrator --db-connection-string="$DB_URL" list | awk 'NF>3 {applied+=1}; END {print applied}')
+applied_before=$(dbmigrator $DBMIGRATOR_QUIET --db-connection-string="$DB_URL" list | awk 'NF>3 {applied+=1}; END {print applied}')
 
 # run the migrations
-dbmigrator --db-connection-string="$DB_URL" migrate --run-deferred
+dbmigrator $DBMIGRATOR_QUIET --db-connection-string="$DB_URL" migrate --run-deferred
 
-applied_after=$(dbmigrator --db-connection-string="$DB_URL" list | awk 'NF>3 {applied+=1}; END {print applied}')
+applied_after=$(dbmigrator $DBMIGRATOR_QUIET --db-connection-string="$DB_URL" list | awk 'NF>3 {applied+=1}; END {print applied}')
 steps=$((applied_after-applied_before))
 
 # store the schema
@@ -62,7 +73,7 @@ pg_dump -s "$DB_URL" >migrated_schema.sql
 # rollback the migrations
 if [ "$steps" -gt 0 ]
 then
-    dbmigrator --db-connection-string="$DB_URL" rollback --steps=$steps
+    dbmigrator $DBMIGRATOR_QUIET --db-connection-string="$DB_URL" rollback --steps=$steps
 fi
 
 pg_dump -s "$DB_URL" >rolled_back_schema.sql
@@ -71,14 +82,14 @@ pg_dump -s "$DB_URL" >rolled_back_schema.sql
 dropdb -U postgres testing
 createdb -U postgres -O tester testing
 cnx-db init
-dbmigrator --db-connection-string="$DB_URL" init
+dbmigrator $DBMIGRATOR_QUIET --db-connection-string="$DB_URL" init
 
 pg_dump -s "$DB_URL" >new_schema.sql
 
 # Put dev environment back, if not on Travis
 if [ -z "$CI" ]
 then
-    pip install -e .
+    pip install $PIP_QUIET -e .
 fi
 
 # check schema
