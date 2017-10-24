@@ -1,6 +1,7 @@
 # The project's testing dependencies...
 pytest
 pytest-cov
+pytest-mock
 mock==1.0.1;python_version<="2.7"
 
 git+https://github.com/Connexions/cnx-query-grammar.git#egg=cnx-query-grammar
