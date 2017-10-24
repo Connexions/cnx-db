@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import sys
+
+__requires__ = ['doc8', 'sphinx']
+import pkg_resources
+
+import doc8.main
+from sphinx import directives
+
+# These setup functions call docutils.parsers.rst.directives.register_directive
+# which is then used by the docutil during validation
+# by the restructuredtext_lint package.
+setup_funcs = [
+    directives.setup,
+    directives.code.setup,
+    # directives.other.setup,
+    directives.patches.setup,
+]
+
+
+def main():
+    """wraps doc8.main.main to setup directives for validation"""
+    for func in setup_funcs:
+        func(None)
+    return doc8.main.main()
+
+
+if __name__ == '__main__':
+    sys.exit(main())
