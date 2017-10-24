@@ -147,7 +147,7 @@ help-lint :
 lint : $(STATEDIR)/env/pyvenv.cfg setup.cfg
 	$(BINDIR)/python -m flake8 .
 	@echo '====  ====  ====  ====  ====  ====  ====  ====  ====  ===='
-	$(BINDIR)/python -m doc8.main README.rst docs/
+	$(BINDIR)/python bin/doc8 README.rst docs/
 
 # /Lint
 

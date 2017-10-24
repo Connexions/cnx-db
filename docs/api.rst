@@ -12,6 +12,16 @@ Configuration
 
    .. autofunction:: discover_settings
 
+Scripting
+=========
+
+:mod:`cnxdb.scripting`
+----------------------
+
+.. automodule:: cnxdb.scripting
+
+   .. autofunction:: prepare
+
 Initialization
 ==============
 
