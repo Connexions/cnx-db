@@ -2,6 +2,16 @@ API
 ===
 
 
+Configuration
+=============
+
+:mod:`cnxdb.config`
+-------------------
+
+.. automodule:: cnxdb.config
+
+   .. autofunction:: discover_settings
+
 Initialization
 ==============
 

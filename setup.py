@@ -14,6 +14,7 @@ install_requires = (
     )
 tests_require = [
     'pytest',
+    'pytest-mock',
     ]
 extras_require = {
     'test': tests_require,
