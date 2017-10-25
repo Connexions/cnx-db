@@ -50,8 +50,6 @@ def test_init_called_twice(capsys, db_connection_string_parts):
     assert 'already initialized' in err
 
 
-@pytest.mark.skipif(not testing.is_db_local(),
-                    reason="not testing against a local database")
 @pytest.mark.usefixtures('db_wipe')
 def test_init_local(db_connection_string_parts):
     from cnxdb.cli.main import main
