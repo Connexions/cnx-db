@@ -112,7 +112,7 @@ class TestAbstractToHtml(BaseTestCase):
         with pytest.raises(ValueError) as exc_info:
             self.call_target(document_ident)
         # Just ensure that we aren't blind when the exception is raised.
-        assert exc_info.value.message.find(str(document_ident)) >= 0
+        assert str(exc_info.value).find(str(document_ident)) >= 0
 
     def test_failure_on_missing_abstract(self):
         # Case to ensure failure when an abstract is missing.
@@ -325,7 +325,7 @@ class TestModuleToHtml(BaseTestCase):
         # Check the error message
         expected_msg = ("One of ('index.cnxml.html',) already "
                         "exists for document 2")
-        assert exc_info.value.message == expected_msg
+        assert str(exc_info.value) == expected_msg
 
         # Assert index.cnxml.html is not deleted
         self.db_cursor.execute(
@@ -386,7 +386,7 @@ class TestModuleToHtml(BaseTestCase):
         assert isinstance(exception, XMLSyntaxError)
         expected_msg = (u"Failed to parse QName 'md:tit47:', "
                         "line 11, column 12")
-        assert exception.message == expected_msg
+        assert str(exception).startswith(expected_msg)
 
 
 # ############### #
@@ -483,7 +483,7 @@ class TestAbstractToCnxml(BaseTestCase):
             self.call_target(document_ident)
         exception = exc_info.value
         # Just ensure that we aren't blind when the exception is raised.
-        assert str(document_ident) in exception.message
+        assert str(document_ident) in str(exception)
 
     def test_failure_on_missing_abstract(self):
         # Case to ensure failure when an abstract is missing.
@@ -637,7 +637,7 @@ class TestModuleToCnxml(BaseTestCase):
         # Check the error message
         expected_msg = ("One of ('index.html.cnxml', 'index.cnxml') "
                         "already exists for document 2")
-        assert exc_info.value.message == expected_msg
+        assert str(exc_info.value) == expected_msg
 
         # Assert index.cnxml.html is not deleted
         self.db_cursor.execute(
@@ -675,7 +675,7 @@ class TestModuleToCnxml(BaseTestCase):
         # Check the error message
         expected_msg = ("One of ('index.html.cnxml', 'index.cnxml') "
                         "already exists for document 2")
-        assert exc_info.value.message == expected_msg
+        assert str(exc_info.value) == expected_msg
 
         # Assert index.cnxml.html is not deleted
         self.db_cursor.execute(
@@ -733,4 +733,4 @@ class TestModuleToCnxml(BaseTestCase):
         exception = exc_info.value
         from lxml.etree import XMLSyntaxError
         assert isinstance(exception, XMLSyntaxError)
-        assert u"attributes construct error, line 2" in exc_info.value.message
+        assert u"attributes construct error, line 2" in str(exc_info.value)

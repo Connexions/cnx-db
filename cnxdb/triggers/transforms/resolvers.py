@@ -252,7 +252,7 @@ class BaseReferenceResolver:
 
         for name, method in inspect.getmembers(cls, predicate=predicate):
             messages.extend(method(self))
-        messages = [e.message for e in messages]
+        messages = [str(e) for e in messages]
         return etree.tostring(self.content), messages
 
     @classmethod
