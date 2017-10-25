@@ -15,7 +15,7 @@ before_install:
   - sudo apt-get purge python-zope.interface
 
   # * Install the 'plpython' extension language
-  - sudo apt-get install postgresql-plpython-9.4
+  - sudo apt-get install postgresql-plpython-9.4 postgresql-plpython3-9.4
   # * Install the 'plxslt' extension language
   - sudo apt-get install libxml2-dev libxslt-dev postgresql-server-dev-9.4
   - git clone https://github.com/petere/plxslt.git
@@ -26,6 +26,9 @@ before_install:
 
   # Install the coverage utility and codecov reporting utility
   - pip install codecov
+
+  # Use plpython3u for python 3 tests
+  - if [[ -n "$(python --version | grep 'Python 3')" ]]; then sed -i 's/plpythonu/plpython3u/' $(git grep -l plpythonu cnxdb/ tests/); fi
 install:
   # Uninstall, because cnx-archive installs it due to the circular dependence.
   - pip uninstall -y cnx-db
@@ -44,6 +47,8 @@ before_script:
 script:
   # This is the same as `python setup.py test` with a coverage wrapper.
   - py.test --cov="$PYPREFIX/lib/$PYVERDIR/site-packages/cnxdb"
+  # If this is python3, we need to undo the plpython3u changes
+  - git reset --hard HEAD
   # Test migrations
   - script/ci_test_migrations.sh
 after_success:
