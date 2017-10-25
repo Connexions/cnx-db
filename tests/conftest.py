@@ -59,7 +59,7 @@ class FauxPlPyPlan(object):
                 results = results[:rows]
             return results
         except psycopg2.ProgrammingError as e:
-            if e.message != 'no results to fetch':
+            if str(e) != 'no results to fetch':
                 raise
 
 
