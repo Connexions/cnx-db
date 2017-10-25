@@ -68,7 +68,7 @@ old_os_path = os.environ.get('PATH','')
 os.environ['PATH'] = os.path.dirname(os.path.abspath('{activate_path}')) \
 + os.pathsep + old_os_path
 base = os.path.dirname(os.path.dirname(os.path.abspath('{activate_path}')))
-site_packages = os.path.join(base, 'lib', 'python%s' % sys.version[:3], \
+site_packages = os.path.join(base, 'lib', 'python{sys_version}', \
 'site-packages')
 prev_sys_path = list(sys.path)
 site.addsitedir(site_packages)
@@ -150,7 +150,8 @@ def init_venv(engine):
                            "'venv.activate_venv'"
                            .format(db_name))
             sql = ACTIVATE_VENV_SQL_FUNCTION.format(
-                activate_path=activate_path)
+                activate_path=activate_path,
+                sys_version=sys.version[:3])
             cursor.execute(sql)
     conn.commit()
     conn.close()
