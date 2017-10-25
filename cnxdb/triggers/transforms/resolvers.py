@@ -248,7 +248,8 @@ class BaseReferenceResolver:
 
         def predicate(object):
             name = getattr(object, '__name__', '')
-            return inspect.ismethod(object) and name.startswith('fix_')
+            return (inspect.ismethod(object) or inspect.isfunction(object)) \
+                and name.startswith('fix_')
 
         for name, method in inspect.getmembers(cls, predicate=predicate):
             messages.extend(method(self))
