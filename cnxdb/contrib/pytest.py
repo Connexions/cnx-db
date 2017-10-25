@@ -1,58 +1,100 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import os
-import psycopg2
+
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.engine.url import make_url
 
 from .testing import (
-    get_connection_string,
-    get_connection_string_parts,
+    get_settings,
     get_database_table_names,
 )
 
 
+@pytest.fixture(scope='session')
+def db_settings():
+    """Returns database connection settings. These settings are provided
+    in a similar format to that of `cnxdb.config.discover_settings`.
+
+    """
+    return get_settings()
+
+
+@pytest.fixture(scope='session')
+def db_engines(db_settings):
+    """Returns a dictionary of database engine values. These are similar
+    to the format used in `cnxdb.scripting.prepare`.
+
+    """
+    engines = {
+        'common': create_engine(db_settings['db.common.url']),
+        'super': create_engine(db_settings['db.super.url']),
+    }
+    return engines
+
+
+def url_to_libpq_dsn(url):
+    """Translate a URL to libpq DSN"""
+    url_obj = make_url(url)
+    items = {}
+    for name, value in url_obj.translate_connect_args().items():
+        if name == 'username':
+            name = 'user'
+        elif name == 'database':
+            name = 'dbname'
+        items[name] = str(value)
+    for k, v in url_obj.query.items():
+        items.setdefault(k, v)
+    return ' '.join(['='.join([k, v]) for k, v in items.items()])
+
+
 @pytest.fixture
-def db_connection_string_parts():
+def db_connection_string_parts(db_settings):
     """Returns a connection string as parts (dict)"""
-    return get_connection_string_parts()
+    conn_str = url_to_libpq_dsn(db_settings['db.common.url'])
+    return dict(map(lambda x: x.split('='), conn_str.split()))
 
 
 @pytest.fixture
-def db_connection_string():
+def db_connection_string(db_settings):
     """Returns a connection string"""
-    return get_connection_string()
+    return url_to_libpq_dsn(db_settings['db.common.url'])
 
 
-def _db_wipe(db_connection_string):
+def _db_wipe(db_engine):
     """Removes the schema from the database"""
-    with psycopg2.connect(db_connection_string) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("DROP SCHEMA public CASCADE; "
-                           "CREATE SCHEMA public")
-            cursor.execute("DROP SCHEMA IF EXISTS venv CASCADE")
+    conn = db_engine.raw_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("DROP SCHEMA public CASCADE; "
+                       "CREATE SCHEMA public")
+        cursor.execute("DROP SCHEMA IF EXISTS venv CASCADE")
+        cursor.connection.commit()
+    conn.close()
 
 
 @pytest.fixture
-def db_wipe(db_connection_string, request, db_cursor_without_db_init):
+def db_wipe(db_engines, request, db_cursor_without_db_init):
     """Cleans up the database after a test run"""
     cursor = db_cursor_without_db_init
     tables = get_database_table_names(cursor)
     # Assume that if db_wipe is used it means we want to start fresh as well.
     if 'modules' in tables:
-        _db_wipe(db_connection_string)
+        _db_wipe(db_engines['super'])
 
     def finalize():
-        _db_wipe(db_connection_string)
+        _db_wipe(db_engines['super'])
 
     request.addfinalizer(finalize)
 
 
 @pytest.fixture
-def db_init(db_connection_string):
+def db_init(db_settings):
     """Initializes the database"""
     from cnxdb.init.main import init_db
     venv = os.getenv('AS_VENV_IMPORTABLE', 'true').lower() == 'true'
-    init_db(db_connection_string, venv)
+    conn_str = url_to_libpq_dsn(db_settings['db.super.url'])
+    init_db(conn_str, venv)
 
 
 @pytest.fixture
@@ -64,9 +106,9 @@ def db_init_and_wipe(db_wipe, db_init):
 
 
 @pytest.fixture
-def db_cursor_without_db_init(db_connection_string):
+def db_cursor_without_db_init(db_engines):
     """Creates a database connection and cursor"""
-    conn = psycopg2.connect(db_connection_string)
+    conn = db_engines['common'].raw_connection()
     cursor = conn.cursor()
     yield cursor
     cursor.close()
@@ -78,24 +120,26 @@ _db_cursor__first_run = True
 
 
 @pytest.fixture
-def db_cursor(db_connection_string):
+def db_cursor(db_engines, db_settings):
     """Creates a database connection and cursor"""
     global _db_cursor__first_run
 
-    with psycopg2.connect(db_connection_string) as conn:
-        with conn.cursor() as cursor:
-            tables = get_database_table_names(cursor)
+    conn = db_engines['super'].raw_connection()
+    conn_str = conn.dsn
+    with conn.cursor() as cursor:
+        tables = get_database_table_names(cursor)
+    conn.close()
     # Use the database if it exists, otherwise initialize it
     if _db_cursor__first_run:
-        _db_wipe(db_connection_string)
-        db_init(db_connection_string)
+        _db_wipe(db_engines['super'])
+        db_init(db_settings)
         _db_cursor__first_run = False
     elif 'modules' not in tables:
-        db_init(db_connection_string)
+        db_init(db_settings)
 
     # Create a new connection to activate the virtual environment
     # as it would normally be used.
-    conn = psycopg2.connect(db_connection_string)
+    conn = db_engines['common'].raw_connection()
     cursor = conn.cursor()
     yield cursor
     cursor.close()
