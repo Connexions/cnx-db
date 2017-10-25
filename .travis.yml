@@ -7,6 +7,7 @@ dist: precise
 addons:
   postgresql: "9.4"
 before_install:
+  - pip install -r requirements/test.txt
   - make lint
 
   - sudo apt-get update
@@ -24,7 +25,6 @@ before_install:
   # - cd rhaptos.cnxmlutils && python setup.py install && cd ..
 
   # Install the coverage utility and codecov reporting utility
-  - pip install -r requirements/test.txt
   - pip install codecov
 install:
   # Uninstall, because cnx-archive installs it due to the circular dependence.
