@@ -388,7 +388,7 @@ class CnxmlToHtmlReferenceResolver(BaseReferenceResolver):
             '//html:span': 'data-src',
         }
 
-        for xpath, attr in media_xpath.iteritems():
+        for xpath, attr in media_xpath.items():
             for elem in self.apply_xpath(xpath):
                 filename = elem.get(attr)
                 if not filename or self._should_ignore_reference(filename):
@@ -645,7 +645,7 @@ class HtmlToCnxmlReferenceResolver(BaseReferenceResolver):
             '//c:labview': ('src',),
         }
 
-        for xpath, attrs in media_xpath.iteritems():
+        for xpath, attrs in media_xpath.items():
             for elem in self.apply_xpath(xpath):
                 for attr in attrs:
                     ref = elem.get(attr)
