@@ -11,6 +11,7 @@ from io import BytesIO
 
 from lxml import etree
 
+from . import ensure_bytes
 from .converters import (
     DEFAULT_XMLPARSER,
     cnxml_to_html, cnxml_to_full_html,
@@ -95,6 +96,7 @@ def produce_html_for_abstract(plpy, document_ident):
 
     # Update the abstract.
     if html:
+        html = html.decode('utf-8')
         plan = plpy.prepare("UPDATE abstracts SET (html) = ($1) "
                             "WHERE abstractid = $2;", ('text', 'integer'))
         plpy.execute(plan, (html, abstractid,))
@@ -125,6 +127,7 @@ def produce_cnxml_for_abstract(plpy, document_ident):
 
     # Update the abstract.
     if cnxml:
+        cnxml = cnxml.decode('utf-8')
         plan = plpy.prepare("UPDATE abstracts SET (abstract) = ($1) "
                             "WHERE abstractid = $2;",
                             ('text', 'integer'))
@@ -143,7 +146,7 @@ def transform_abstract_to_html(abstract, document_ident, plpy):
         'cnxml-version="0.7"><content>{}</content></document>'\
         .format(abstract)
     # Does it have a wrapping tag?
-    abstract_html = cnxml_to_html(abstract)
+    abstract_html = ensure_bytes(cnxml_to_html(abstract))
 
     # Rename the containing element, because the abstract is a snippet,
     #   not a document.
@@ -188,7 +191,7 @@ def transform_abstract_to_cnxml(abstract, document_ident, plpy):
     # Strip the <wrapper> wrapper tag off the content.
     # The wrapper is used so that bare text can be in the abstract
     #   and still be valid xml, which is required for the reference resolver.
-    start = cnxml.find('>') + 1
+    start = cnxml.find(b'>') + 1
     end = len(cnxml) - len('</wrapper>')
     cnxml = cnxml[start:end]
 
@@ -287,7 +290,7 @@ def produce_transformed_file(plpy, ident, transform_type,
         else:
             raise IndexFileExistsError(ident, destination_filenames)
 
-    new_content = transformer(content)
+    new_content = ensure_bytes(transformer(content))
 
     # Fix up content references to cnx-archive specific urls.
     new_content, bad_refs = reference_resolver(BytesIO(new_content),

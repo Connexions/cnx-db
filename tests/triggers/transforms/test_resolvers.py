@@ -38,21 +38,21 @@ class TestHtmlReferenceResolution(BaseTestCase):
                                         'm42119-1.3-modified.cnxml')
         with open(content_filepath, 'r') as fb:
             content = cnxml_to_full_html(fb.read())
-            content = io.BytesIO(content)
+            content = io.BytesIO(content.encode('utf-8'))
             content, bad_refs = self.target(content, self.faux_plpy, ident)
 
         # Read the content for the reference changes.
         expected_img_ref = (
-            '<img src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/'
-            'Figure_01_00_01.jpg" data-media-type="image/jpg" '
-            'alt="The spiral galaxy Andromeda is shown."/>')
+            b'<img src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/'
+            b'Figure_01_00_01.jpg" data-media-type="image/jpg" '
+            b'alt="The spiral galaxy Andromeda is shown."/>')
         assert expected_img_ref in content
         expected_internal_ref = (
-            '<a href="/contents/209deb1f-1a46-4369-9e0d-18674cf58a3e@7">')
+            b'<a href="/contents/209deb1f-1a46-4369-9e0d-18674cf58a3e@7">')
         assert expected_internal_ref in content
         expected_resource_ref = (
-            '<a href="/resources/'
-            'd47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg">')
+            b'<a href="/resources/'
+            b'd47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg">')
         assert expected_resource_ref in content
 
     def test_reference_not_parseable(self):
@@ -62,7 +62,7 @@ class TestHtmlReferenceResolution(BaseTestCase):
                                         'm45070.cnxml')
         with open(content_filepath, 'r') as fb:
             content = cnxml_to_full_html(fb.read())
-        content = io.BytesIO(content)
+        content = io.BytesIO(content.encode('utf-8'))
         content, bad_refs = self.target(content, self.faux_plpy, ident)
 
         assert sorted(bad_refs) == [
@@ -73,10 +73,10 @@ class TestHtmlReferenceResolution(BaseTestCase):
             ("Unable to find a reference to 'm43540' at version 'None'.: "
              "document=3, reference=/m43540"),
         ]
-        assert '<a href="/m">' in content
+        assert b'<a href="/m">' in content
 
     def test_reference_resolver(self):
-        html = io.BytesIO('''\
+        html = io.BytesIO(b'''\
 <?xml version="1.0" encoding="UTF-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml">
     <body>
@@ -125,7 +125,7 @@ class TestHtmlReferenceResolution(BaseTestCase):
              "moduleid m42092 version 1.3.: document=3, "
              "reference=PhET_Icon.png")
         ]
-        assert html == '''\
+        assert html == b'''\
 <html xmlns="http://www.w3.org/1999/xhtml">
     <body>
         <a href="/contents/d395b566-5fe3-4428-bcb2-19016e3aa3ce#xn">
@@ -168,7 +168,7 @@ class TestHtmlReferenceResolution(BaseTestCase):
             ReferenceNotFound,
         )
 
-        resolver = ReferenceResolver(io.BytesIO('<html></html>'),
+        resolver = ReferenceResolver(io.BytesIO(b'<html></html>'),
                                      self.faux_plpy, 3)
 
         # Test file not found
@@ -299,9 +299,10 @@ import io
 
 import plpy
 
-from cnxarchive.transforms.resolvers import CnxmlToHtmlReferenceResolver
+from cnxdb.triggers.transforms.resolvers import (
+    CnxmlToHtmlReferenceResolver)
 
-resolver = CnxmlToHtmlReferenceResolver(io.BytesIO('<html></html>'), plpy, 3)
+resolver = CnxmlToHtmlReferenceResolver(io.BytesIO(b'<html></html>'), plpy, 3)
 result = resolver.get_page_ident_hash(%s, %s, %s, %s)
 return result[1]
 $$ LANGUAGE plpythonu;
@@ -434,14 +435,14 @@ class TestCnxmlReferenceResolution(BaseTestCase):
         nsmap['c'] = nsmap.pop(None)
 
         # Ensure the module-id has been set.
-        expected_module_id = 'module-id="m42119"'
+        expected_module_id = b'module-id="m42119"'
         assert expected_module_id in content
 
         # Read the content for the reference changes.
         # Check the links
-        expected_ref = '<link document="m41237" version="1.1">'
+        expected_ref = b'<link document="m41237" version="1.1">'
         assert expected_ref in content
-        expected_resource_ref = '<link resource="Figure_01_00_01.jpg">'
+        expected_resource_ref = b'<link resource="Figure_01_00_01.jpg">'
         assert expected_resource_ref in content
 
         def find_elm(xpath):
@@ -453,39 +454,39 @@ class TestCnxmlReferenceResolution(BaseTestCase):
             return etree.tostring(query_result)
 
         # Check the media/image tags...
-        expected_img_thumbnail_ref = 'thumbnail="Figure_01_00_01.jpg"'
+        expected_img_thumbnail_ref = b'thumbnail="Figure_01_00_01.jpg"'
         xpath = '//*[@id="image-w-thumbnail"]'
         assert expected_img_thumbnail_ref in find_elm(xpath)
 
-        expected_img_src_ref = 'src="Figure_01_00_01.jpg"'
+        expected_img_src_ref = b'src="Figure_01_00_01.jpg"'
         xpath = '//*[@id="image-w-thumbnail"]'
         assert expected_img_src_ref in find_elm(xpath)
 
         # Check the media/video & media/audio tags...
-        expected_ref = 'src="Figure_01_00_01.jpg"'
+        expected_ref = b'src="Figure_01_00_01.jpg"'
         xpath = '//*[@id="video-n-audio"]/c:video'
         assert expected_ref in find_elm(xpath)
         xpath = '//*[@id="video-n-audio"]/c:audio'
         assert expected_ref in find_elm(xpath)
 
         # Check the flash tag.
-        expected_ref = 'src="Figure_01_00_01.jpg"'
+        expected_ref = b'src="Figure_01_00_01.jpg"'
         xpath = '//*[@id="object-embed"]/c:flash'
         assert expected_ref in find_elm(xpath)
 
         # Check the java-applet tag.
-        expected_ref = 'src="Figure_01_00_01.jpg"'
+        expected_ref = b'src="Figure_01_00_01.jpg"'
         xpath = '//*[@id="java-applet"]/c:java-applet'
         assert expected_ref in find_elm(xpath)
 
         # Check bad reference was not transformed.
-        expected_ref = '<link>indkoeb.jpg</link>'
+        expected_ref = b'<link>indkoeb.jpg</link>'
         assert expected_ref in content
 
     def test_fix_module_id_fails(self):
         from cnxdb.triggers.transforms.resolvers import ReferenceNotFound
 
-        content = """\
+        content = b"""\
 <document xmlns="http://cnx.rice.edu/cnxml">
 <content><para>hi.</para></content>
 </document>"""
@@ -527,7 +528,7 @@ class TestCnxmlReferenceResolution(BaseTestCase):
         assert sorted(bad_refs) == expected_bad_refs
 
         # invalid ref still in the content?
-        assert '<link url="/contents/42ae45b/hello-world">' in content
+        assert b'<link url="/contents/42ae45b/hello-world">' in content
 
     def test_get_resource_filename(self):
         from cnxdb.triggers.transforms.resolvers import (
@@ -535,7 +536,7 @@ class TestCnxmlReferenceResolution(BaseTestCase):
             ReferenceNotFound,
         )
 
-        resolver = ReferenceResolver(io.BytesIO('<html></html>'),
+        resolver = ReferenceResolver(io.BytesIO(b'<html></html>'),
                                      self.faux_plpy, 3)
 
         # Test file not found

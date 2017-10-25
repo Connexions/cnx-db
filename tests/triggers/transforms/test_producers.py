@@ -5,6 +5,8 @@
 # Public License version 3 (AGPLv3).
 # See LICENCE.txt for details.
 # ###
+import sys
+
 import pytest
 from psycopg2 import Binary
 
@@ -237,10 +239,13 @@ class TestModuleToHtml(BaseTestCase):
             (ident,))
         index_html = self.db_cursor.fetchone()[0][:]
 
+        if sys.version_info >= (3,):
+            index_html = index_html.tobytes()
+
         # We only need to test that the file got transformed and placed
         #   placed in the database, the transform itself should be verified.
         #   independent of this code.
-        assert index_html.find('<html') >= 0
+        assert index_html.find(b'<html') >= 0
 
     def test_module_transform_remove_index_html(self):
         # Test when overwrite_html is True, the index.cnxml.html is removed
@@ -279,10 +284,13 @@ class TestModuleToHtml(BaseTestCase):
         index_html_id, index_html = self.db_cursor.fetchone()
         index_html = index_html[:]
 
+        if sys.version_info >= (3,):
+            index_html = index_html.tobytes()
+
         # We only need to test that the file got transformed and placed
         #   placed in the database, the transform itself should be verified.
         #   independent of this code.
-        assert index_html.find('<html') >= 0
+        assert index_html.find(b'<html') >= 0
 
         # Assert index.html has been replaced
         assert fileid != index_html_id
@@ -344,6 +352,8 @@ class TestModuleToHtml(BaseTestCase):
             "         AND filename = %s);",
             (ident, filename))
         index_cnxml = self.db_cursor.fetchone()[0][:]
+        if sys.version_info > (3,):
+            index_cnxml = index_cnxml.tobytes()
         # Make a mess of things...
         content = index_cnxml[:600] + index_cnxml[700:]
         payload = (Binary(content), ident, filename,)
@@ -553,11 +563,13 @@ class TestModuleToCnxml(BaseTestCase):
             "         AND filename = 'index.html.cnxml');",
             (ident,))
         index_cnxml = self.db_cursor.fetchone()[0][:]
+        if sys.version_info >= (3,):
+            index_cnxml = index_cnxml.tobytes()
 
         # We only need to test that the file got transformed and placed
         #   placed in the database, the transform itself should be verified.
         #   independent of this code.
-        assert '<document' in index_cnxml
+        assert b'<document' in index_cnxml
 
     def test_module_transform_remove_index_cnxml(self):
         # Test when overwrite is True, the index.html.cnxml is removed
@@ -589,11 +601,13 @@ class TestModuleToCnxml(BaseTestCase):
             "         AND filename = 'index.html.cnxml');")
         index_cnxml_id, index_cnxml = self.db_cursor.fetchone()
         index_cnxml = index_cnxml[:]
+        if sys.version_info >= (3,):
+            index_cnxml = index_cnxml.tobytes()
 
         # We only need to test that the file got transformed and placed
         #   placed in the database, the transform itself should be verified.
         #   independent of this code.
-        assert '<document' in index_cnxml
+        assert b'<document' in index_cnxml
 
         # Assert index.cnxml.html has been replaced
         assert fileid != index_cnxml_id
@@ -687,6 +701,8 @@ class TestModuleToCnxml(BaseTestCase):
             "         AND filename = %s);",
             (ident, filename))
         file = self.db_cursor.fetchone()[0][:]
+        if sys.version_info > (3,):
+            file = file.tobytes()
         # Make a mess of things...
         content = file[:600] + file[700:]
         payload = (Binary(content), ident, filename,)
