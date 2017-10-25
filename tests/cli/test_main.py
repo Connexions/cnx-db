@@ -2,25 +2,15 @@
 import os
 import sys
 
-import psycopg2
 import pytest
 
 from cnxdb.contrib import testing
 
 
-def _translate_parts_to_args(parts):
-    """Translates connection string parts to arguments"""
-    return ['-h', parts['host'],
-            '-p', parts['port'],
-            '-d', parts['dbname'],
-            '-U', parts['user'],
-            ]
-
-
 @pytest.mark.usefixtures('db_wipe')
-def test_init(db_connection_string_parts, db_cursor_without_db_init):
+def test_init(db_env_vars, db_cursor_without_db_init):
     from cnxdb.cli.main import main
-    args = ['init'] + _translate_parts_to_args(db_connection_string_parts)
+    args = ['init']
     return_code = main(args)
 
     assert return_code == 0
@@ -37,9 +27,9 @@ def test_init(db_connection_string_parts, db_cursor_without_db_init):
 
 
 @pytest.mark.usefixtures('db_wipe')
-def test_init_called_twice(capsys, db_connection_string_parts):
+def test_init_called_twice(capsys, db_env_vars):
     from cnxdb.cli.main import main
-    args = ['init'] + _translate_parts_to_args(db_connection_string_parts)
+    args = ['init']
 
     return_code = main(args)
     assert return_code == 0
@@ -51,73 +41,62 @@ def test_init_called_twice(capsys, db_connection_string_parts):
 
 
 @pytest.mark.usefixtures('db_wipe')
-def test_init_local(db_connection_string_parts):
-    from cnxdb.cli.main import main
-    args = ['init'] + _translate_parts_to_args(db_connection_string_parts)[4:]
+def test_init_without_env_vars(capsys, mocker):
+    mocker.patch.dict(os.environ, {})
 
-    return_code = main(args)
-    assert return_code == 0
-
-
-@pytest.mark.usefixtures('db_wipe')
-def test_init_without_dbname(db_connection_string_parts):
     from cnxdb.cli.main import main
     args = ['init']
-    args.extend(_translate_parts_to_args(db_connection_string_parts)[:4])
-    args.extend(_translate_parts_to_args(db_connection_string_parts)[6:])
 
-    with pytest.raises(SystemExit) as exc_info:
-        main(args)
-    assert exc_info.value.code == 2
+    return_code = main(args)
+    assert return_code == 4
 
-
-@pytest.mark.usefixtures('db_wipe')
-def test_init_without_user(db_connection_string_parts):
-    from cnxdb.cli.main import main
-    args = ['init'] + _translate_parts_to_args(db_connection_string_parts)[:6]
-
-    with pytest.raises(SystemExit) as exc_info:
-        main(args)
-    assert exc_info.value.code == 2
+    expected_msg = "'DB_URL' environment variable must be defined\n"
+    assert expected_msg in capsys.readouterr()
 
 
-def assert_venv_is_active(db_connection_string_parts):
+def assert_venv_is_active(db_engines):
     """Asserts the venv is active and working"""
-    with psycopg2.connect(**db_connection_string_parts) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("CREATE OR REPLACE FUNCTION pyprefix() "
-                           "RETURNS text LANGUAGE "
-                           "plpythonu AS $$import sys;return sys.prefix$$")
-            cursor.execute("SELECT pyprefix()")
-            db_pyprefix = cursor.fetchone()[0]
+    # Dispose of all existing pooled connections.
+    db_engines['super'].dispose()
+
+    conn = db_engines['super'].raw_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("CREATE OR REPLACE FUNCTION pyprefix() "
+                       "RETURNS text LANGUAGE "
+                       "plpythonu AS $$import sys;return sys.prefix$$")
+        cursor.execute("SELECT pyprefix()")
+        db_pyprefix = cursor.fetchone()[0]
+    conn.close()
 
     assert os.path.samefile(db_pyprefix, sys.prefix)
 
 
 @pytest.mark.skipif(not testing.is_venv(), reason="not within a venv")
 @pytest.mark.usefixtures('db_init_and_wipe')
-def test_venv(db_connection_string_parts):
+def test_venv(db_env_vars, db_engines):
     # Remove the venv schema before trying to initialize it.
-    with psycopg2.connect(**db_connection_string_parts) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("DROP SCHEMA venv CASCADE")
+    conn = db_engines['super'].raw_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("DROP SCHEMA venv CASCADE")
+    conn.commit()
+    conn.close()
 
     from cnxdb.cli.main import main
-    args = ['venv'] + _translate_parts_to_args(db_connection_string_parts)
+    args = ['venv']
 
     return_code = main(args)
     assert return_code == 0
 
-    assert_venv_is_active(db_connection_string_parts)
+    assert_venv_is_active(db_engines)
 
 
 @pytest.mark.skipif(not testing.is_venv(), reason="not within a venv")
 @pytest.mark.usefixtures('db_init_and_wipe')
-def test_venv_called_twice(db_connection_string_parts):
+def test_venv_called_twice(db_env_vars, db_engines):
     # Note, the initialization already setup the venv,
     # so this really calles 3 times.
     from cnxdb.cli.main import main
-    args = ['venv'] + _translate_parts_to_args(db_connection_string_parts)
+    args = ['venv']
 
     return_code = main(args)
     assert return_code == 0
@@ -125,4 +104,18 @@ def test_venv_called_twice(db_connection_string_parts):
     return_code = main(args)
     assert return_code == 0
 
-    assert_venv_is_active(db_connection_string_parts)
+    assert_venv_is_active(db_engines)
+
+
+@pytest.mark.usefixtures('db_wipe')
+def test_venv_without_env_vars(capsys, mocker):
+    mocker.patch.dict(os.environ, {})
+
+    from cnxdb.cli.main import main
+    args = ['venv']
+
+    return_code = main(args)
+    assert return_code == 4
+
+    expected_msg = "'DB_URL' environment variable must be defined\n"
+    assert expected_msg in capsys.readouterr()

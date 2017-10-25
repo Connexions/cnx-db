@@ -44,16 +44,18 @@ def _has_schema(cursor):
         return False
 
 
-def init_db(connection_string, as_venv_importable=False):
+def init_db(engine, as_venv_importable=False):
     """Initialize the database from the given ``connection_string``."""
-    with psycopg2.connect(connection_string) as db_connection:
-        with db_connection.cursor() as cursor:
-            if _has_schema(cursor):
-                raise exceptions.DBSchemaInitialized()
-            for schema_part in get_schema(SCHEMA_DIR):
-                cursor.execute(schema_part)
+    conn = engine.raw_connection()
+    with conn.cursor() as cursor:
+        if _has_schema(cursor):
+            raise exceptions.DBSchemaInitialized()
+        for schema_part in get_schema(SCHEMA_DIR):
+            cursor.execute(schema_part)
+    conn.commit()
+    conn.close()
     if as_venv_importable:
-        init_venv(connection_string)
+        init_venv(engine)
 
 
 ACTIVATE_VENV_SQL_FUNCTION = """\
@@ -92,7 +94,7 @@ def _is_localhost_connection(db_connection):
     return db_dict.get('host', 'localhost') != 'localhost'
 
 
-def init_venv(connection_string):
+def init_venv(engine):
     """Initialize a Python virtual environment for trigger importation."""
     # If virtualenv is active, use that for postgres
     if hasattr(sys, 'real_prefix'):  # attr is only present within a venv
@@ -101,55 +103,57 @@ def init_venv(connection_string):
     else:  # pragma: no cover
         return
 
-    with psycopg2.connect(connection_string) as db_connection:
-        if _is_localhost_connection(db_connection):  # pragma: no cover
-            warnings.warn("An attempt to use ``init_venv`` was made, "
-                          "but not on the same host as the postgres service.")
-        with db_connection.cursor() as cursor:
-            cursor.execute("SELECT current_database();")
-            db_name = cursor.fetchone()[0]
+    conn = engine.raw_connection()
+    if _is_localhost_connection(conn):  # pragma: no cover
+        warnings.warn("An attempt to use ``init_venv`` was made, "
+                      "but not on the same host as the postgres service.")
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT current_database();")
+        db_name = cursor.fetchone()[0]
 
-            cursor.execute("SELECT schema_name "
-                           "FROM information_schema.schemata "
-                           "WHERE schema_name = 'venv';")
+        cursor.execute("SELECT schema_name "
+                       "FROM information_schema.schemata "
+                       "WHERE schema_name = 'venv';")
+        try:
+            # Does the schema already exist?
+            cursor.fetchone()[0]
+        except TypeError:
+            cursor.execute("CREATE SCHEMA venv")
             try:
-                # Does the schema already exist?
-                cursor.fetchone()[0]
-            except TypeError:
-                cursor.execute("CREATE SCHEMA venv")
-                try:
-                    cursor.execute("SAVEPOINT session_preload")
-                    cursor.execute("LOAD 'session_exec.so'")
-                    cursor.execute("ALTER DATABASE \"{}\" SET "
-                                   "session_preload_libraries ="
-                                   "'session_exec'".format(db_name))
-                except psycopg2.ProgrammingError as e:  # pragma: no cover
-                    if e.message.startswith(
-                            'unrecognized configuration parameter'):
+                cursor.execute("SAVEPOINT session_preload")
+                cursor.execute("LOAD 'session_exec.so'")
+                cursor.execute("ALTER DATABASE \"{}\" SET "
+                               "session_preload_libraries ="
+                               "'session_exec'".format(db_name))
+            except psycopg2.ProgrammingError as e:  # pragma: no cover
+                if e.message.startswith(
+                        'unrecognized configuration parameter'):
 
-                        cursor.execute("ROLLBACK TO SAVEPOINT "
-                                       "session_preload")
-                        logger.warning("Postgresql < 9.4: make sure "
-                                       "to set "
-                                       "'local_preload_libraries "
-                                       "= session_exec' in "
-                                       "postgresql.conf and restart")
-                    else:  # pragma: no cover
-                        raise
-                except psycopg2.OperationalError as e:  # pragma: no cover
-                    if 'could not access file "session_exec' in e.message:
-                        cursor.execute("ROLLBACK TO SAVEPOINT "
-                                       "session_preload")
-                        logger.error("session_exec not found")
+                    cursor.execute("ROLLBACK TO SAVEPOINT "
+                                   "session_preload")
+                    logger.warning("Postgresql < 9.4: make sure "
+                                   "to set "
+                                   "'local_preload_libraries "
+                                   "= session_exec' in "
+                                   "postgresql.conf and restart")
+                else:  # pragma: no cover
                     raise
+            except psycopg2.OperationalError as e:  # pragma: no cover
+                if 'could not access file "session_exec' in e.message:
+                    cursor.execute("ROLLBACK TO SAVEPOINT "
+                                   "session_preload")
+                    logger.error("session_exec not found")
+                raise
 
-                cursor.execute("ALTER DATABASE \"{}\" "
-                               "SET session_exec.login_name = "
-                               "'venv.activate_venv'"
-                               .format(db_name))
-                sql = ACTIVATE_VENV_SQL_FUNCTION.format(
-                    activate_path=activate_path)
-                cursor.execute(sql)
+            cursor.execute("ALTER DATABASE \"{}\" "
+                           "SET session_exec.login_name = "
+                           "'venv.activate_venv'"
+                           .format(db_name))
+            sql = ACTIVATE_VENV_SQL_FUNCTION.format(
+                activate_path=activate_path)
+            cursor.execute(sql)
+    conn.commit()
+    conn.close()
 
 
 __all__ = (

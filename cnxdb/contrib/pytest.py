@@ -4,7 +4,6 @@ import os
 
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.engine.url import make_url
 
 from .testing import (
     get_settings,
@@ -34,32 +33,17 @@ def db_engines(db_settings):
     return engines
 
 
-def url_to_libpq_dsn(url):
-    """Translate a URL to libpq DSN"""
-    url_obj = make_url(url)
-    items = {}
-    for name, value in url_obj.translate_connect_args().items():
-        if name == 'username':
-            name = 'user'
-        elif name == 'database':
-            name = 'dbname'
-        items[name] = str(value)
-    for k, v in url_obj.query.items():
-        items.setdefault(k, v)
-    return ' '.join(['='.join([k, v]) for k, v in items.items()])
-
-
 @pytest.fixture
-def db_connection_string_parts(db_settings):
-    """Returns a connection string as parts (dict)"""
-    conn_str = url_to_libpq_dsn(db_settings['db.common.url'])
-    return dict(map(lambda x: x.split('='), conn_str.split()))
-
-
-@pytest.fixture
-def db_connection_string(db_settings):
-    """Returns a connection string"""
-    return url_to_libpq_dsn(db_settings['db.common.url'])
+def db_env_vars(mocker, db_settings):
+    """Sets the environment variables used by this project"""
+    env_vars = os.environ.copy()
+    env_vars.update({
+        'DB_URL': db_settings['db.common.url'],
+        'DB_SUPER_URL': db_settings['db.super.url'],
+    })
+    mocker.patch.dict(os.environ, env_vars)
+    yield env_vars
+    pass
 
 
 def _db_wipe(db_engine):
@@ -89,12 +73,11 @@ def db_wipe(db_engines, request, db_cursor_without_db_init):
 
 
 @pytest.fixture
-def db_init(db_settings):
+def db_init(db_engines):
     """Initializes the database"""
     from cnxdb.init.main import init_db
     venv = os.getenv('AS_VENV_IMPORTABLE', 'true').lower() == 'true'
-    conn_str = url_to_libpq_dsn(db_settings['db.super.url'])
-    init_db(conn_str, venv)
+    init_db(db_engines['super'], venv)
 
 
 @pytest.fixture
@@ -120,22 +103,21 @@ _db_cursor__first_run = True
 
 
 @pytest.fixture
-def db_cursor(db_engines, db_settings):
+def db_cursor(db_engines):
     """Creates a database connection and cursor"""
     global _db_cursor__first_run
 
     conn = db_engines['super'].raw_connection()
-    conn_str = conn.dsn
     with conn.cursor() as cursor:
         tables = get_database_table_names(cursor)
     conn.close()
     # Use the database if it exists, otherwise initialize it
     if _db_cursor__first_run:
         _db_wipe(db_engines['super'])
-        db_init(db_settings)
+        db_init(db_engines)
         _db_cursor__first_run = False
     elif 'modules' not in tables:
-        db_init(db_settings)
+        db_init(db_engines)
 
     # Create a new connection to activate the virtual environment
     # as it would normally be used.
