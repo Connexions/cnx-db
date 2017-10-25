@@ -5,10 +5,18 @@
 # Public License version 3 (AGPLv3).
 # See LICENCE.txt for details.
 # ###
+import os
+import subprocess
 import sys
 
 import pytest
 from psycopg2 import Binary
+
+
+def py3_too_old(*args):
+    if sys.version_info >= (3,) and os.path.exists('/usr/bin/python3'):
+        out = subprocess.check_output(['/usr/bin/python3', '--version'])
+        return out < b'Python 3.4'
 
 
 class BaseTestCase(object):
@@ -130,6 +138,7 @@ class TestAbstractToHtml(BaseTestCase):
         with pytest.raises(MissingAbstract):
             self.call_target(document_ident)
 
+    @pytest.mark.skipif(py3_too_old)
     def test_abstract_w_resource_reference(self):
         # Case to ensure the reference resolution for resources.
         # This test requires a document_ident in order match with
@@ -218,6 +227,7 @@ class TestModuleToHtml(BaseTestCase):
         assert exception.document_ident == ident
         assert exception.filename == filename
 
+    @pytest.mark.skipif(py3_too_old)
     def test_success(self):
         # Case to test for a successful tranformation of a module from
         #   cnxml to html.
@@ -247,6 +257,7 @@ class TestModuleToHtml(BaseTestCase):
         #   independent of this code.
         assert index_html.find(b'<html') >= 0
 
+    @pytest.mark.skipif(py3_too_old)
     def test_module_transform_remove_index_html(self):
         # Test when overwrite_html is True, the index.cnxml.html is removed
         # from the database before a new one is added
@@ -295,6 +306,7 @@ class TestModuleToHtml(BaseTestCase):
         # Assert index.html has been replaced
         assert fileid != index_html_id
 
+    @pytest.mark.skipif(py3_too_old)
     def test_module_transform_index_html_exists(self):
         # Test when overwrite_html is False, the index.cnxml.html causes an
         # error when a new one is generated
@@ -544,6 +556,7 @@ class TestModuleToCnxml(BaseTestCase):
         assert exception.document_ident == ident
         assert exception.filename == filename
 
+    @pytest.mark.skipif(py3_too_old)
     def test_success(self):
         # Case to test for a successful tranformation of a module
         ident = 2  # m42955
@@ -571,6 +584,7 @@ class TestModuleToCnxml(BaseTestCase):
         #   independent of this code.
         assert b'<document' in index_cnxml
 
+    @pytest.mark.skipif(py3_too_old)
     def test_module_transform_remove_index_cnxml(self):
         # Test when overwrite is True, the index.html.cnxml is removed
         # from the database before a new one is added
@@ -612,6 +626,7 @@ class TestModuleToCnxml(BaseTestCase):
         # Assert index.cnxml.html has been replaced
         assert fileid != index_cnxml_id
 
+    @pytest.mark.skipif(py3_too_old)
     def test_module_transform_index_html_cnxml_exists(self):
         # Test when overwrite is False, the index.html.cnxml
         # causes an error when a new one is generated
@@ -650,6 +665,7 @@ class TestModuleToCnxml(BaseTestCase):
 
         assert fileid == index_cnxml_id
 
+    @pytest.mark.skipif(py3_too_old)
     def test_module_transform_index_cnxml_exists(self):
         # Test when overwrite is False, the index.html.cnxml
         # causes an error when a new one is generated
