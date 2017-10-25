@@ -3,50 +3,41 @@
 from __future__ import print_function
 import sys
 
-from .common import assign_db_args
+from ..scripting import prepare
 from .discovery import register_subcommand
 
 
-def _compile_connection_string_parts(args_namespace):
-    """Given an ``argparse.Namespace``, translate this to a connection string
-    parts (dict).
-
-    """
-    return {
-        'dbname': args_namespace.dbname,
-        'user': args_namespace.user,
-        # 'password': None,
-        'host': args_namespace.host,
-        'port': args_namespace.port,
-    }
-
-
-def _translate_parts_to_string(connection_string_parts):
-    """Translate the connection string parts ot a string"""
-    return ' '.join(['='.join([k, v])
-                     for k, v in connection_string_parts.items()
-                     if v is not None])
-
-
-@register_subcommand('init', *assign_db_args)
+@register_subcommand('init')
 def init_cmd(args_namespace):
     """initialize the database"""
-    connection_string_parts = _compile_connection_string_parts(args_namespace)
-    connection_string = _translate_parts_to_string(connection_string_parts)
+    try:
+        env = prepare()
+    except RuntimeError as exc:
+        if 'DB_URL' in exc.args[0]:
+            print(exc.args[0], file=sys.stderr)
+            return 4
+        else:  # pragma: no cover
+            raise
     from ..init import init_db, DBSchemaInitialized
     try:
-        init_db(connection_string, False)
+        init_db(env['engines']['super'], False)
     except DBSchemaInitialized:
         print("Database is already initialized", file=sys.stderr)
         return 3
     return 0
 
 
-@register_subcommand('venv', *assign_db_args)
+@register_subcommand('venv')
 def venv_cmd(args_namespace):
     """(re)initialize the venv within the database"""
-    connection_string_parts = _compile_connection_string_parts(args_namespace)
-    connection_string = _translate_parts_to_string(connection_string_parts)
+    try:
+        env = prepare()
+    except RuntimeError as exc:
+        if 'DB_URL' in exc.args[0]:
+            print(exc.args[0], file=sys.stderr)
+            return 4
+        else:  # pragma: no cover
+            raise
     from ..init import init_venv
-    init_venv(connection_string)
+    init_venv(env['engines']['super'])
     return 0

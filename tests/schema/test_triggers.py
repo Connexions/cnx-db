@@ -3,7 +3,6 @@ import json
 import os
 import uuid
 
-import psycopg2
 import pytest
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
@@ -63,11 +62,11 @@ class TestPostPublication:
         assert payload['timestamp']
 
 
-def insert_test_data(db_conn_dsn, i):
-    with psycopg2.connect(db_conn_dsn) as db_conn:
-        for minor_version in range(2, 12):
-            with db_conn.cursor() as cursor:
-                cursor.execute("""\
+def insert_test_data(db_engine, i):
+    conn = db_engine.raw_connection()
+    for minor_version in range(2, 12):
+        with conn.cursor() as cursor:
+            cursor.execute("""\
 INSERT INTO MODULES (moduleid, version, name, \
     created, revised, \
     abstractid, licenseid, doctype, submitter, submitlog, stateid, \
@@ -78,27 +77,28 @@ INSERT INTO MODULES (moduleid, version, name, \
  1, 7, '', 'bijay_maniari', 'Modules added', 1, \
  NULL, 'en', '{bijay_maniari}', '{bijay_maniari}', '{bijay_maniari}', '{}', \
  'Collection', '94919e72-7573-4ed4-828e-673c1fe0cf9b', 100, %s)""",
-                               (i * 10 + minor_version,))
+                           (i * 10 + minor_version,))
+            cursor.connection.commit()
+    conn.close()
 
 
 @pytest.mark.usefixtures('db_init_and_wipe')
-def test_update_latest_race_condition(db_connection_string):
-    with psycopg2.connect(db_connection_string) as db_conn:
-        with db_conn.cursor() as db_cursor:
-
-            db_cursor.execute("""\
+def test_update_latest_race_condition(db_engines):
+    conn = db_engines['super'].raw_connection()
+    with conn.cursor() as db_cursor:
+        db_cursor.execute("""\
 INSERT INTO document_controls
     (uuid, licenseid)
 VALUES (%s, 1)""", ('94919e72-7573-4ed4-828e-673c1fe0cf9b',))
-            db_cursor.execute("""\
+        db_cursor.execute("""\
 INSERT INTO abstracts
     (abstractid, abstract)
 VALUES (1, 'test')""")
-            db_cursor.execute("""\
+        db_cursor.execute("""\
 ALTER TABLE modules DISABLE TRIGGER USER;
 ALTER TABLE latest_modules DISABLE TRIGGER USER;
 ALTER TABLE modules ENABLE TRIGGER update_latest_version;""")
-            db_cursor.execute("""\
+        db_cursor.execute("""\
 INSERT INTO latest_modules (moduleid, version, name, \
     created, revised, \
     abstractid, licenseid, doctype, submitter, submitlog, stateid, \
@@ -109,6 +109,8 @@ INSERT INTO latest_modules (moduleid, version, name, \
  1, 7, '', 'bijay_maniari', 'Modules added', 1, \
  NULL, 'en', '{bijay_maniari}', '{bijay_maniari}', '{bijay_maniari}', '{}', \
  'Collection', '94919e72-7573-4ed4-828e-673c1fe0cf9b', 100, 1)""")
+        db_cursor.connection.commit()
+    conn.close()
 
     pids = []
     for i in range(2):
@@ -116,7 +118,7 @@ INSERT INTO latest_modules (moduleid, version, name, \
         if pid:
             pids.append(pid)
         else:
-            insert_test_data(db_connection_string, i)
+            insert_test_data(db_engines['super'], i)
             os._exit(0)
 
     for pid in pids:
