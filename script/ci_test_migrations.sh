@@ -26,10 +26,12 @@ pip install .
 # install db-migrator and cnx-db
 pip install 'db-migrator>=1.0.0'
 
+export DB_URL='postgresql://tester:tester@localhost:5432/testing'
+
 # set up the database
 dropdb -U postgres testing
 createdb -U postgres -O tester testing
-cnx-db init -d testing -U tester
+cnx-db init
 dbmigrator --db-connection-string='dbname=testing user=tester' init
 
 # store the schema
@@ -68,7 +70,7 @@ pg_dump -s 'dbname=testing user=tester' >rolled_back_schema.sql
 # reset database
 dropdb -U postgres testing
 createdb -U postgres -O tester testing
-cnx-db init -d testing -U tester
+cnx-db init
 dbmigrator --db-connection-string='dbname=testing user=tester' init
 
 pg_dump -s 'dbname=testing user=tester' >new_schema.sql
