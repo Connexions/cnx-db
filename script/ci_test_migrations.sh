@@ -32,7 +32,7 @@ export DB_URL='postgresql://tester:tester@localhost:5432/testing'
 dropdb -U postgres testing
 createdb -U postgres -O tester testing
 cnx-db init
-dbmigrator --db-connection-string='dbname=testing user=tester' init
+dbmigrator --db-connection-string="$DB_URL" init
 
 # store the schema
 pg_dump -s 'dbname=testing user=tester' >old_schema.sql
@@ -43,17 +43,17 @@ pip install .
 
 # mark all the repeat, deferred migrations as not applied (to make the
 # calculation of the number of migrations to rollback easier)
-dbmigrator --db-connection-string='dbname=testing user=tester' list | \
+dbmigrator --db-connection-string="$DB_URL" list | \
     awk '/deferred\*/ {print $1}' | \
-    while read timestamp; do dbmigrator --db-connection-string='dbname=testing user=tester' mark -f $timestamp; done
+    while read timestamp; do dbmigrator --db-connection-string="$DB_URL" mark -f $timestamp; done
 
 # check the number of migrations that are going to run
-applied_before=$(dbmigrator --db-connection-string='dbname=testing user=tester' list | awk 'NF>3 {applied+=1}; END {print applied}')
+applied_before=$(dbmigrator --db-connection-string="$DB_URL" list | awk 'NF>3 {applied+=1}; END {print applied}')
 
 # run the migrations
-dbmigrator --db-connection-string='dbname=testing user=tester' migrate --run-deferred
+dbmigrator --db-connection-string="$DB_URL" migrate --run-deferred
 
-applied_after=$(dbmigrator --db-connection-string='dbname=testing user=tester' list | awk 'NF>3 {applied+=1}; END {print applied}')
+applied_after=$(dbmigrator --db-connection-string="$DB_URL" list | awk 'NF>3 {applied+=1}; END {print applied}')
 steps=$((applied_after-applied_before))
 
 # store the schema
@@ -62,7 +62,7 @@ pg_dump -s 'dbname=testing user=tester' >migrated_schema.sql
 # rollback the migrations
 if [ "$steps" -gt 0 ]
 then
-    dbmigrator --db-connection-string='dbname=testing user=tester' rollback --steps=$steps
+    dbmigrator --db-connection-string="$DB_URL" rollback --steps=$steps
 fi
 
 pg_dump -s 'dbname=testing user=tester' >rolled_back_schema.sql
@@ -71,7 +71,7 @@ pg_dump -s 'dbname=testing user=tester' >rolled_back_schema.sql
 dropdb -U postgres testing
 createdb -U postgres -O tester testing
 cnx-db init
-dbmigrator --db-connection-string='dbname=testing user=tester' init
+dbmigrator --db-connection-string="$DB_URL" init
 
 pg_dump -s 'dbname=testing user=tester' >new_schema.sql
 
