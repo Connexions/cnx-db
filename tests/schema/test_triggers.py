@@ -62,8 +62,12 @@ class TestPostPublication:
         assert payload['timestamp']
 
 
-def insert_test_data(db_engine, i):
-    conn = db_engine.raw_connection()
+def insert_test_data(conn_str, i):
+    # We use pyscopg2 directly because the caller has entered a fork
+    # via os.fork. If we were to use the connection pool here,
+    # shared connections would be closed.
+    import psycopg2
+    conn = psycopg2.connect(conn_str)
     for minor_version in range(2, 12):
         with conn.cursor() as cursor:
             cursor.execute("""\
@@ -78,7 +82,7 @@ INSERT INTO MODULES (moduleid, version, name, \
  NULL, 'en', '{bijay_maniari}', '{bijay_maniari}', '{bijay_maniari}', '{}', \
  'Collection', '94919e72-7573-4ed4-828e-673c1fe0cf9b', 100, %s)""",
                            (i * 10 + minor_version,))
-            cursor.connection.commit()
+    conn.commit()
     conn.close()
 
 
@@ -110,6 +114,7 @@ INSERT INTO latest_modules (moduleid, version, name, \
  NULL, 'en', '{bijay_maniari}', '{bijay_maniari}', '{bijay_maniari}', '{}', \
  'Collection', '94919e72-7573-4ed4-828e-673c1fe0cf9b', 100, 1)""")
         db_cursor.connection.commit()
+    conn_str = conn.dsn
     conn.close()
 
     pids = []
@@ -118,7 +123,7 @@ INSERT INTO latest_modules (moduleid, version, name, \
         if pid:
             pids.append(pid)
         else:
-            insert_test_data(db_engines['super'], i)
+            insert_test_data(conn_str, i)
             os._exit(0)
 
     for pid in pids:
