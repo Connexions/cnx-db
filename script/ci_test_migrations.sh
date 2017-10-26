@@ -57,7 +57,7 @@ applied_after=$(dbmigrator --db-connection-string="$DB_URL" list | awk 'NF>3 {ap
 steps=$((applied_after-applied_before))
 
 # store the schema
-pg_dump -s 'dbname=testing user=tester' >migrated_schema.sql
+pg_dump -s "$DB_URL" >migrated_schema.sql
 
 # rollback the migrations
 if [ "$steps" -gt 0 ]
@@ -65,7 +65,7 @@ then
     dbmigrator --db-connection-string="$DB_URL" rollback --steps=$steps
 fi
 
-pg_dump -s 'dbname=testing user=tester' >rolled_back_schema.sql
+pg_dump -s "$DB_URL" >rolled_back_schema.sql
 
 # reset database
 dropdb -U postgres testing
@@ -73,7 +73,7 @@ createdb -U postgres -O tester testing
 cnx-db init
 dbmigrator --db-connection-string="$DB_URL" init
 
-pg_dump -s 'dbname=testing user=tester' >new_schema.sql
+pg_dump -s "$DB_URL" >new_schema.sql
 
 # Put dev environment back, if not on Travis
 if [ -z "$CI" ]
