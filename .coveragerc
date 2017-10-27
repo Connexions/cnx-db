@@ -1,13 +1,10 @@
 [run]
-omit =
-  cnxdb/tests/*
 
 [report]
 omit =
-  cnxdb/contrib/pytest.py
-  cnxdb/contrib/testing.py
-  cnxdb/tests/*
-  cnxdb/_version.py
-  cnxdb/__init__.py
+  *cnxdb/contrib/pytest.py
+  *cnxdb/contrib/testing.py
+  *cnxdb/_version.py
+  *cnxdb/__init__.py
 exclude_lines =
   pragma: no cover

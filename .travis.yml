@@ -27,6 +27,8 @@ before_install:
   - pip install -r requirements/test.txt
   - pip install codecov
 install:
+  # Uninstall, because cnx-archive installs it due to the circular dependence.
+  - pip uninstall -y cnx-db
   - pip install .
 before_script:
   # Set up postgres roles
@@ -37,9 +39,11 @@ before_script:
   - cd session_exec
   - make USE_PGXS=1 -e && sudo make USE_PGXS=1 -e install
   - cd ..
+  - export PYPREFIX=$(python -c 'import sys; print(sys.prefix)')
+  - export PYVERDIR=$(python -c 'import sys; print("python%d.%d" % sys.version_info[:2])')
 script:
   # This is the same as `python setup.py test` with a coverage wrapper.
-  - py.test
+  - py.test --cov="$PYPREFIX/lib/$PYVERDIR/site-packages/cnxdb"
   # Test migrations
   - script/ci_test_migrations.sh
 after_success:
