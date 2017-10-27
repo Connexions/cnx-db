@@ -27,7 +27,7 @@ before_install:
   - pip install -r requirements/test.txt
   - pip install codecov
 install:
-  - pip install .
+  - pip install -e .
 before_script:
   # Set up postgres roles
   - sudo -u postgres psql -d postgres -c "CREATE USER tester WITH SUPERUSER PASSWORD 'tester';"
