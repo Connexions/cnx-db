@@ -15,7 +15,7 @@ FROM (SELECT
     m.moduleid AS legacy_id,
     m.version AS legacy_version,
     a.html AS abstract,
-    '/resources/' || f.sha1 AS "resourcePath",
+    '/resources/' || files.sha1 AS "resourcePath",
     t.tag AS "type"
 FROM featured_books as f
   LEFT JOIN modules as m
@@ -24,4 +24,9 @@ FROM featured_books as f
          f.major_version is NULL)
     and (f.minor_version=m.minor_version OR
          f.minor_version is NULL))
+  LEFT JOIN abstracts as a ON m.abstractid=a.abstractid
+  LEFT JOIN moduletags mt ON m.module_ident = mt.module_ident
+  LEFT JOIN tags t ON mt.tagid = t.tagid
+  LEFT JOIN files
+    ON files.fileid = f.fileid
 ) combined_rows;
