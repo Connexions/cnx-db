@@ -1,9 +1,11 @@
 CREATE OR REPLACE FUNCTION update_latest() RETURNS trigger AS '
 BEGIN
+-- lastest content is the highest version that has successfully baked - states 1 and 8 (current and fallback)
+-- represent some sort of success (fallback used an old recipe due to errors)
   IF (TG_OP = ''INSERT'' OR TG_OP = ''UPDATE'') AND
           ARRAY [NEW.major_version, NEW.minor_version] >= (SELECT ARRAY [major_version, minor_version]
             FROM latest_modules WHERE uuid = NEW.uuid UNION ALL SELECT ARRAY[0, NULL] LIMIT 1) AND
-          NEW.stateid = 1 THEN
+          NEW.stateid in (1, 8) THEN -- current and fallback
       LOCK TABLE latest_modules IN SHARE ROW EXCLUSIVE MODE;
       DELETE FROM latest_modules WHERE moduleid = NEW.moduleid OR uuid = NEW.uuid;
       INSERT into latest_modules (
@@ -20,7 +22,7 @@ BEGIN
          NEW.major_version, NEW.minor_version, NEW.print_style, NEW.baked, NEW.recipe);
   END IF;
 
-  IF TG_OP = ''UPDATE'' THEN
+  IF TG_OP = ''UPDATE'' AND NEW.stateid in (1, 8) THEN -- current or fallback
       UPDATE latest_modules SET
         uuid=NEW.uuid,
         moduleid=NEW.moduleid,
