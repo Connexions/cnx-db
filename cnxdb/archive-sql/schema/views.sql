@@ -29,7 +29,7 @@ WITH latest_idents (module_ident) AS (
                         m2.major_version = m4.major_version
                     )
                 )
-                AND ms.statename = 'current'
+                AND ms.statename in ('current', 'fallback')
         )
 SELECT m.* FROM latest_idents li JOIN modules m
 ON m.module_ident = li.module_ident;
