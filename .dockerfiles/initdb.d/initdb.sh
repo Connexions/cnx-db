@@ -11,7 +11,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" "$POSTGRES_DB" <<-EOSQL
     GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA PUBLIC TO ${DB_USER};
 EOSQL
 
-cnx-db init -U $POSTGRES_USER -d $DB_NAME
+cnx-db init
 
 # ??? Is this really what we want to be doing?
 psql -v ON_ERROR_STOP=1 --username postgres "$DB_NAME" <<-EOSQL
