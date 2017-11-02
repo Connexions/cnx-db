@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from cnxdb.config import discover_settings
 
 
-def prepare():
+def prepare(settings=None):
     """This function prepares an application/script for use with this codebase.
 
     :return: an environment dictionary containing the newly created
@@ -17,7 +17,7 @@ def prepare():
 
     """
     # Get the settings
-    settings = discover_settings()
+    settings = discover_settings(settings)
     engines = {
         'common': create_engine(settings['db.common.url']),
         'super': create_engine(settings['db.super.url']),
