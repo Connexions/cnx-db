@@ -6,6 +6,22 @@
 
    - feature message
 
+0.12.0
+------
+
+- Change pg_dump to use $DB_URL in ci_test_migrations
+- Change dbmigrator commands to use $DB_URL in ci_test_migrations
+- Use $DB_URL in ci_test_migrations.sh
+- Fix triggers test to use raw connection string
+- Remove all connection string uses in favor of URL
+- Move to using a URL rather than connection string
+- Add prepare function for scripting env preparation
+- Add a function to discover environment settings
+- a view of all most recent content, regardless of baked state
+- Correct code coverage configuration (#94)
+- Ignore linting of build and dist directories (#89)
+- Wrap lines in docs/changes.rst (#90)
+
 0.11.0
 ------
 
