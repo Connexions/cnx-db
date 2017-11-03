@@ -9,7 +9,7 @@ setup_requires = (
     'pytest-runner',
     )
 install_requires = (
-    'lxml',
+    'pyramid',
     'psycopg2',
     'sqlalchemy',
     'rhaptos.cnxmlutils',

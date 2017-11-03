@@ -44,6 +44,12 @@ Testing (:mod:`cnxdb.contrib.testing`)
 .. automodule:: cnxdb.contrib.testing
    :members:
 
+Pyramid (:mod:`cnxdb.contrib.pyramid`)
+--------------------------------------
+
+.. automodule:: cnxdb.contrib.pyramid
+   :members:
+
 Pytest (:mod:`cnxdb.contrib.pytest`)
 ------------------------------------
 

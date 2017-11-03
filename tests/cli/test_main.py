@@ -50,7 +50,8 @@ def test_init_without_env_vars(capsys, mocker):
     return_code = main(args)
     assert return_code == 4
 
-    expected_msg = "'DB_URL' environment variable must be defined\n"
+    expected_msg = ("'DB_URL' environment variable "
+                    "OR the 'db.common.url' setting MUST be defined\n")
     assert expected_msg in capsys.readouterr()
 
 
@@ -117,5 +118,6 @@ def test_venv_without_env_vars(capsys, mocker):
     return_code = main(args)
     assert return_code == 4
 
-    expected_msg = "'DB_URL' environment variable must be defined\n"
+    expected_msg = ("'DB_URL' environment variable "
+                    "OR the 'db.common.url' setting MUST be defined\n")
     assert expected_msg in capsys.readouterr()
