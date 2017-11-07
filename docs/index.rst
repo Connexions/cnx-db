@@ -6,18 +6,6 @@
 Connexions Database Library
 ===========================
 
-
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
-   config
-   usage
-   api
-   changes
-
-
 Installation
 ------------
 
@@ -69,6 +57,19 @@ License
 This software is subject to the provisions of the GNU Affero General
 Public License Version 3.0 (AGPL). See license.txt for details.
 Copyright (c) 2017 Rice University
+
+
+Contents
+========
+
+.. toctree::
+   :maxdepth: 2
+
+   config
+   usage
+   api
+   changes
+
 
 
 Indices and tables
