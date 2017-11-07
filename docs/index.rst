@@ -25,9 +25,8 @@ Usage
 
 Initialize an database::
 
-    cnx-db init [-h host] [-p port] -d dbname -U user
-
-.. todo:: Deprecate ``cnx-archive-initdb`` in favor of ``cnx-db init ...``.
+    export DB_URL=postgresql:///repository
+    cnx-db init
 
 .. todo:: This may become part of ``dbmigrator init`` or ``dbmigrator migrate``
           in the future.
