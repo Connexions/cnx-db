@@ -35,6 +35,20 @@ Initialization
 
 .. automodule:: cnxdb.init.manifest
 
+Contributions
+=============
+
+Testing (:mod:`cnxdb.contrib.testing`)
+--------------------------------------
+
+.. automodule:: cnxdb.contrib.testing
+   :members:
+
+Pytest (:mod:`cnxdb.contrib.pytest`)
+------------------------------------
+
+.. automodule:: cnxdb.contrib.pytest
+   :members:
 
 Migrations
 ==========

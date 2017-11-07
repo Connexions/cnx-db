@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""\
+These are shared pytest fixtures used by this library's test suite,
+but also made available to packages using this library.
+For more information on how pytest fixtures work, look at the
+`pytest fixtures documentation
+<https://docs.pytest.org/en/latest/fixture.html>`_.
+
+"""
 from __future__ import absolute_import
 import os
 
