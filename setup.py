@@ -27,7 +27,6 @@ with open('README.rst', 'r') as readme, \
      open('docs/changes.rst', 'r') as changes:
     long_description = '\n'.join([
         readme.read(),
-        "==========\nChange Log\n==========",
         changes.read(),
     ])
 
