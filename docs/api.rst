@@ -30,6 +30,7 @@ Initialization
 -----------------
 
 .. automodule:: cnxdb.init
+   :members: init_db, init_venv
 
 :mod:`cnxdb.init.manifest`
 --------------------------

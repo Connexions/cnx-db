@@ -45,7 +45,15 @@ def _has_schema(cursor):
 
 
 def init_db(engine, as_venv_importable=False):
-    """Initialize the database from the given ``connection_string``."""
+    """Initialize the database from the given ``connection_string``.
+
+    :param engine: The database connection engine
+    :type engine: sqlalchemy.engine.Engine
+    :param bool as_venv_importable: Flag to trigger
+        the use of :func:`init_venv` from this function
+    :return: None
+
+    """
     conn = engine.raw_connection()
     with conn.cursor() as cursor:
         if _has_schema(cursor):
@@ -95,7 +103,13 @@ def _is_localhost_connection(db_connection):
 
 
 def init_venv(engine):
-    """Initialize a Python virtual environment for trigger importation."""
+    """Initialize a Python virtual environment for trigger importation.
+
+    :param engine: The database connection engine
+    :type engine: sqlalchemy.engine.Engine
+    :return: None
+
+    """
     # If virtualenv is active, use that for postgres
     if hasattr(sys, 'real_prefix'):  # attr is only present within a venv
         activate_path = os.path.join(os.path.realpath(sys.prefix),
