@@ -10,8 +10,7 @@ Configuration
 -------------------
 
 .. automodule:: cnxdb.config
-
-   .. autofunction:: discover_settings
+   :members: discover_settings
 
 Scripting
 =========
@@ -20,8 +19,7 @@ Scripting
 ----------------------
 
 .. automodule:: cnxdb.scripting
-
-   .. autofunction:: prepare
+   :members: prepare
 
 Initialization
 ==============
