@@ -1,5 +1,6 @@
-Library Usage
-=============
+=====
+Usage
+=====
 
 Some facts about this library:
 
