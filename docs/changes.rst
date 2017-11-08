@@ -6,6 +6,14 @@
 
    - feature message
 
+1.0.0
+-----
+
+- Migrate transform triggers logic to this package from cnx-archive (#86)
+- Ignore artifacts of running ci_test_migrations.sh
+- Run non-continous integration runs of ci_test_migration.sh quietly
+- Fix docker-compose to use env vars
+
 0.12.0
 ------
 
