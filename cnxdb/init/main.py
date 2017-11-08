@@ -45,7 +45,8 @@ def _has_schema(cursor):
 
 
 def init_db(engine, as_venv_importable=False):
-    """Initialize the database from the given ``connection_string``.
+    """Initialize the database schema, including tables, functions
+    and triggers.
 
     :param engine: The database connection engine
     :type engine: sqlalchemy.engine.Engine
@@ -103,7 +104,14 @@ def _is_localhost_connection(db_connection):
 
 
 def init_venv(engine):
-    """Initialize a Python virtual environment for trigger importation.
+    """Sets up the database's plpython environment
+    for use with a python virtual environment (aka venv).
+    This function can only be run on the same system as the database
+    or on a system with an identical path to a compatible python venv.
+
+    The results of this is that plpythonu interpreters will execute
+    with the contents of the venv's site-packages available
+    for use rather than use the default system python environment only.
 
     :param engine: The database connection engine
     :type engine: sqlalchemy.engine.Engine
