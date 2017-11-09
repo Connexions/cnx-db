@@ -92,20 +92,20 @@ CREATE TRIGGER delete_from_latest_version
   EXECUTE PROCEDURE delete_from_latest();
 
 
-
-
 CREATE OR REPLACE FUNCTION post_publication() RETURNS trigger AS $$
 BEGIN
-  PERFORM pg_notify('post_publication', '{"module_ident": '||NEW.module_ident||', "ident_hash": "'||ident_hash(NEW.uuid, NEW.major_version, NEW.minor_version)||'", "timestamp": "'||CURRENT_TIMESTAMP||'"}');
-  RETURN NEW;
-END;
+      -- skip if this is an update that has already sent a notify that has not yet been picked up - avoid double notify
+      IF TG_OP = 'INSERT' OR ( TG_OP = 'UPDATE' AND OLD.stateid != 5 ) THEN
+            PERFORM pg_notify('post_publication', '{"module_ident": '||NEW.module_ident||', "ident_hash": "'||ident_hash(NEW.uuid, NEW.major_version, NEW.minor_version)||'", "timestamp": "'||CURRENT_TIMESTAMP||'"}');
+              END IF;
+              RETURN NEW;
+        END;
 $$ LANGUAGE 'plpgsql';
 
 CREATE TRIGGER post_publication_trigger
   AFTER INSERT OR UPDATE ON modules FOR EACH ROW
   WHEN (NEW.stateid = 5)
   EXECUTE PROCEDURE post_publication();
-
 
 
 
