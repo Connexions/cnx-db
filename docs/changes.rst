@@ -9,6 +9,13 @@ Change Log
 
    - feature message
 
+1.1.0
+-----
+
+- Touchup the docstrings for database init funcs (#99)
+- Add an integration point for the pyramid web framework (#98)
+- Update documentation headers and contrib module api docs (#97)
+
 1.0.0
 -----
 
