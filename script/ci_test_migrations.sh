@@ -32,6 +32,7 @@ fi
 
 # checkout the branch point
 git checkout $GIT_QUIET $first_commit^
+pip uninstall -y cnx-db
 pip install $PIP_QUIET .
 
 # install db-migrator and cnx-db
@@ -50,6 +51,7 @@ pg_dump -s 'dbname=testing user=tester' >old_schema.sql
 
 # go back to the branch HEAD
 git checkout $GIT_QUIET $current_commit
+pip uninstall -y cnx-db
 pip install $PIP_QUIET .
 
 # mark all the repeat, deferred migrations as not applied (to make the
