@@ -1,4 +1,4 @@
-FROM postgres:9.4
+FROM openstax/postgres:9.4
 
 MAINTAINER Michael Mulich <michael.mulich@gmail.com>
 
