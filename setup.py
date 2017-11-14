@@ -9,13 +9,13 @@ setup_requires = (
     'pytest-runner',
     )
 install_requires = (
-    'pyramid',
     'psycopg2',
     'sqlalchemy',
     'rhaptos.cnxmlutils',
     'venusian',
     )
 tests_require = [
+    'pyramid',
     'pytest',
     'pytest-mock',
     ]
