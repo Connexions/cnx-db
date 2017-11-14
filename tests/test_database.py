@@ -13,24 +13,19 @@ import sys
 import time
 import unittest
 
+from cnxarchive.tests import testing
 from cnxepub import flatten_tree_to_ident_hashes
 import psycopg2
-
-from cnxarchive.tests import testing
+import pytest
 
 
 class MiscellaneousFunctionsTestCase(unittest.TestCase):
-    fixture = testing.schema_fixture
+    @pytest.fixture(autouse=True)
+    def suite_fixture(self, db_init_and_wipe, db_cursor):
+        self.db_cursor = db_cursor
 
-    @testing.db_connect
-    def setUp(self, cursor):
-        self.fixture.setUp()
-
-    def tearDown(self):
-        self.fixture.tearDown()
-
-    @testing.db_connect
-    def test_iso8601(self, cursor):
+    def test_iso8601(self):
+        cursor = self.db_cursor
         # Exams the iso8601 SQL function.
         cursor.execute("SELECT date_trunc('second', current_timestamp), iso8601(current_timestamp);")
         current, iso8601 = cursor.fetchone()
@@ -44,8 +39,8 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
 
     @unittest.skipIf(not testing.is_venv(),
                      "Not within a virtualenv")
-    @testing.db_connect
-    def test_pypath(self, cursor):
+    def test_pypath(self):
+        cursor = self.db_cursor
         site_packages = testing.getsitepackages()
         # Examine the results of the pypath SQL function.
         cursor.execute("SELECT unnest(pypath())")
@@ -56,8 +51,8 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
 
     @unittest.skipIf(not testing.db_is_local(),
                      'Database is not on the same host')
-    @testing.db_connect
-    def test_pyimport(self, cursor):
+    def test_pyimport(self):
+        cursor = self.db_cursor
         target_name = 'cnxdb.database'
 
         # Import the module from current directory
@@ -113,8 +108,8 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         self.assertIn(directory, expected_directories)
         self.assertIn(file_path, expected_file_paths)
 
-    @testing.db_connect
-    def test_pyimport_with_importerror(self, cursor):
+    def test_pyimport_with_importerror(self):
+        cursor = self.db_cursor
         target_name = 'hubris'
         # Check the results of calling pyimport on cnxarchive.
         cursor.execute("SELECT import, directory, file_path "
@@ -123,8 +118,8 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
 
         self.assertEqual(row, None)
 
-    @testing.db_connect
-    def test_module_ident_from_ident_hash(self, cursor):
+    def test_module_ident_from_ident_hash(self):
+        cursor = self.db_cursor
         uuid = 'c395b566-5fe3-4428-bcb2-19016e3aa3ce'
         module_ident = 10
         # Create a piece of content.
@@ -151,8 +146,8 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         self.assertEqual(get_module_ident_from_ident_hash(uuid+"@1", cursor), module_ident)
         self.assertEqual(get_module_ident_from_ident_hash(uuid+"@1.3", cursor), module_ident)
 
-    @testing.db_connect
-    def test_html_abstract_deprecated(self, cursor):
+    def test_html_abstract_deprecated(self):
+        cursor = self.db_cursor
         # insert test data
         cursor.execute('''\
         INSERT INTO abstracts VALUES
@@ -185,8 +180,8 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         self.assertTrue(html_abstract4,
                         'A link to the <a href="http://example.com">outside world</a>.</div>')
 
-    @testing.db_connect
-    def test_html_abstract(self, cursor):
+    def test_html_abstract(self):
+        cursor = self.db_cursor
         # insert test data
         cursor.execute('''\
         INSERT INTO abstracts VALUES
@@ -211,8 +206,8 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         self.assertEqual(html_abstract,
                          'A link to an <a href="/contents/d395b566-5fe3-4428-bcb2-19016e3aa3ce">interal document</a>.</div>')
 
-    @testing.db_connect
-    def test_cnxml_abstract(self, cursor):
+    def test_cnxml_abstract(self):
+        cursor = self.db_cursor
         # insert test data
         cursor.execute('''\
         INSERT INTO abstracts VALUES
@@ -236,8 +231,8 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         self.assertEqual(cnxml_abstract,
                          'A link to an <link document="m42092" version="1.4">interal document</link>.')
 
-    @testing.db_connect
-    def test_html_content_deprecated(self, cursor):
+    def test_html_content_deprecated(self):
+        cursor = self.db_cursor
         # insert test data
         cursor.execute('''\
         INSERT INTO abstracts VALUES
@@ -274,8 +269,8 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         # Only test for general conversion.
         self.assertIn('<body', content)
 
-    @testing.db_connect
-    def test_html_content(self, cursor):
+    def test_html_content(self):
+        cursor = self.db_cursor
         # insert test data
         cursor.execute('''\
         INSERT INTO abstracts VALUES
@@ -308,8 +303,8 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         cursor.execute("SELECT html_content(4) FROM files")
         self.assertIn("<body", cursor.fetchone()[0])
 
-    @testing.db_connect
-    def test_cnxml_content(self, cursor):
+    def test_cnxml_content(self):
+        cursor = self.db_cursor
         # insert test data
         cursor.execute('''\
         INSERT INTO abstracts VALUES
@@ -341,8 +336,8 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         cursor.execute("SELECT cnxml_content(4) FROM files")
         self.assertIn("<document", cursor.fetchone()[0])
 
-    @testing.db_connect
-    def test_identifiers_equal_function(self, cursor):
+    def test_identifiers_equal_function(self):
+        cursor = self.db_cursor
         import inspect
 
         from cnxarchive.tests.test_utils import identifiers_equal
@@ -440,8 +435,8 @@ $$ LANGUAGE plpythonu;
             identifier, identifier))
         self.assertTrue(cursor.fetchone()[0])
 
-    @testing.db_connect
-    def test_strip_html(self, cursor):
+    def test_strip_html(self):
+        cursor = self.db_cursor
         cursor.execute("SELECT strip_html('no html')")
         result = cursor.fetchone()[0]
         self.assertEqual('no html', result)
@@ -466,20 +461,12 @@ line')""")
 
 
 class TreeToJsonTestCase(unittest.TestCase):
-    fixture = testing.data_fixture
+    @pytest.fixture(autouse=True)
+    def suite_fixture(self, xxx_archive_data, db_cursor):
+        self.db_cursor = db_cursor
+        self._insert_collated_tree()
 
-    @classmethod
-    def setUpClass(cls):
-        cls.fixture.setUp()
-        cls._insert_collated_tree()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.fixture.tearDown()
-
-    @classmethod
-    def _insert_collated_tree(cls):
-        connect = testing.db_connection_factory()
+    def _insert_collated_tree(self):
         nodes = [
             # nodeid, parent_id, documentid, title, childorder
             (936, None, 1, None, 0,),
@@ -533,10 +520,8 @@ class TreeToJsonTestCase(unittest.TestCase):
         #        else:
         #            cursor.execute("DELETE FROM trees WHERE nodeid >= 900")
 
-        with connect() as db_conn:
-            with db_conn.cursor() as cursor:
-                for node_entry in nodes:
-                    insert_tree_node(cursor, node_entry)
+        for node_entry in nodes:
+            insert_tree_node(self.db_cursor, node_entry)
 
     @property
     def target(self):
@@ -573,16 +558,12 @@ class TreeToJsonTestCase(unittest.TestCase):
 class ModulePublishTriggerTestCase(unittest.TestCase):
     """Tests for the postgresql triggers when a module is published
     """
-    fixture = testing.data_fixture
+    @pytest.fixture(autouse=True)
+    def suite_fixture(self, xxx_archive_data, db_cursor):
+        self.db_cursor = db_cursor
 
-    def setUp(self):
-        self.fixture.setUp()
-
-    def tearDown(self):
-        self.fixture.tearDown()
-
-    @testing.db_connect
-    def test_get_current_module_ident(self, cursor):
+    def test_get_current_module_ident(self):
+        cursor = self.db_cursor
         cursor.execute('ALTER TABLE modules DISABLE TRIGGER module_published')
 
         from cnxdb.database import get_current_module_ident
@@ -605,8 +586,8 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
 
         self.assertEqual(module_ident, expected_module_ident)
 
-    @testing.db_connect
-    def test_next_version(self, cursor):
+    def test_next_version(self):
+        cursor = self.db_cursor
         from cnxdb.database import next_version
 
         # Insert collection version 2.1
@@ -643,8 +624,8 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
         # still going to be 2.3
         self.assertEqual(next_version(module_ident, testing.fake_plpy), 3)
 
-    @testing.db_connect
-    def test_get_collections(self, cursor):
+    def test_get_collections(self):
+        cursor = self.db_cursor
         cursor.execute('ALTER TABLE modules DISABLE TRIGGER module_published')
 
         from cnxdb.database import get_collections
@@ -692,8 +673,8 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
             list(get_collections(module_ident, testing.fake_plpy)),
             [collection_ident, collection2_ident])
 
-    @testing.db_connect
-    def test_rebuild_collection_tree(self, cursor):
+    def test_rebuild_collection_tree(self):
+        cursor = self.db_cursor
         cursor.execute('ALTER TABLE modules DISABLE TRIGGER module_published')
 
         from cnxdb.database import rebuild_collection_tree
@@ -766,8 +747,8 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
         self.assertEqual(cursor.fetchall(), [(new_collection_ident,),
                          (new_module_ident,), (module2_ident,)])
 
-    @testing.db_connect
-    def test_republish_collection(self, cursor):
+    def test_republish_collection(self):
+        cursor = self.db_cursor
         cursor.execute('ALTER TABLE modules DISABLE TRIGGER module_published')
 
         from cnxdb.database import republish_collection
@@ -818,8 +799,8 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
         self.assertEqual(data[22], 10)
         self.assertEqual(data[23], 3)
 
-    @testing.db_connect
-    def test_republish_collection_w_keywords(self, cursor):
+    def test_republish_collection_w_keywords(self):
+        cursor = self.db_cursor
         # Ensure association of the new collection with existing keywords.
         cursor.execute("""\
 ALTER TABLE modules DISABLE TRIGGER module_published""")
@@ -860,8 +841,8 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
         inserted_keywords = [x[0] for x in cursor.fetchall()]
         self.assertEqual(sorted(inserted_keywords), sorted(keywords))
 
-    @testing.db_connect
-    def test_republish_collection_w_files(self, cursor):
+    def test_republish_collection_w_files(self):
+        cursor = self.db_cursor
         # Ensure association of the new collection with existing files.
         cursor.execute("""\
 ALTER TABLE modules DISABLE TRIGGER module_published""")
@@ -904,8 +885,8 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
         self.assertEqual(sorted(inserted_files),
                          sorted([(fileid, 'ruleset.css')]))
 
-    @testing.db_connect
-    def test_republish_collection_w_subjects(self, cursor):
+    def test_republish_collection_w_subjects(self):
+        cursor = self.db_cursor
         # Ensure association of the new collection with existing subjects/tags.
         cursor.execute("""\
 ALTER TABLE modules DISABLE TRIGGER module_published""")
@@ -995,8 +976,8 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
         subcols = tuple(get_subcols(4, plpy))
         self.assertEqual(subcols, (22, 25))
 
-    @testing.db_connect
-    def test_insert_new_module(self, cursor):
+    def test_insert_new_module(self):
+        cursor = self.db_cursor
         cursor.execute('SELECT COUNT(*) FROM modules')
         old_n_modules = cursor.fetchone()[0]
 
@@ -1038,8 +1019,8 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
         self.assertEqual(major, 13)
         self.assertEqual(minor, None)
 
-    @testing.db_connect
-    def test_collection_minor_updates(self, cursor):
+    def test_collection_minor_updates(self):
+        cursor = self.db_cursor
         cursor.execute('SELECT COUNT(*) FROM modules')
         old_n_modules = cursor.fetchone()[0]
 
@@ -1108,8 +1089,8 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
         self.assertIn('209deb1f-1a46-4369-9e0d-18674cf58a3e@8', children)
         self.assertIn('d395b566-5fe3-4428-bcb2-19016e3aa3ce@5', children)
 
-    @testing.db_connect
-    def test_module(self, cursor):
+    def test_module(self):
+        cursor = self.db_cursor
         # Create a fake collated tree for College Physics
         # which contains the module that is going to have a new version
         cursor.execute("""\
@@ -1265,8 +1246,8 @@ INSERT INTO trees (parent_id, documentid, is_collated)
             self.assertEqual(old_node[4], new_tree[i][4])  # child order
             self.assertEqual(old_node[5], new_tree[i][5])  # latest
 
-    @testing.db_connect
-    def test_module_files_from_cnxml(self, cursor):
+    def test_module_files_from_cnxml(self):
+        cursor = self.db_cursor
         # Insert abstract with cnxml
         cursor.execute('''\
         INSERT INTO abstracts
@@ -1366,8 +1347,8 @@ INSERT INTO trees (parent_id, documentid, is_collated)
         self.assertIn('Introduction to Science and the Realm of Physics, '
                       'Physical Quantities, and Units', fulltext)
 
-    @testing.db_connect
-    def test_module_files_from_html(self, cursor):
+    def test_module_files_from_html(self):
+        cursor = self.db_cursor
         # Insert abstract with cnxml -- (this is tested elsewhere)
         # This also tests for when a abstract has a resource. The transfomr
         #   happens within when the add_module_file trigger is executed.
@@ -1470,8 +1451,8 @@ INSERT INTO trees (parent_id, documentid, is_collated)
         self.assertIn('Introduction to Science and the Realm of Physics, '
                       'Physical Quantities, and Units', fulltext)
 
-    @testing.db_connect
-    def test_module_files_overwrite_index_html(self, cursor):
+    def test_module_files_overwrite_index_html(self):
+        cursor = self.db_cursor
         # Insert a new version of an existing module
         cursor.execute('''
         INSERT INTO modules
@@ -1554,8 +1535,8 @@ INSERT INTO trees (parent_id, documentid, is_collated)
         html = index_htmls[0][0][:]
         self.assertEqual(custom_content, html)
 
-    @testing.db_connect
-    def test_collated_fulltext_indexing_triggers(self, cursor):
+    def test_collated_fulltext_indexing_triggers(self):
+        cursor = self.db_cursor
         """Verify that inserting a collated file association builds
         the necessary indexes.  This is used when a book is cooked.
         """
@@ -1575,8 +1556,8 @@ INSERT INTO trees (parent_id, documentid, is_collated)
         self.assertEqual(len(words), 55)
         self.assertIn(('følger',), words)
 
-    @testing.db_connect
-    def test_tree_to_json(self, cursor):
+    def test_tree_to_json(self):
+        cursor = self.db_cursor
         """Verify the results of the ``tree_to_json_for_legacy`` sql function.
         This is used during a cnx-publishing publication.
         """
@@ -1656,16 +1637,12 @@ SELECT tree_to_json_for_legacy(
 class UpdateLatestTriggerTestCase(unittest.TestCase):
     """Test case for updating the latest_modules table
     """
-    fixture = testing.data_fixture
+    @pytest.fixture(autouse=True)
+    def suite_fixture(self, xxx_archive_data, db_cursor):
+        self.db_cursor = db_cursor
 
-    def setUp(self):
-        self.fixture.setUp()
-
-    def tearDown(self):
-        self.fixture.tearDown()
-
-    @testing.db_connect
-    def test_insert_new_module(self, cursor):
+    def test_insert_new_module(self):
+        cursor = self.db_cursor
         cursor.execute('''INSERT INTO modules VALUES (
         DEFAULT, 'Module', 'm1', DEFAULT, '1.1', 'Name of m1',
         '2013-07-31 12:00:00.000000+02', '2013-10-03 21:14:11.000000+02',
@@ -1677,8 +1654,8 @@ class UpdateLatestTriggerTestCase(unittest.TestCase):
         WHERE uuid = %s''', [uuid])
         self.assertEqual(cursor.fetchone()[0], module_ident)
 
-    @testing.db_connect
-    def test_insert_existing_module(self, cursor):
+    def test_insert_existing_module(self):
+        cursor = self.db_cursor
         cursor.execute('''INSERT INTO modules VALUES (
         DEFAULT, 'Module', 'm1', DEFAULT, '1.1', 'Name of m1',
         '2013-07-31 12:00:00.000000+02', '2013-10-03 21:14:11.000000+02',
@@ -1697,8 +1674,8 @@ class UpdateLatestTriggerTestCase(unittest.TestCase):
         WHERE uuid = %s''', [uuid])
         self.assertEqual(cursor.fetchone()[0], module_ident)
 
-    @testing.db_connect
-    def test_insert_not_latest_version(self, cursor):
+    def test_insert_not_latest_version(self):
+        cursor = self.db_cursor
         """This test case is specifically written for backfilling, new inserts
         may not mean new versions
         """
@@ -1739,20 +1716,15 @@ class LegacyCompatTriggerTestCase(unittest.TestCase):
     but only when making a revision publication, which ties the ``uuid``
     to the legacy ``moduleid``.
     """
-    fixture = testing.schema_fixture
-
-    @testing.db_connect
-    def setUp(self, cursor):
-        self.fixture.setUp()
-        cursor.execute("""\
+    @pytest.fixture(autouse=True)
+    def suite_fixture(self, db_init_and_wipe, db_cursor):
+        self.db_cursor = db_cursor
+        db_cursor.execute("""\
 INSERT INTO abstracts (abstract) VALUES (' ') RETURNING abstractid""")
-        self._abstract_id = cursor.fetchone()[0]
+        self._abstract_id = db_cursor.fetchone()[0]
 
-    def tearDown(self):
-        self.fixture.tearDown()
-
-    @testing.db_connect
-    def test_new_module(self, cursor):
+    def test_new_module(self):
+        cursor = self.db_cursor
         """Verify publishing of a new module creates values for legacy fields.
         """
         # Insert a new module.
@@ -1787,8 +1759,8 @@ RETURNING
         self.assertEqual(minor_ver, None)
         self.assertEqual(ver, '1.1')
 
-    @testing.db_connect
-    def test_new_collection(self, cursor):
+    def test_new_collection(self):
+        cursor = self.db_cursor
         """Verify publishing of a new collection creates values
         for legacy fields.
         """
@@ -1824,8 +1796,8 @@ RETURNING
         self.assertEqual(minor_ver, 1)
         self.assertEqual(ver, '1.1')
 
-    @testing.db_connect
-    def test_module_revision(self, cursor):
+    def test_module_revision(self):
+        cursor = self.db_cursor
         """Verify publishing of a module revision uses legacy field values.
         """
         cursor.execute("SELECT setval('moduleid_seq', 10100)")
@@ -1894,8 +1866,8 @@ RETURNING
         self.assertEqual(rev_minor_ver, None)
         self.assertEqual(rev_ver, '1.2')
 
-    @testing.db_connect
-    def test_collection_revision(self, cursor):
+    def test_collection_revision(self):
+        cursor = self.db_cursor
         """Verify publishing of a collection revision uses legacy field values.
         """
         cursor.execute("SELECT setval('collectionid_seq', 10100)")
@@ -1964,8 +1936,8 @@ RETURNING
         self.assertEqual(rev_minor_ver, 1)
         self.assertEqual(rev_ver, '1.2')
 
-    @testing.db_connect
-    def test_anti_republish_module_on_collection_revision(self, cursor):
+    def test_anti_republish_module_on_collection_revision(self):
+        cursor = self.db_cursor
         """Verify publishing of a collection revision with modules included
         in other collections. Contemporary publications should not republish
         the modules within the current collections in the publication context.
@@ -2092,8 +2064,8 @@ GROUP BY portal_type""")
             }
         self.assertEqual(counts, expected_counts)
 
-    @testing.db_connect
-    def test_new_module_wo_uuid(self, cursor):
+    def test_new_module_wo_uuid(self):
+        cursor = self.db_cursor
         """Verify legacy publishing of a new module creates a UUID
         and licenseid in a 'document_controls' entry.
         """
@@ -2131,8 +2103,8 @@ RETURNING
         self.assertEqual(uuid_, controls_uuid)
         self.assertEqual(license_id, controls_license_id)
 
-    @testing.db_connect
-    def test_new_module_user_upsert(self, cursor):
+    def test_new_module_user_upsert(self):
+        cursor = self.db_cursor
         """Verify legacy publishing of a new module upserts users
         from the persons table into the users table.
         """
@@ -2189,8 +2161,8 @@ ORDER BY username
         self.assertEqual(user_records[1],
                          ('ruins', 'Legacy', 'Ruins', 'Legacy Ruins',))
 
-    @testing.db_connect
-    def test_update_user_update(self, cursor):
+    def test_update_user_update(self):
+        cursor = self.db_cursor
         """Verify legacy updating of user account also updates rewrite
         """
         # Insert the legacy persons records.
@@ -2228,8 +2200,8 @@ ORDER BY username
         # Check for the update.
         self.assertEqual(rewrite_user_record, ('cnxcap', 'Univeristy', 'Maths', 'OSC Maths Maintainer'))
 
-    @testing.db_connect
-    def test_new_moduleoptionalroles_user_insert(self, cursor):
+    def test_new_moduleoptionalroles_user_insert(self):
+        cursor = self.db_cursor
         """Verify publishing of a new moduleoptionalroles record
         inserts users from the persons table into the users table.
         This should only insert new records and leave the existing
@@ -2353,22 +2325,13 @@ ALTER TABLE modules ENABLE TRIGGER ALL;
 
 
 class DocumentHitsTestCase(unittest.TestCase):
-    fixture = testing.schema_fixture
+    @pytest.fixture(autouse=True)
+    def suite_fixture(self, db_init_and_wipe, db_cursor):
+        self.db_cursor = db_cursor
+        db_cursor.execute(SQL_FOR_HIT_DOCUMENTS)
 
-    @classmethod
-    def setUpClass(cls):
-        cls.settings = testing.integration_test_settings()
-
-    @testing.db_connect
-    def setUp(self, cursor):
-        self.fixture.setUp()
-        cursor.execute(SQL_FOR_HIT_DOCUMENTS)
-
-    def tearDown(self):
-        self.fixture.tearDown()
-
-    @testing.db_connect
-    def override_recent_date(self, cursor):
+    def override_recent_date(self):
+        cursor = self.db_cursor
         # Override the SQL function for acquiring the recent date,
         #   because otherwise the test will be a moving target in time.
         cursor.execute("CREATE OR REPLACE FUNCTION get_recency_date () "
@@ -2376,8 +2339,8 @@ class DocumentHitsTestCase(unittest.TestCase):
                        "  RETURN '2013-10-20'::timestamp with time zone; "
                        "END; $$ LANGUAGE plpgsql;")
 
-    @testing.db_connect
-    def make_hit(self, cursor, ident, start_date, end_date=None, count=0):
+    def make_hit(self, ident, start_date, end_date=None, count=0):
+        cursor = self.db_cursor
         from datetime import timedelta
         if end_date is None:
             end_date = start_date + timedelta(1)
@@ -2410,8 +2373,8 @@ class DocumentHitsTestCase(unittest.TestCase):
                 self.make_hit(ident, date, count=hit_counts[i])
         return hits
 
-    @testing.db_connect
-    def test_recency_function_w_no_document_hits(self, cursor):
+    def test_recency_function_w_no_document_hits(self):
+        cursor = self.db_cursor
         # Exam the function out puts a date.
 
         # At the time of this writting the recency is one week.
@@ -2424,8 +2387,8 @@ class DocumentHitsTestCase(unittest.TestCase):
         #   so checking by date should be sufficient.
         self.assertEqual(then.date(), value.date())
 
-    @testing.db_connect
-    def test_recency_function_w_document_hits(self, cursor):
+    def test_recency_function_w_document_hits(self):
+        cursor = self.db_cursor
         # Exam the function out puts a date.
 
         self.create_hits()
@@ -2442,8 +2405,8 @@ class DocumentHitsTestCase(unittest.TestCase):
         #   so checking by date should be sufficient.
         self.assertEqual(then.date(), value.date())
 
-    @testing.db_connect
-    def test_hit_average_function(self, cursor):
+    def test_hit_average_function(self):
+        cursor = self.db_cursor
         # Verify the hit average is output in both overall and recent
         #   circumstances.
         self.override_recent_date()
@@ -2466,8 +2429,8 @@ class DocumentHitsTestCase(unittest.TestCase):
         self.assertEqual(close_enough(other_average),
                          close_enough(sum(hits[6]) / 5.0))
 
-    @testing.db_connect
-    def test_hit_rank_function(self, cursor):
+    def test_hit_rank_function(self):
+        cursor = self.db_cursor
         # Verify the hit rank is output in both overall and recent
         #   circumstances.
         self.override_recent_date()
@@ -2481,8 +2444,8 @@ class DocumentHitsTestCase(unittest.TestCase):
         self.assertEqual(rank, 5)
         self.assertEqual(recent_rank, 3)
 
-    @testing.db_connect
-    def test_update_recent_hits_function(self, cursor):
+    def test_update_recent_hits_function(self):
+        cursor = self.db_cursor
         # Verify the function updates the recent hit ranks table
         #   with hit rank information grouped by document uuid.
         self.override_recent_date()
@@ -2499,8 +2462,8 @@ class DocumentHitsTestCase(unittest.TestCase):
         self.assertEqual(hit_ranks[3],  # row that combines two idents.
                          ('88cd206d-66d2-48f9-86bb-75d5366582ee', 54, 9, 4))
 
-    @testing.db_connect
-    def test_update_overall_hits_function(self, cursor):
+    def test_update_overall_hits_function(self):
+        cursor = self.db_cursor
         # Verify the function updates the overall hit ranks table
         #   with hit rank information grouped by document uuid.
         self.override_recent_date()
