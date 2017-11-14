@@ -305,10 +305,6 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         (4, %s, 'index.cnxml');''', [fileid])
 
         # check that cnxml content can be transformed
-        html_filepath = os.path.join(testing.DATA_DIRECTORY,
-                                     'm42033-1.3.html')
-        with open(html_filepath, 'r') as f:
-            html_content = f.read()
         cursor.execute("SELECT html_content(4) FROM files")
         self.assertIn("<body", cursor.fetchone()[0])
 
@@ -342,10 +338,6 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         (4, %s, 'index.cnxml.html');''', [fileid])
 
         # check that cnxml content can be transformed
-        filepath = os.path.join(testing.DATA_DIRECTORY,
-                                'm42033-1.3.cnxml')
-        with open(filepath, 'r') as f:
-            cnxml_content = f.read()
         cursor.execute("SELECT cnxml_content(4) FROM files")
         self.assertIn("<document", cursor.fetchone()[0])
 
@@ -829,7 +821,6 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
     @testing.db_connect
     def test_republish_collection_w_keywords(self, cursor):
         # Ensure association of the new collection with existing keywords.
-        settings = testing.integration_test_settings()
         cursor.execute("""\
 ALTER TABLE modules DISABLE TRIGGER module_published""")
         cursor.connection.commit()
@@ -872,7 +863,6 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
     @testing.db_connect
     def test_republish_collection_w_files(self, cursor):
         # Ensure association of the new collection with existing files.
-        settings = testing.integration_test_settings()
         cursor.execute("""\
 ALTER TABLE modules DISABLE TRIGGER module_published""")
         cursor.connection.commit()
@@ -917,7 +907,6 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
     @testing.db_connect
     def test_republish_collection_w_subjects(self, cursor):
         # Ensure association of the new collection with existing subjects/tags.
-        settings = testing.integration_test_settings()
         cursor.execute("""\
 ALTER TABLE modules DISABLE TRIGGER module_published""")
         cursor.connection.commit()
@@ -2043,7 +2032,6 @@ RETURNING nodeid""", args)
                 root_node_id = cursor.fetchone()[0]
                 # Insert the tree for the collections.
                 for i, sub_mid in enumerate(entries[:2]):
-                    decendents = entries[2:]
                     args = (root_node_id, sub_mid, sub_mid, i,)
                     cursor.execute("""\
 INSERT INTO trees
@@ -2445,7 +2433,7 @@ class DocumentHitsTestCase(unittest.TestCase):
         max_end_timestamp = cursor.fetchone()[0]
 
         # At the time of this writting the recency is one week.
-        from datetime import datetime, timedelta
+        from datetime import timedelta
         then = max_end_timestamp - timedelta(7)
 
         cursor.execute("SELECT get_recency_date();")
@@ -2483,7 +2471,7 @@ class DocumentHitsTestCase(unittest.TestCase):
         # Verify the hit rank is output in both overall and recent
         #   circumstances.
         self.override_recent_date()
-        hits = self.create_hits()
+        self.create_hits()
 
         cursor.execute("SELECT hit_rank(5, 'f');")
         rank = cursor.fetchone()[0]
@@ -2498,7 +2486,7 @@ class DocumentHitsTestCase(unittest.TestCase):
         # Verify the function updates the recent hit ranks table
         #   with hit rank information grouped by document uuid.
         self.override_recent_date()
-        hits = self.create_hits()
+        self.create_hits()
 
         # Call the target SQL function.
         cursor.execute("SELECT update_hit_ranks();")
@@ -2516,7 +2504,7 @@ class DocumentHitsTestCase(unittest.TestCase):
         # Verify the function updates the overall hit ranks table
         #   with hit rank information grouped by document uuid.
         self.override_recent_date()
-        hits = self.create_hits()
+        self.create_hits()
 
         # Call the target SQL function.
         cursor.execute("SELECT update_hit_ranks();")
