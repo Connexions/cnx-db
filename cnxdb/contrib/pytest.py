@@ -17,6 +17,7 @@ from sqlalchemy import create_engine
 from .testing import (
     get_settings,
     get_database_table_names,
+    is_venv_importable,
 )
 
 
@@ -85,8 +86,7 @@ def db_wipe(db_engines, request, db_cursor_without_db_init):
 def db_init(db_engines):
     """Initializes the database"""
     from cnxdb.init.main import init_db
-    venv = os.getenv('AS_VENV_IMPORTABLE', 'true').lower() == 'true'
-    init_db(db_engines['super'], venv)
+    init_db(db_engines['super'], is_venv_importable())
 
 
 @pytest.fixture
