@@ -24,8 +24,10 @@ def test_includeme(pyramid_config):
     includeme(pyramid_config)
 
 
-def test_includeme_with_missing_settings(pyramid_config):
+def test_includeme_with_missing_settings(pyramid_config, mocker):
     pyramid_config.registry.settings = {}
+    mocker.patch.dict('os.environ', {}, clear=True)
+
     with pytest.raises(RuntimeError) as exc_info:
         includeme(pyramid_config)
     expected_msg = 'must be defined'
