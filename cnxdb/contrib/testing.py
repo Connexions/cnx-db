@@ -13,6 +13,7 @@ __all__ = (
     'get_settings',
     'is_py3',
     'is_venv',
+    'is_venv_importable',
 )
 
 
@@ -45,6 +46,22 @@ def is_venv():
 
     """
     return hasattr(sys, 'real_prefix')
+
+
+def is_venv_importable():
+    """Determines whether the tests should be run with virtualenv
+    (aka venv) database import features enabled.
+
+    By default this will be true if the process is running within a venv.
+    This can be overridden by setting the `AS_VENV_IMPORTABLE` environment
+    anything other than the string 'true'.
+
+    :return: enable venv features
+    :rtype: bool
+
+    """
+    x = os.environ.get('AS_VENV_IMPORTABLE', 'true') == 'true'
+    return is_venv() and x
 
 
 def is_py3():

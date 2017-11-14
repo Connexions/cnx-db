@@ -37,7 +37,9 @@ def test_db_init_called_twice(db_engines):
         assert False, "the initialization check failed"
 
 
-@pytest.mark.skipif(not testing.is_venv(), reason="not within a venv")
+@pytest.mark.skipif(not testing.is_venv_importable(),
+                    reason=("settings indicate this environment is not "
+                            "virtualenv (venv) importable."))
 @pytest.mark.usefixtures('db_wipe')
 def test_db_init_with_venv(db_engines):
     from cnxdb.init.main import init_db
