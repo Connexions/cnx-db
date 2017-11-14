@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from cnxdb.config import discover_settings
@@ -13,7 +11,7 @@ def test_success(mocker):
         'DB_URL': common_url,
         'SUPER_URL': super_url,
     }
-    mocker.patch.dict(os.environ, _patch)
+    mocker.patch.dict('os.environ', _patch, clear=True)
 
     settings = discover_settings()
 
@@ -23,7 +21,7 @@ def test_success(mocker):
 
 def test_required(mocker):
     _patch = {}
-    mocker.patch.dict(os.environ, _patch)
+    mocker.patch.dict('os.environ', _patch, clear=True)
 
     with pytest.raises(RuntimeError) as exc_info:
         discover_settings()
@@ -37,7 +35,7 @@ def test_super_url_not_required(mocker):
     _patch = {
         'DB_URL': common_url,
     }
-    mocker.patch.dict(os.environ, _patch)
+    mocker.patch.dict('os.environ', _patch, clear=True)
 
     settings = discover_settings()
 
@@ -53,7 +51,7 @@ def test_with_existing_settings(mocker):
         'DB_URL': other_url,
         'DB_SUPER_URL': other_url,
     }
-    mocker.patch.dict(os.environ, _patch)
+    mocker.patch.dict('os.environ', _patch, clear=True)
     existing_settings = {
         'db.common.url': common_url
     }
