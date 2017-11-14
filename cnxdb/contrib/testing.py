@@ -54,7 +54,7 @@ def is_venv_importable():
 
     By default this will be true if the process is running within a venv.
     This can be overridden by setting the `AS_VENV_IMPORTABLE` environment
-    anything other than the string 'true'.
+    variable to anything other than the string 'true'.
 
     :return: enable venv features
     :rtype: bool
