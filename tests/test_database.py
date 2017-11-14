@@ -16,7 +16,7 @@ import unittest
 from cnxepub import flatten_tree_to_ident_hashes
 import psycopg2
 
-from . import testing
+from cnxarchive.tests import testing
 
 
 class MiscellaneousFunctionsTestCase(unittest.TestCase):
@@ -58,10 +58,10 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
                      'Database is not on the same host')
     @testing.db_connect
     def test_pyimport(self, cursor):
-        target_name = 'cnxarchive.database'
+        target_name = 'cnxdb.database'
 
         # Import the module from current directory
-        import cnxarchive.database as target_source
+        import cnxdb.database as target_source
 
         # Remove current directory from sys.path
         cwd = os.getcwd()
@@ -77,7 +77,7 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         # This is basically what pip does to determine whether a file
         # is editable or installed.
         import pkg_resources
-        dist = pkg_resources.get_distribution('cnx-archive')
+        dist = pkg_resources.get_distribution('cnx-db')
         is_editable = False
         for path_item in sys.path:
             egg_link = os.path.join(path_item, dist.project_name + '.egg-link')
@@ -91,11 +91,11 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
             sys_modules = sys.modules.copy()
             self.addCleanup(sys.modules.update, sys_modules)
             for module in sys.modules.keys():
-                if module.startswith('cnxarchive'):
+                if module.startswith('cnxdb'):
                     del sys.modules[module]
 
             # Import the installed version, if "setup.py install" was used.
-            import cnxarchive.database as target_installed
+            import cnxdb.database as target_installed
             targets.append(target_installed)
 
         expected_directories = [
@@ -137,7 +137,7 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
           (%s, 'Module', %s, 'Physics: An Introduction', 11, '')""",
                        (module_ident, uuid,))
 
-        from ..database import get_module_ident_from_ident_hash
+        from cnxdb.database import get_module_ident_from_ident_hash
         self.assertEqual(get_module_ident_from_ident_hash(uuid[:-1]+'c', cursor), None)
         self.assertEqual(get_module_ident_from_ident_hash(uuid, cursor), module_ident)
         self.assertEqual(get_module_ident_from_ident_hash(uuid+"@1", cursor), module_ident)
@@ -353,7 +353,7 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
     def test_identifiers_equal_function(self, cursor):
         import inspect
 
-        from .test_utils import identifiers_equal
+        from cnxarchive.tests.test_utils import identifiers_equal
 
         cursor.execute("""\
 CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 text, identifier2 text)
@@ -593,7 +593,7 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
     def test_get_current_module_ident(self, cursor):
         cursor.execute('ALTER TABLE modules DISABLE TRIGGER module_published')
 
-        from ..database import get_current_module_ident
+        from cnxdb.database import get_current_module_ident
 
         cursor.execute('''INSERT INTO modules VALUES (
         DEFAULT, 'Module', 'm1', DEFAULT, '1.1', 'Name of m1',
@@ -615,7 +615,7 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
 
     @testing.db_connect
     def test_next_version(self, cursor):
-        from ..database import next_version
+        from cnxdb.database import next_version
 
         # Insert collection version 2.1
         cursor.execute('''INSERT INTO modules
@@ -655,7 +655,7 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
     def test_get_collections(self, cursor):
         cursor.execute('ALTER TABLE modules DISABLE TRIGGER module_published')
 
-        from ..database import get_collections
+        from cnxdb.database import get_collections
 
         cursor.execute('''INSERT INTO modules VALUES (
         DEFAULT, 'Collection', 'col1', DEFAULT, '1.9', 'Name of c1',
@@ -704,7 +704,7 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
     def test_rebuild_collection_tree(self, cursor):
         cursor.execute('ALTER TABLE modules DISABLE TRIGGER module_published')
 
-        from ..database import rebuild_collection_tree
+        from cnxdb.database import rebuild_collection_tree
 
         cursor.execute('''INSERT INTO modules VALUES (
         DEFAULT, 'Collection', 'col1', DEFAULT, '1.9', 'Name of c1',
@@ -778,7 +778,7 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
     def test_republish_collection(self, cursor):
         cursor.execute('ALTER TABLE modules DISABLE TRIGGER module_published')
 
-        from ..database import republish_collection
+        from cnxdb.database import republish_collection
 
         cursor.execute("""INSERT INTO document_controls (uuid)
         VALUES ('3a5344bd-410d-4553-a951-87bccd996822'::uuid)""")
@@ -856,7 +856,7 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
         VALUES {};""".format(values_expr))
         cursor.connection.commit()
 
-        from ..database import republish_collection
+        from cnxdb.database import republish_collection
         new_ident = republish_collection("DEFAULT", "DEFAULT",
                                          3, collection_ident,
                                          testing.fake_plpy)
@@ -900,7 +900,7 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
 
         cursor.connection.commit()
 
-        from ..database import republish_collection
+        from cnxdb.database import republish_collection
         new_ident = republish_collection("DEFAULT", "DEFAULT",
                                          3, collection_ident,
                                          testing.fake_plpy)
@@ -941,7 +941,7 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
         VALUES {};""".format(values_expr))
         cursor.connection.commit()
 
-        from ..database import republish_collection
+        from cnxdb.database import republish_collection
         new_ident = republish_collection("DEFAULT", "DEFAULT",
                                          3, collection_ident,
                                          testing.fake_plpy)
@@ -956,7 +956,7 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
                          sorted([name for id, name in subjects]))
 
     def test_set_version(self):
-        from ..database import set_version
+        from cnxdb.database import set_version
 
         # set_version for modules
         td = {
@@ -996,13 +996,13 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
 
     @testing.plpy_connect
     def test_get_module_uuid(self, plpy):
-        from ..database import get_module_uuid
+        from cnxdb.database import get_module_uuid
         mod_uuid = get_module_uuid(plpy, 'm41237')
         self.assertEqual(mod_uuid, '91cb5f28-2b8a-4324-9373-dac1d617bc24')
 
     @testing.plpy_connect
     def test_get_subcols(self, plpy):
-        from ..database import get_subcols
+        from cnxdb.database import get_subcols
         subcols = tuple(get_subcols(4, plpy))
         self.assertEqual(subcols, (22, 25))
 

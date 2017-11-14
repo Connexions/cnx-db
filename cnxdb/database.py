@@ -21,8 +21,8 @@ from cnxdb.triggers.transforms import (
     transform_abstract_to_html,
 )
 
-from . import config
-from .utils import split_ident_hash, IdentHashMissingVersion
+from cnxarchive import config
+from cnxarchive.utils import split_ident_hash, IdentHashMissingVersion
 
 here = os.path.abspath(os.path.dirname(__file__))
 CNXDB_DIRECTORY = os.path.abspath(os.path.dirname(cnxdb.__file__))
