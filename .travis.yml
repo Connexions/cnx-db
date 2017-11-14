@@ -7,6 +7,8 @@ dist: precise
 addons:
   postgresql: "9.4"
 before_install:
+  # TODO remove
+  - git fetch --depth=250 origin move-db-logic:move-db-logic
   - pip install -r requirements/test.txt
   #- make lint
 
