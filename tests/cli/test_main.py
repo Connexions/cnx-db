@@ -42,7 +42,7 @@ def test_init_called_twice(capsys, db_env_vars):
 
 @pytest.mark.usefixtures('db_wipe')
 def test_init_without_env_vars(capsys, mocker):
-    mocker.patch.dict(os.environ, {})
+    mocker.patch.dict('os.environ', {}, clear=True)
 
     from cnxdb.cli.main import main
     args = ['init']
@@ -110,7 +110,7 @@ def test_venv_called_twice(db_env_vars, db_engines):
 
 @pytest.mark.usefixtures('db_wipe')
 def test_venv_without_env_vars(capsys, mocker):
-    mocker.patch.dict(os.environ, {})
+    mocker.patch.dict('os.environ', {}, clear=True)
 
     from cnxdb.cli.main import main
     args = ['venv']

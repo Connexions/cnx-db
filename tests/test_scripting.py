@@ -1,11 +1,9 @@
-import os
-
 from cnxdb.scripting import prepare
 
 
 def test_prepare(mocker):
     db_url = 'sqlite:///:memory:'
-    mocker.patch.dict(os.environ, {'DB_URL': db_url})
+    mocker.patch.dict('os.environ', {'DB_URL': db_url}, clear=True)
     env = prepare()
 
     assert sorted(env.keys()) == ['closer', 'engines', 'settings']
