@@ -13,10 +13,13 @@ import sys
 import time
 import unittest
 
-from cnxarchive.tests import testing
+import cnxarchive
+from cnxdb.contrib import testing
 from cnxepub import flatten_tree_to_ident_hashes
 import psycopg2
 import pytest
+
+DATA_DIRECTORY = os.path.join(cnxarchive.__path__[0], 'tests', 'data')
 
 
 class MiscellaneousFunctionsTestCase(unittest.TestCase):
@@ -37,8 +40,7 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
                                   "%Y-%m-%dT%H:%M:%SZ")[:6], tzinfo=FixedOffsetTimezone())
         self.assertEqual(current, value)
 
-    @unittest.skipIf(not testing.is_venv(),
-                     "Not within a virtualenv")
+    @unittest.skipIf(not testing.is_venv(), "Not within a virtualenv")
     def test_pypath(self):
         cursor = self.db_cursor
         site_packages = testing.getsitepackages()
@@ -49,7 +51,7 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         for site_pkg in site_packages:
             self.assertIn(os.path.abspath(site_pkg), paths)
 
-    @unittest.skipIf(not testing.db_is_local(),
+    @unittest.skipIf(testing.db_is_local(),
                      'Database is not on the same host')
     def test_pyimport(self):
         cursor = self.db_cursor
@@ -250,7 +252,7 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         '{9366c786-e3c8-4960-83d4-aec1269ac5e5}', NULL, NULL, NULL, 4, NULL);''')
         cursor.execute('SELECT fileid FROM files')
 
-        cnxml_filepath = os.path.join(testing.DATA_DIRECTORY,
+        cnxml_filepath = os.path.join(DATA_DIRECTORY,
                                       'm42033-1.3.cnxml')
         with open(cnxml_filepath, 'r') as f:
             cursor.execute('''\
@@ -288,7 +290,7 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         '{9366c786-e3c8-4960-83d4-aec1269ac5e5}', NULL, NULL, NULL, 4, NULL);''')
         cursor.execute('SELECT fileid FROM files')
 
-        cnxml_filepath = os.path.join(testing.DATA_DIRECTORY,
+        cnxml_filepath = os.path.join(DATA_DIRECTORY,
                                       'm42033-1.3.cnxml')
         with open(cnxml_filepath, 'r') as f:
             cursor.execute('''\
@@ -322,7 +324,7 @@ class MiscellaneousFunctionsTestCase(unittest.TestCase):
         '{9366c786-e3c8-4960-83d4-aec1269ac5e5}', NULL, NULL, NULL, 4, NULL);''')
         cursor.execute('SELECT fileid FROM files')
 
-        filepath = os.path.join(testing.DATA_DIRECTORY, 'm42033-1.3.html')
+        filepath = os.path.join(DATA_DIRECTORY, 'm42033-1.3.html')
         with open(filepath, 'r') as f:
             cursor.execute('''\
             INSERT INTO files (file, media_type) VALUES
@@ -525,17 +527,13 @@ class TreeToJsonTestCase(unittest.TestCase):
 
     @property
     def target(self):
-        connect = testing.db_connection_factory()
-
         def get_tree(consume_raw=False):
             args = ['e79ffde3-7fb4-4af3-9ec8-df648b391597', '7.1']
             stmt = "select tree_to_json(%s, %s)"
             if consume_raw:
                 stmt = "select tree_to_json(%s, %s, FALSE)"
-            with connect() as db_connection:
-                with db_connection.cursor() as cursor:
-                    cursor.execute(stmt, args)
-                    tree = cursor.fetchone()[0]
+            self.db_cursor.execute(stmt, args)
+            tree = self.db_cursor.fetchone()[0]
             return json.loads(tree)
 
         return get_tree
@@ -559,7 +557,8 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
     """Tests for the postgresql triggers when a module is published
     """
     @pytest.fixture(autouse=True)
-    def suite_fixture(self, xxx_archive_data, db_cursor):
+    def suite_fixture(self, xxx_archive_data, faux_plpy, db_cursor):
+        self.faux_plpy = faux_plpy
         self.db_cursor = db_cursor
 
     def test_get_current_module_ident(self):
@@ -582,7 +581,7 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
 
         expected_module_ident = cursor.fetchone()[0]
         cursor.connection.commit()
-        module_ident = get_current_module_ident('m1', testing.fake_plpy)
+        module_ident = get_current_module_ident('m1', self.faux_plpy)
 
         self.assertEqual(module_ident, expected_module_ident)
 
@@ -605,7 +604,7 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
         cursor.connection.commit()
 
         # The next version should be 2.2
-        self.assertEqual(next_version(module_ident, testing.fake_plpy), 2)
+        self.assertEqual(next_version(module_ident, self.faux_plpy), 2)
 
         # Insert collection version 2.2
         cursor.execute('''INSERT INTO modules
@@ -622,7 +621,7 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
 
         # Even if you use the module_ident for version 2.1, the next version is
         # still going to be 2.3
-        self.assertEqual(next_version(module_ident, testing.fake_plpy), 3)
+        self.assertEqual(next_version(module_ident, self.faux_plpy), 3)
 
     def test_get_collections(self):
         cursor = self.db_cursor
@@ -670,7 +669,7 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
         cursor.connection.commit()
 
         self.assertEqual(
-            list(get_collections(module_ident, testing.fake_plpy)),
+            list(get_collections(module_ident, self.faux_plpy)),
             [collection_ident, collection2_ident])
 
     def test_rebuild_collection_tree(self):
@@ -731,7 +730,7 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
             module_ident: new_module_ident
             }
         rebuild_collection_tree(collection_ident, new_document_id_map,
-                                testing.fake_plpy)
+                                self.faux_plpy)
 
         cursor.execute('''\
         WITH RECURSIVE t(node, parent, document, path) AS (
@@ -770,7 +769,7 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
 
         new_ident = republish_collection(republished_submitter,
                                          republished_submitlog, 3,
-                                         collection_ident, testing.fake_plpy)
+                                         collection_ident, self.faux_plpy)
 
         cursor.execute('''SELECT * FROM modules WHERE
         module_ident = %s''', [new_ident])
@@ -831,7 +830,7 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
         from cnxdb.database import republish_collection
         new_ident = republish_collection("DEFAULT", "DEFAULT",
                                          3, collection_ident,
-                                         testing.fake_plpy)
+                                         self.faux_plpy)
 
         cursor.execute("""\
         SELECT word
@@ -859,7 +858,7 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
         ) RETURNING module_ident;''')
         collection_ident = cursor.fetchone()[0]
 
-        filepath = os.path.join(testing.DATA_DIRECTORY, 'ruleset.css')
+        filepath = os.path.join(DATA_DIRECTORY, 'ruleset.css')
         with open(filepath, 'r') as f:
             cursor.execute('''\
             INSERT INTO files (file, media_type) VALUES
@@ -874,7 +873,7 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
         from cnxdb.database import republish_collection
         new_ident = republish_collection("DEFAULT", "DEFAULT",
                                          3, collection_ident,
-                                         testing.fake_plpy)
+                                         self.faux_plpy)
 
         cursor.execute("""\
         SELECT fileid, filename
@@ -914,7 +913,7 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
         from cnxdb.database import republish_collection
         new_ident = republish_collection("DEFAULT", "DEFAULT",
                                          3, collection_ident,
-                                         testing.fake_plpy)
+                                         self.faux_plpy)
 
         cursor.execute("""\
         SELECT tag
@@ -964,16 +963,14 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
             'version': '1.100',
             })
 
-    @testing.plpy_connect
-    def test_get_module_uuid(self, plpy):
+    def test_get_module_uuid(self):
         from cnxdb.database import get_module_uuid
-        mod_uuid = get_module_uuid(plpy, 'm41237')
+        mod_uuid = get_module_uuid(self.faux_plpy, 'm41237')
         self.assertEqual(mod_uuid, '91cb5f28-2b8a-4324-9373-dac1d617bc24')
 
-    @testing.plpy_connect
-    def test_get_subcols(self, plpy):
+    def test_get_subcols(self):
         from cnxdb.database import get_subcols
-        subcols = tuple(get_subcols(4, plpy))
+        subcols = tuple(get_subcols(4, self.faux_plpy))
         self.assertEqual(subcols, (22, 25))
 
     def test_insert_new_module(self):
