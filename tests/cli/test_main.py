@@ -72,7 +72,9 @@ def assert_venv_is_active(db_engines):
     assert os.path.samefile(db_pyprefix, sys.prefix)
 
 
-@pytest.mark.skipif(not testing.is_venv(), reason="not within a venv")
+@pytest.mark.skipif(not testing.is_venv_importable(),
+                    reason=("settings indicate this environment is not "
+                            "virtualenv (venv) importable."))
 @pytest.mark.usefixtures('db_init_and_wipe')
 def test_venv(db_env_vars, db_engines):
     # Remove the venv schema before trying to initialize it.
@@ -91,7 +93,9 @@ def test_venv(db_env_vars, db_engines):
     assert_venv_is_active(db_engines)
 
 
-@pytest.mark.skipif(not testing.is_venv(), reason="not within a venv")
+@pytest.mark.skipif(not testing.is_venv_importable(),
+                    reason=("settings indicate this environment is not "
+                            "virtualenv (venv) importable."))
 @pytest.mark.usefixtures('db_init_and_wipe')
 def test_venv_called_twice(db_env_vars, db_engines):
     # Note, the initialization already setup the venv,
