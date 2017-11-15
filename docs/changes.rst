@@ -9,7 +9,7 @@ Change Log
 
    - feature message
 
-?.?.?
+1.2.0
 -----
 
 - Fix settings discovery to use the given settings value for 'db.common.url'
