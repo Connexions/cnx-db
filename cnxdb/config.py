@@ -6,6 +6,11 @@ __all__ = ('discover_settings')
 def discover_settings(settings=None):
     """Discover settings from environment variables
 
+    ``DB_URL`` is required, while ``DB_READONLY_URL`` and ``DB_SUPER_URL``
+    are not required and while default to ``DB_URL``. However, be aware
+    that some parts of the application may not function correctly
+    without these optional values set.
+
     :param dict settings: An existing settings value
     :return: dictionary of settings
     :rtype: dict
@@ -20,6 +25,7 @@ def discover_settings(settings=None):
         settings = {}
 
     common_url = os.environ.get('DB_URL', None)
+    readonly_url = os.environ.get('DB_READONLY_URL', common_url)
     super_url = os.environ.get('DB_SUPER_URL', common_url)
 
     if common_url is None and settings.get('db.common.url') is None:
@@ -28,6 +34,7 @@ def discover_settings(settings=None):
 
     new_settings = {
         'db.common.url': common_url,
+        'db.readonly.url': readonly_url,
         'db.super.url': super_url,
     }
 

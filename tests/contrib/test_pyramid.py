@@ -14,6 +14,7 @@ def pyramid_config():
     url = 'sqlite:///:memory:'
     settings = {
         'db.common.url': url,
+        'db.readonly.url': url,
         'db.super.url': url,
     }
     with testing.testConfig(settings=settings) as config:
@@ -39,4 +40,4 @@ def test_includeme_with_usage(pyramid_config):
 
     assert hasattr(pyramid_config.registry, 'engines')
     engines = pyramid_config.registry.engines
-    assert sorted(engines.keys()) == ['common', 'super']
+    assert sorted(engines.keys()) == ['common', 'readonly', 'super']

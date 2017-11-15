@@ -9,6 +9,13 @@ Change Log
 
    - feature message
 
+?.?.?
+-----
+
+- Add a read-only database setting to allow for read-only database
+  connections. The setting is available through the ``DB_READONLY_URL``
+  environment variable.
+
 1.1.0
 -----
 
