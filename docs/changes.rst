@@ -12,6 +12,8 @@ Change Log
 ?.?.?
 -----
 
+- Fix settings discovery to use the given settings value for 'db.common.url'
+  when the ``DB_URL`` environment variable is undefined.
 - Add a read-only database setting to allow for read-only database
   connections. The setting is available through the ``DB_READONLY_URL``
   environment variable.
