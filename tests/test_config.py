@@ -66,3 +66,18 @@ def test_with_existing_settings(mocker):
     assert settings['db.common.url'] == common_url
     assert settings['db.readonly.url'] == other_url
     assert settings['db.super.url'] == other_url
+
+
+def test_with_existing_settings_and_no_env(mocker):
+    common_url = 'postgresql:///common'
+
+    mocker.patch.dict('os.environ', {}, clear=True)
+    existing_settings = {
+        'db.common.url': common_url
+    }
+
+    settings = discover_settings(existing_settings)
+
+    assert settings['db.common.url'] == common_url
+    assert settings['db.readonly.url'] == common_url
+    assert settings['db.super.url'] == common_url
