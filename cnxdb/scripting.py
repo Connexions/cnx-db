@@ -20,6 +20,7 @@ def prepare(settings=None):
     settings = discover_settings(settings)
     engines = {
         'common': create_engine(settings['db.common.url']),
+        'readonly': create_engine(settings['db.readonly.url']),
         'super': create_engine(settings['db.super.url']),
     }
 

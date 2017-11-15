@@ -7,7 +7,7 @@ def test_prepare(mocker):
     env = prepare()
 
     assert sorted(env.keys()) == ['closer', 'engines', 'settings']
-    assert sorted(env['engines'].keys()) == ['common', 'super']
+    assert sorted(env['engines'].keys()) == ['common', 'readonly', 'super']
     from sqlalchemy.engine import Engine
     assert isinstance(env['engines']['common'], Engine)
 
@@ -24,6 +24,7 @@ def test_prepare(mocker):
 
     expected_settings = {
         'db.common.url': db_url,
+        'db.readonly.url': db_url,
         'db.super.url': db_url,
     }
     assert env['settings'] == expected_settings
