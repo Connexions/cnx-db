@@ -12,6 +12,7 @@ Change Log
 ?.?.?
 -----
 
+- Provide docs for using the Pyramid Web Framework with this package.
 - Add a database tables definition to the pyramid integration.
   This places a ``tables`` attribute on the registry.
   The attribute contains sqlalchemy table definitions that are reflected

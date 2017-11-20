@@ -4,6 +4,8 @@ When used in conjunction with the `Pyramid Web Framework
 <http://docs.pylonsproject.org/projects/pyramid/en/latest/>`_
 this module will setup the cnx-db library within the Pyramid application.
 
+For usage examples, see :ref:`pyramid_usage`
+
 """
 from sqlalchemy import MetaData
 

@@ -31,6 +31,8 @@ Initialize an database::
 .. todo:: This may become part of ``dbmigrator init`` or ``dbmigrator migrate``
           in the future.
 
+For application and scripting usage information, see :ref:`usage_chapter`.
+
 Testing
 -------
 
