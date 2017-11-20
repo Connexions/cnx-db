@@ -1,3 +1,5 @@
+.. _usage_chapter:
+
 =====
 Usage
 =====
@@ -60,3 +62,33 @@ This script prints the UUID of the latest publication. It utilizes all three
 of the ``env`` values: ``settings``, ``engines`` and ``closer``.
 
 For other examples, have a look at :mod:`cnxdb.cli.subcommands`.
+
+.. _pyramid_usage:
+
+Pyramid Application Usage
+=========================
+
+This package can be integrated with a `Pyramid Web Framework
+<http://docs.pylonsproject.org/projects/pyramid/en/latest/>`_
+based application.
+For exmaple, the following includes this package
+using the imperative configuration style:
+
+.. code-block:: python
+   :linenos:
+   :emphasize-lines: 6
+
+   from pyramid.config import Configurator
+
+   def app():
+       config = Configurator()
+       # ...
+       config.include('cnxdb.contrib.pyramid')
+       # ...
+       return config.make_wsgi_app()
+
+This will give you access to the ``engines`` and ``tables`` attributes
+on the registry.
+The ``engines`` attribute is a dictionary of SQLAlchemy Engine objects.
+The ``tables`` object contains references SQLAlchemy Table objects
+that have been created from the database through inspection.
