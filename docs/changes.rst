@@ -9,6 +9,14 @@ Change Log
 
    - feature message
 
+?.?.?
+-----
+
+- Add a database tables definition to the pyramid integration.
+  This places a ``tables`` attribute on the registry.
+  The attribute contains sqlalchemy table definitions that are reflected
+  from the existing database schema.
+
 1.2.0
 -----
 
