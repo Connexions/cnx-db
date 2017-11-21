@@ -452,7 +452,7 @@ SELECT strip_html('<span><span class="number">1.1</span> \
 
         cursor.execute("SELECT strip_html('<span>三百年</span>')")
         result = cursor.fetchone()[0]
-        self.assertEqual('三百年', result)
+        self.assertEqual(u'三百年', result)
 
         cursor.execute("""\
 SELECT strip_html('<span
@@ -1551,7 +1551,7 @@ INSERT INTO trees (parent_id, documentid, is_collated)
                        "WHERE context = 18 AND item = 19')")
         words = cursor.fetchall()
         self.assertEqual(len(words), 55)
-        self.assertIn(('følger',), words)
+        self.assertIn((u'følger',), words)
 
     def test_tree_to_json(self):
         cursor = self.db_cursor
