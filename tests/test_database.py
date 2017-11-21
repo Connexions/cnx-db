@@ -12,6 +12,7 @@ import os
 import sys
 import time
 import unittest
+from uuid import UUID
 
 import cnxarchive
 from cnxdb.contrib import testing
@@ -776,7 +777,7 @@ class ModulePublishTriggerTestCase(unittest.TestCase):
         data = cursor.fetchone()
         self.assertEqual(data[1], 'Collection')
         self.assertEqual(data[2], 'col1')
-        self.assertEqual(data[3], '3a5344bd-410d-4553-a951-87bccd996822')
+        self.assertEqual(data[3], UUID('3a5344bd-410d-4553-a951-87bccd996822'))
         self.assertEqual(data[4], '1.10')
         self.assertEqual(data[5], 'Name of c1')
         self.assertEqual(str(data[6]), '2013-07-31 12:00:00-07:00')
@@ -1135,7 +1136,7 @@ INSERT INTO trees (parent_id, documentid, is_collated)
         self.assertEqual(major, 4)
         self.assertEqual(minor, None)
         # Test that the module inserted has the same uuid as an older version of m42955
-        self.assertEqual(uuid, 'f3c9ab70-a916-4d8c-9256-42953287b4e9')
+        self.assertEqual(uuid, UUID('f3c9ab70-a916-4d8c-9256-42953287b4e9'))
 
         # Test that the latest row in modules is a collection with updated
         # version
@@ -2454,10 +2455,12 @@ class DocumentHitsTestCase(unittest.TestCase):
                        "ORDER BY rank ASC;")
         hit_ranks = cursor.fetchall()
 
-        self.assertEqual(hit_ranks[1],
-                         ('c8ee8dc5-bb73-47c8-b10f-3f37123cf607', 9, 3, 2))
-        self.assertEqual(hit_ranks[3],  # row that combines two idents.
-                         ('88cd206d-66d2-48f9-86bb-75d5366582ee', 54, 9, 4))
+        self.assertEqual(
+            hit_ranks[1],
+            (UUID('c8ee8dc5-bb73-47c8-b10f-3f37123cf607'), 9, 3, 2))
+        self.assertEqual(
+            hit_ranks[3],  # row that combines two idents.
+            (UUID('88cd206d-66d2-48f9-86bb-75d5366582ee'), 54, 9, 4))
 
     def test_update_overall_hits_function(self):
         cursor = self.db_cursor
@@ -2472,9 +2475,11 @@ class DocumentHitsTestCase(unittest.TestCase):
                        "ORDER BY rank ASC;")
         hit_ranks = cursor.fetchall()
 
-        self.assertEqual(hit_ranks[2],  # row that combines two idents.
-                         ('88cd206d-66d2-48f9-86bb-75d5366582ee', 67, 6.7, 3))
+        self.assertEqual(
+            hit_ranks[2],  # row that combines two idents.
+            (UUID('88cd206d-66d2-48f9-86bb-75d5366582ee'), 67, 6.7, 3))
         # Note, this module has fewer hits in total, but more on average,
         #   which expectedly boosts its rank.
-        self.assertEqual(hit_ranks[3],
-                         ('dd7b92c2-e82e-43bb-b224-accbc3cd395a', 39, 7.8, 4))
+        self.assertEqual(
+            hit_ranks[3],
+            (UUID('dd7b92c2-e82e-43bb-b224-accbc3cd395a'), 39, 7.8, 4))
