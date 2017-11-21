@@ -12,8 +12,9 @@ import sys
 
 import pytest
 from lxml import etree
-# XXX (2017-10-12) deps-on-cnx-archive: Depends on cnx-archive
-from cnxarchive.config import TEST_DATA_DIRECTORY
+
+
+here = os.path.abspath(os.path.dirname(__file__))
 
 
 def py3_too_old(*args):
@@ -42,8 +43,7 @@ class TestHtmlReferenceResolution(BaseTestCase):
         #   been rewritten to the cnx-archive's read-only API routes.
         ident = 3
         from cnxdb.triggers.transforms.converters import cnxml_to_full_html
-        content_filepath = os.path.join(TEST_DATA_DIRECTORY,
-                                        'm42119-1.3-modified.cnxml')
+        content_filepath = os.path.join(here, 'm42119-1.3-modified.cnxml')
         with open(content_filepath, 'r') as fb:
             content = cnxml_to_full_html(fb.read())
             content = io.BytesIO(content.encode('utf-8'))
@@ -66,8 +66,7 @@ class TestHtmlReferenceResolution(BaseTestCase):
     def test_reference_not_parseable(self):
         ident = 3
         from cnxdb.triggers.transforms.converters import cnxml_to_full_html
-        content_filepath = os.path.join(TEST_DATA_DIRECTORY,
-                                        'm45070.cnxml')
+        content_filepath = os.path.join(here, 'm45070.cnxml')
         with open(content_filepath, 'r') as fb:
             content = cnxml_to_full_html(fb.read())
         content = io.BytesIO(content.encode('utf-8'))
@@ -84,48 +83,12 @@ class TestHtmlReferenceResolution(BaseTestCase):
         assert b'<a href="/m">' in content
 
     def test_reference_resolver(self):
-        html = io.BytesIO(b'''\
-<?xml version="1.0" encoding="UTF-8"?>
-<html xmlns="http://www.w3.org/1999/xhtml">
-    <body>
-        <a href="/m42092#xn">
-            <img src="Figure_01_00_01.jpg"/>
-        </a>
-        <a href="/ m42709@1.4">
-            <img src="/Figure_01_00_01.jpg"/>
-        </a>
-        <a href="/m42092/latest?collection=col11406/latest#figure">
-            Module link with collection
-        </a>
-        <a href="/m42955/latest?collection=col11406/1.6">
-            Module link with collection and version
-        </a>
-        <img src=" Figure_01_00_01.jpg"/>
-        <img src="/content/m42092/latest/PhET_Icon.png"/>
-        <img src="/content/m42092/1.4/PhET_Icon.png"/>
-        <img src="/content/m42092/1.3/PhET_Icon.png"/>
-        <span data-src="Figure_01_00_01.jpg"/>
-
-        <audio src="Figure_01_00_01.jpg" id="music" mime-type="audio/mpeg"></audio>
-
-        <video src="Figure_01_00_01.jpg" id="music" mime-type="video/mp4"></video>
-
-        <object width="400" height="400" data="Figure_01_00_01.jpg"></object>
-
-        <object width="400" height="400">
-            <embed src="Figure_01_00_01.jpg"/>
-        </object>
-
-        <audio controls="controls">
-            <source src="Figure_01_00_01.jpg" type="audio/mpeg"/>
-        </audio>
-    </body>
-</html>''')  # noqa: E501
-
-        html, bad_references = self.target(
-            html,
-            self.faux_plpy,
-            document_ident=3)
+        html_filepath = os.path.join(here, 'content-to-resolve.html')
+        with open(html_filepath, 'r') as fb:
+            html, bad_references = self.target(
+                fb,
+                self.faux_plpy,
+                document_ident=3)
         self.db_cursor.connection.commit()
 
         assert bad_references == [
@@ -133,42 +96,9 @@ class TestHtmlReferenceResolution(BaseTestCase):
              "moduleid m42092 version 1.3.: document=3, "
              "reference=PhET_Icon.png")
         ]
-        assert html == b'''\
-<html xmlns="http://www.w3.org/1999/xhtml">
-    <body>
-        <a href="/contents/d395b566-5fe3-4428-bcb2-19016e3aa3ce#xn">
-            <img src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg"/>
-        </a>
-        <a href="/contents/ae3e18de-638d-4738-b804-dc69cd4db3a3@4">
-            <img src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg"/>
-        </a>
-        <a href="/contents/e79ffde3-7fb4-4af3-9ec8-df648b391597:d395b566-5fe3-4428-bcb2-19016e3aa3ce#figure">
-            Module link with collection
-        </a>
-        <a href="/contents/e79ffde3-7fb4-4af3-9ec8-df648b391597@6.2:209deb1f-1a46-4369-9e0d-18674cf58a3e">
-            Module link with collection and version
-        </a>
-        <img src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg"/>
-        <img src="/resources/075500ad9f71890a85fe3f7a4137ac08e2b7907c/PhET_Icon.png"/>
-        <img src="/resources/075500ad9f71890a85fe3f7a4137ac08e2b7907c/PhET_Icon.png"/>
-        <img src="/content/m42092/1.3/PhET_Icon.png"/>
-        <span data-src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg"/>
-
-        <audio src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg" id="music" mime-type="audio/mpeg"/>
-
-        <video src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg" id="music" mime-type="video/mp4"/>
-
-        <object width="400" height="400" data="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg"/>
-
-        <object width="400" height="400">
-            <embed src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg"/>
-        </object>
-
-        <audio controls="controls">
-            <source src="/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/Figure_01_00_01.jpg" type="audio/mpeg"/>
-        </audio>
-    </body>
-</html>'''  # noqa: E501
+        html_filepath = os.path.join(here, 'content-that-is-resolved.html')
+        with open(html_filepath, 'r') as fb:
+            assert html == fb.read()
 
     def test_get_resource_info(self):
         from cnxdb.triggers.transforms.resolvers import (
@@ -432,8 +362,7 @@ class TestCnxmlReferenceResolution(BaseTestCase):
         #   been rewritten to legacy's read-only API routes.
         ident = 3
         from cnxdb.triggers.transforms.converters import html_to_full_cnxml
-        content_filepath = os.path.join(TEST_DATA_DIRECTORY,
-                                        'm99999-1.1.html')
+        content_filepath = os.path.join(here, 'm99999-1.1.html')
         with open(content_filepath, 'r') as fb:
             content = html_to_full_cnxml(fb.read())
             content = io.BytesIO(content)
@@ -516,8 +445,7 @@ class TestCnxmlReferenceResolution(BaseTestCase):
     def test_reference_not_parsable(self):
         ident = 3
         from cnxdb.triggers.transforms.converters import html_to_full_cnxml
-        content_filepath = os.path.join(TEST_DATA_DIRECTORY,
-                                        'm99999-1.1.html')
+        content_filepath = os.path.join(here, 'm99999-1.1.html')
         with open(content_filepath, 'r') as fb:
             content = html_to_full_cnxml(fb.read())
         content = io.BytesIO(content)
