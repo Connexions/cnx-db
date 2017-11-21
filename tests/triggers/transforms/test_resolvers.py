@@ -6,20 +6,45 @@
 # See LICENCE.txt for details.
 # ###
 import os
-import subprocess
 import io
-import sys
 
 import pytest
 from lxml import etree
 # XXX (2017-10-12) deps-on-cnx-archive: Depends on cnx-archive
 from cnxarchive.config import TEST_DATA_DIRECTORY
 
+from cnxdb.contrib.testing import is_py3_too_old
 
-def py3_too_old(*args):
-    if sys.version_info >= (3,) and os.path.exists('/usr/bin/python3'):
-        out = subprocess.check_output(['/usr/bin/python3', '--version'])
-        return out < b'Python 3.4'
+
+@pytest.mark.skipif(is_py3_too_old(),
+                    reason="python is too old for this test to run")
+def test_get_page_ident_hash(xxx_archive_data, db_cursor):
+    book_uuid = 'e79ffde3-7fb4-4af3-9ec8-df648b391597'
+    book_version = '7.1'
+    page_uuid = '209deb1f-1a46-4369-9e0d-18674cf58a3e'
+    page_version = '7'
+
+    db_cursor.execute(
+        '''\
+CREATE FUNCTION test_get_page_ident_hash() RETURNS TEXT AS $$
+import io
+
+import plpy
+
+from cnxdb.triggers.transforms.resolvers import (
+    CnxmlToHtmlReferenceResolver)
+
+resolver = CnxmlToHtmlReferenceResolver(io.BytesIO(b'<html></html>'), plpy, 3)
+result = resolver.get_page_ident_hash(%s, %s, %s, %s)
+return result[1]
+$$ LANGUAGE plpythonu;
+SELECT test_get_page_ident_hash();''',
+        (page_uuid, page_version, book_uuid, book_version))
+    expected = '{}@{}:{}@{}'.format(book_uuid,
+                                    book_version,
+                                    page_uuid,
+                                    page_version)
+    assert db_cursor.fetchone()[0] == expected
 
 
 class BaseTestCase(object):
@@ -293,35 +318,6 @@ class TestHtmlReferenceResolution(BaseTestCase):
         ref = ('http://legacy.cnx.org/content/m48897/latest'
                '?collection=col11441/latest')
         assert parse_reference(ref) == (None, ())
-
-    @pytest.mark.skipif(py3_too_old)
-    def test_get_page_ident_hash(self):
-        book_uuid = 'e79ffde3-7fb4-4af3-9ec8-df648b391597'
-        book_version = '7.1'
-        page_uuid = '209deb1f-1a46-4369-9e0d-18674cf58a3e'
-        page_version = '7'
-
-        self.db_cursor.execute(
-            '''\
-CREATE FUNCTION test_get_page_ident_hash() RETURNS TEXT AS $$
-import io
-
-import plpy
-
-from cnxdb.triggers.transforms.resolvers import (
-    CnxmlToHtmlReferenceResolver)
-
-resolver = CnxmlToHtmlReferenceResolver(io.BytesIO(b'<html></html>'), plpy, 3)
-result = resolver.get_page_ident_hash(%s, %s, %s, %s)
-return result[1]
-$$ LANGUAGE plpythonu;
-SELECT test_get_page_ident_hash();''',
-            (page_uuid, page_version, book_uuid, book_version))
-        expected = '{}@{}:{}@{}'.format(book_uuid,
-                                        book_version,
-                                        page_uuid,
-                                        page_version)
-        assert self.db_cursor.fetchone()[0] == expected
 
 
 class TestCnxmlReferenceResolution(BaseTestCase):

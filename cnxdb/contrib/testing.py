@@ -6,6 +6,7 @@ configuration discovery, setting defaults, and inspect the environment.
 """
 import os
 import sys
+import subprocess
 
 
 __all__ = (
@@ -14,6 +15,7 @@ __all__ = (
     'is_py3',
     'is_venv',
     'is_venv_importable',
+    'is_py3_too_old',
 )
 
 
@@ -92,3 +94,20 @@ def get_database_table_names(cursor,
     tables = [table_name for (table_name,) in cursor.fetchall()
               if table_name_filter(table_name)]
     return list(tables)
+
+
+def is_py3_too_old():
+    """Lookup the runtime python version and system python version
+    to determine if this version is too old. We lookup the system python
+    because we wan to know which version of python postgres' plpythonu
+    is using, rather than just the virtualenv.
+
+    """
+    if sys.version_info < (3,):  # using python2
+        return False
+    #: This is primarily used to check Travis is using an upgraded version.
+    elif sys.version_info >= (3,) and os.path.exists('/usr/bin/python3'):
+        o = subprocess.check_output(['/usr/bin/python3', '--version'])
+        return b'Python 3.4' in o
+    else:
+        return True
