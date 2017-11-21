@@ -1082,7 +1082,7 @@ ALTER TABLE modules DISABLE TRIGGER module_published""")
         # Check that new versions of both pages are in the collection tree
         cursor.execute("SELECT tree_to_json(%s, '7.3', FALSE)::JSON",
                        ('e79ffde3-7fb4-4af3-9ec8-df648b391597',))
-        tree = cursor.fetchone()[0]
+        tree = json.loads(cursor.fetchone()[0])
         children = list(flatten_tree_to_ident_hashes(tree))
         self.assertIn('209deb1f-1a46-4369-9e0d-18674cf58a3e@8', children)
         self.assertIn('d395b566-5fe3-4428-bcb2-19016e3aa3ce@5', children)
@@ -1620,7 +1620,7 @@ INSERT INTO trees (parent_id, documentid, is_collated)
 SELECT tree_to_json_for_legacy(
     'e79ffde3-7fb4-4af3-9ec8-df648b391597', '7.1')::json
 """)
-        tree = cursor.fetchone()[0]
+        tree = json.loads(cursor.fetchone()[0])
         self.assertEqual(expected_tree, tree)
 
     @unittest.skip("Not implemented")
