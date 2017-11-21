@@ -97,7 +97,7 @@ class TestHtmlReferenceResolution(BaseTestCase):
              "reference=PhET_Icon.png")
         ]
         html_filepath = os.path.join(here, 'content-that-is-resolved.html')
-        with open(html_filepath, 'r') as fb:
+        with open(html_filepath, 'rb') as fb:
             assert html == fb.read()
 
     def test_get_resource_info(self):
