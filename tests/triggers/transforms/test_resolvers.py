@@ -15,7 +15,10 @@ from lxml import etree
 # XXX (2017-10-12) deps-on-cnx-archive: Depends on cnx-archive
 from cnxarchive.config import TEST_DATA_DIRECTORY
 
-from cnxdb.triggers.transforms.resolvers import parse_legacy_reference
+from cnxdb.triggers.transforms.resolvers import (
+    parse_html_reference,
+    parse_legacy_reference,
+)
 
 
 def test_parse_legacy_reference():
@@ -44,6 +47,42 @@ def test_parse_legacy_reference():
     )
     for i, ref in enumerate(cases):
         result = parse_legacy_reference(ref)
+        assert result == expected_results[i]
+
+
+def test_parse_html_reference():
+    cases = (
+        'http://cnx.org/smoo',
+        'https://cnx.org/smoo',
+        '/resources/d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9/figure_1.jpeg',
+        '/contents/9c300c89-987d-4c4b-b722-1e1cab5fd8f4@7',
+        '/contents/9c300c89-987d-4c4b-b722-1e1cab5fd8f4/smoo',
+        ('/contents/9c300c89-987d-4c4b-b722-1e1cab5fd8f4@7'
+         ':013c4f88-4b42-4118-b497-be074f4569fa'),
+        ('/contents/9c300c89-987d-4c4b-b722-1e1cab5fd8f4@7'
+         ':013c4f88-4b42-4118-b497-be074f4569fa@2/smoo#frag'),
+    )
+    # sequential results associated case in the same position
+    expected_results = (
+        (None, ()),
+        (None, ()),
+        ('resource-reference', ('d47864c2ac77d80b1f2ff4c4c7f1b2059669e3e9',
+                                '/figure_1.jpeg')),
+        ('document-reference', ('9c300c89-987d-4c4b-b722-1e1cab5fd8f4',
+                                '7', '')),
+        ('document-reference', ('9c300c89-987d-4c4b-b722-1e1cab5fd8f4',
+                                None, '/smoo')),
+        ('binder-reference', ('9c300c89-987d-4c4b-b722-1e1cab5fd8f4',
+                              '7',
+                              '013c4f88-4b42-4118-b497-be074f4569fa',
+                              '')),
+        ('binder-reference', ('9c300c89-987d-4c4b-b722-1e1cab5fd8f4',
+                              '7',
+                              '013c4f88-4b42-4118-b497-be074f4569fa@2',
+                              '/smoo#frag')),
+    )
+    for i, ref in enumerate(cases):
+        result = parse_html_reference(ref)
         assert result == expected_results[i]
 
 

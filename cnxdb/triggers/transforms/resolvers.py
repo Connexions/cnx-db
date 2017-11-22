@@ -187,12 +187,8 @@ def parse_html_reference(ref):
     A resource-reference value resource filename.
     """
     match = PATH_REFERENCE_REGEX.match(ref)
-    try:
-        # Dictionary keyed by named groups, None values for no match
-        matches = match.groupdict()
-    except AttributeError:  # None type
-        raise ValueError("Unable to parse reference with value '{}'"
-                         .format(ref))
+    # Dictionary keyed by named groups, None values for no match
+    matches = match.groupdict()
 
     try:
         version = matches['version']
