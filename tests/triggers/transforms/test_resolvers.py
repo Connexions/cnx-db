@@ -15,6 +15,37 @@ from lxml import etree
 # XXX (2017-10-12) deps-on-cnx-archive: Depends on cnx-archive
 from cnxarchive.config import TEST_DATA_DIRECTORY
 
+from cnxdb.triggers.transforms.resolvers import parse_legacy_reference
+
+
+def test_parse_legacy_reference():
+    cases = (
+        'http://cnx.org/smoo',
+        'https://cnx.org/smoo',
+        'http://legacy.cnx.org/glob',
+        'https://legacy.cnx.org/glob',
+        '/content/m12345/latest/',
+        '/content/m12345/latest/figure_1.jpeg',
+        '/content/col12345/latest/',
+        '/content/m12345/1.3/?collection=col12345/latest',
+        '/content/m12345/1.3/?collection=col12345/1.7#frag',
+    )
+    # sequential results associated case in the same position
+    expected_results = (
+        ('resource-reference', ('smoo', None, None)),
+        ('resource-reference', ('smoo', None, None)),
+        (None, ()),
+        (None, ()),
+        ('module-reference', ('m12345', None, None, None, '')),
+        ('resource-reference', ('figure_1.jpeg', 'm12345', None)),
+        ('module-reference', ('col12345', None, None, None, '')),
+        ('module-reference', ('m12345', '1.3', 'col12345', None, '')),
+        ('module-reference', ('m12345', '1.3', 'col12345', '1.7', '#frag')),
+    )
+    for i, ref in enumerate(cases):
+        result = parse_legacy_reference(ref)
+        assert result == expected_results[i]
+
 
 def py3_too_old(*args):
     if sys.version_info >= (3,) and os.path.exists('/usr/bin/python3'):

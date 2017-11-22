@@ -149,12 +149,8 @@ def parse_legacy_reference(ref):
     A resource-reference value contains resource filename.
     """
     match = LEGACY_PATH_REFERENCE_REGEX.match(ref)
-    try:
-        # Dictionary keyed by named groups, None values for no match
-        matches = match.groupdict()
-    except AttributeError:  # None type
-        raise ValueError("Unable to parse reference with value '{}'"
-                         .format(ref))
+    # Dictionary keyed by named groups, None values for no match
+    matches = match.groupdict()
 
     version = matches['version']
     if version == 'latest':
