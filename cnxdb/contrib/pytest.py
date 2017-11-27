@@ -87,6 +87,11 @@ def db_init(db_engines):
     """Initializes the database"""
     from cnxdb.init.main import init_db
     init_db(db_engines['super'], is_venv_importable())
+    if is_venv_importable():
+        # We need to recreate the connection pool after initializing venv
+        # because all the existing connections wouldn't have venv set up
+        for engine in db_engines.values():
+            engine.dispose()
 
 
 @pytest.fixture
