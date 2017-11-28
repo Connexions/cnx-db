@@ -46,11 +46,10 @@ def db_engines(db_settings):
 @pytest.fixture
 def db_env_vars(mocker, db_settings):
     """Sets the environment variables used by this project"""
-    env_vars = os.environ.copy()
-    env_vars.update({
+    env_vars = {
         'DB_URL': db_settings['db.common.url'],
         'DB_SUPER_URL': db_settings['db.super.url'],
-    })
+    }
     mocker.patch.dict(os.environ, env_vars)
     yield env_vars
     pass
