@@ -13,10 +13,10 @@ import os
 import psycopg2
 import pytest
 from sqlalchemy import create_engine
+from sqlalchemy.engine.reflection import Inspector
 
 from .testing import (
     get_settings,
-    get_database_table_names,
     is_venv_importable,
 )
 
@@ -68,10 +68,10 @@ def _db_wipe(db_engine):
 
 
 @pytest.fixture
-def db_wipe(db_engines, request, db_cursor_without_db_init):
+def db_wipe(db_engines, request):
     """Cleans up the database after a test run"""
-    cursor = db_cursor_without_db_init
-    tables = get_database_table_names(cursor)
+    inspector = Inspector.from_engine(db_engines['common'])
+    tables = inspector.get_table_names()
     # Assume that if db_wipe is used it means we want to start fresh as well.
     if 'modules' in tables:
         _db_wipe(db_engines['super'])
@@ -120,17 +120,19 @@ def _maybe_init_database(db_engines):
     """Initializes the database if it isn't already initialized"""
     global _db_cursor__first_run
 
-    conn = db_engines['super'].raw_connection()
-    with conn.cursor() as cursor:
-        tables = get_database_table_names(cursor)
+    inspector = Inspector.from_engine(db_engines['common'])
+    tables = inspector.get_table_names()
     # Use the database if it exists, otherwise initialize it
     if _db_cursor__first_run:
         _db_wipe(db_engines['super'])
         db_init(db_engines)
         _db_cursor__first_run = False
+        # Dispose of any attempted connections that may not be venv
+        # initialized, which would not have the necessary imports.
+        for eng in db_engines.values():
+            eng.dispose()
     elif 'modules' not in tables:
         db_init(db_engines)
-    conn.close()
 
 
 @pytest.fixture

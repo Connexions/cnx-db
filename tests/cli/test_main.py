@@ -3,24 +3,21 @@ import os
 import sys
 
 import pytest
+from sqlalchemy.engine.reflection import Inspector
 
 from cnxdb.contrib import testing
 
 
 @pytest.mark.usefixtures('db_wipe')
-def test_init(db_env_vars, db_cursor_without_db_init):
+def test_init(db_env_vars, db_engines):
     from cnxdb.cli.main import main
     args = ['init']
     return_code = main(args)
 
     assert return_code == 0
 
-    def table_name_filter(table_name):
-        return (not table_name.startswith('pg_') and
-                not table_name.startswith('_pg_'))
-
-    cursor = db_cursor_without_db_init
-    tables = testing.get_database_table_names(cursor, table_name_filter)
+    inspector = Inspector.from_engine(db_engines['common'])
+    tables = inspector.get_table_names()
 
     assert 'modules' in tables
     assert 'pending_documents' in tables
