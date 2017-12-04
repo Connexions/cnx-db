@@ -9,9 +9,13 @@ Change Log
 
    - feature message
 
-?.?.?
+1.3.0
 -----
 
+- Add a new baking state, known as 'fallback', that allows content
+  to remain in a success state even when the latest print-style
+  won't work with the content.
+- Fix the primary key on the ``print_style_recipes`` table.
 - Provide docs for using the Pyramid Web Framework with this package.
 - Add a database tables definition to the pyramid integration.
   This places a ``tables`` attribute on the registry.
