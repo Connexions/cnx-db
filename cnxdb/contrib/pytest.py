@@ -55,7 +55,7 @@ def db_env_vars(mocker, db_settings):
     pass
 
 
-def _db_wipe(db_engine):
+def _wipe_db(db_engine):
     """Removes the schema from the database"""
     conn = db_engine.raw_connection()
     with conn.cursor() as cursor:
@@ -73,12 +73,18 @@ def db_wipe(db_engines, request):
     tables = inspector.get_table_names()
     # Assume that if db_wipe is used it means we want to start fresh as well.
     if 'modules' in tables:
-        _db_wipe(db_engines['super'])
+        _wipe_db(db_engines['super'])
 
     def finalize():
-        _db_wipe(db_engines['super'])
+        _wipe_db(db_engines['super'])
 
     request.addfinalizer(finalize)
+
+
+@pytest.fixture(scope='module')
+def db_wipe_module_scope(db_engines, request):
+    """Cleans up the database after a test run"""
+    return db_wipe(db_engines, request)
 
 
 @pytest.fixture
@@ -93,8 +99,22 @@ def db_init(db_engines):
             engine.dispose()
 
 
+@pytest.fixture(scope='module')
+def db_init_module_scope(db_engines):
+    """Initializes the database"""
+    db_init(db_engines)
+
+
 @pytest.fixture
 def db_init_and_wipe(db_wipe, db_init):
+    """Combination of the initialization and wiping procedures."""
+    # The argument order, 'wipe' then 'init' is important, because
+    #   db_wipe assumes you want to start with a clean database.
+    pass
+
+
+@pytest.fixture(scope='module')
+def db_init_and_wipe_module_scope(db_wipe_module_scope, db_init_module_scope):
     """Combination of the initialization and wiping procedures."""
     # The argument order, 'wipe' then 'init' is important, because
     #   db_wipe assumes you want to start with a clean database.
@@ -123,7 +143,7 @@ def _maybe_init_database(db_engines):
     tables = inspector.get_table_names()
     # Use the database if it exists, otherwise initialize it
     if _db_cursor__first_run:
-        _db_wipe(db_engines['super'])
+        _wipe_db(db_engines['super'])
         db_init(db_engines)
         _db_cursor__first_run = False
         # Dispose of any attempted connections that may not be venv
