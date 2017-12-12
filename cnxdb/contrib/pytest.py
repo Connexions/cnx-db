@@ -191,3 +191,9 @@ def db_tables(db_engines):
     tables = _Tables()
     tables.metadata.reflect(bind=db_engines['common'])
     return tables
+
+
+@pytest.fixture(scope='module')
+def db_tables_module_scope(db_engines):
+    """Provides access to sqlalchemy table objects"""
+    return db_tables(db_engines)
