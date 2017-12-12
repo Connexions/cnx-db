@@ -9,6 +9,17 @@ Change Log
 
    - feature message
 
+?.?.?
+-----
+
+- Massage testing fixtures to better facilitate testing in packages using
+  this package.
+
+  - Provide additional init and wipe fixtures scoped at the module level.
+  - Remove custom function for table name lookup. Replaced by sqlalchemy
+    Inspector methods.
+  - Add a ``db_tables`` pytest fixture that supplies sqlalchemy table objects.
+
 1.3.0
 -----
 
