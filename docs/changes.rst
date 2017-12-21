@@ -9,7 +9,7 @@ Change Log
 
    - feature message
 
-?.?.?
+1.4.0
 -----
 
 - Massage testing fixtures to better facilitate testing in packages using
