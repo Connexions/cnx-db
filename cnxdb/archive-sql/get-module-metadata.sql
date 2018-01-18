@@ -107,7 +107,8 @@ FROM (SELECT
       WHERE mf.module_ident = m.module_ident
       ORDER BY f.sha1, f.media_type, mf.filename
     ) AS module_file_row) AS resources,
-  m.print_style AS "printStyle"
+  m.print_style AS "printStyle",
+  m.baked AS "baked"
 FROM modules m
   LEFT JOIN abstracts a on m.abstractid = a.abstractid
   LEFT JOIN modules p on m.parent = p.module_ident,

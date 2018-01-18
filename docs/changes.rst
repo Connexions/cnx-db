@@ -9,6 +9,11 @@ Change Log
 
    - feature message
 
+?.?.?
+-----
+
+- Add the baked and print-style columns to the module metadata query.
+
 1.4.0
 -----
 
