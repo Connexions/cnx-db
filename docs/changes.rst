@@ -12,6 +12,12 @@ Change Log
 ?.?.?
 -----
 
+- Simplify slim dump import into docker container
+  - Rename .dockerfiles/initdb.d/initdb.sh to 00_initdb.sh
+  - Don't run cnx-db init if ``*.sql`` or ``*.sql.gz`` exist
+  - Remove .dockerfiles/initdb.d/load_database_dump.sh
+  - Set POSTGRES_DB to the same as DB_NAME
+
 - Add the baked and print-style columns to the module metadata query.
 
 1.4.0
