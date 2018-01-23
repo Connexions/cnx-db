@@ -9,10 +9,11 @@ Change Log
 
    - feature message
 
-?.?.?
+1.5.0
 -----
 
 - Simplify slim dump import into docker container
+
   - Rename .dockerfiles/initdb.d/initdb.sh to 00_initdb.sh
   - Don't run cnx-db init if ``*.sql`` or ``*.sql.gz`` exist
   - Remove .dockerfiles/initdb.d/load_database_dump.sh
