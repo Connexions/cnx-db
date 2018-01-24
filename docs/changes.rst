@@ -12,6 +12,8 @@ Change Log
 ?.?.?
 -----
 
+- Remove the ``DB_NAME`` environment variable from the container definition.
+  This appears to have become redundant with the ``POSTGRES_DB`` variable.
 - Fix .dockerfiles/initdb.d/00_initdb.sh to look for ``*.sql``
   and ``*.sql.gz`` files in the docker entrypoint directory rather than
   the current working directory.

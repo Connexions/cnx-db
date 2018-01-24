@@ -10,9 +10,6 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - DB_USER=rhaptos
-      - DB_NAME=repository
-      - POSTGRES_DB=repository
       - DB_URL=postgresql://rhaptos@localhost/repository
       - DB_SUPER_URL=postgresql://postgres@localhost/repository
 volumes:
