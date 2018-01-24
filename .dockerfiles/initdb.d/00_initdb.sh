@@ -12,7 +12,7 @@ psql -v ON_ERROR_STOP=1 --username postgres <<-EOSQL
     GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA PUBLIC TO ${DB_USER};
 EOSQL
 
-if [ -z "`ls *.sql.gz`" -a -z  "`ls *.sql`" ]; then
+if [ -z "`ls /docker-entrypoint-initdb.d/*.sql.gz`" -a -z  "`ls /docker-entrypoint-initdb.d/*.sql`" ]; then
     cnx-db init
 fi
 

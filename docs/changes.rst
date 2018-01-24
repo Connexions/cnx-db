@@ -9,6 +9,13 @@ Change Log
 
    - feature message
 
+?.?.?
+-----
+
+- Fix .dockerfiles/initdb.d/00_initdb.sh to look for ``*.sql``
+  and ``*.sql.gz`` files in the docker entrypoint directory rather than
+  the current working directory.
+
 1.5.0
 -----
 
