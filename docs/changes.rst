@@ -9,7 +9,7 @@ Change Log
 
    - feature message
 
-?.?.?
+1.5.1
 -----
 
 - Remove the ``DB_NAME`` environment variable from the container definition.
