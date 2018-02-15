@@ -21,11 +21,18 @@ UNION ALL
   WHERE not nodeid = any (t.path)
 ),
 
-books(uuid, major_version, minor_version, title) AS (
-  SELECT m.uuid, m.major_version, m.minor_version, COALESCE(t.title, m.name),
-         m.authors
+books(uuid, major_version, minor_version, title, revised, authors) AS (
+  SELECT m.uuid, m.major_version, m.minor_version, COALESCE(t.title, m.name), m.revised,
+         (SELECT ARRAY(
+           SELECT row_to_json(user_row) FROM
+             (SELECT u.username,
+             u.first_name as firstname, u.last_name as surname,
+             u.full_name as fullname, u.title, u.suffix)
+
+           as user_row))
   FROM t
   JOIN modules m ON t.value = m.module_ident
+  JOIN users as u on u.username = ANY(m.authors)
   WHERE t.parent IS NULL
   ORDER BY uuid, major_version desc, minor_version desc
 ),
@@ -36,13 +43,15 @@ page(authors) as (
   AND module_version(m.major_version, m.minor_version) = %(document_version)s
 ),
 
-top_books(title, ident_hash, authors) AS (
+top_books(title, ident_hash, authors, revised) AS (
 SELECT first(title),
        ident_hash(uuid, first(major_version), first(minor_version)),
-       first(authors)
+       first(authors),
+       first(revised)
   FROM books GROUP BY uuid
 )
 
-SELECT tb.title, tb.ident_hash, tb.authors
-  FROM top_books tb, page p ORDER BY tb.authors = p.authors DESC
-
+SELECT tb.title, tb.ident_hash, tb.authors, tb.revised
+  FROM top_books tb, page p
+  -- ORDER BY tb.authors = p.authors DESC
+  -- need to figure out how to fix this to still do author match
