@@ -44,15 +44,16 @@ page(authors) as (
   AND module_version(m.major_version, m.minor_version) = %(document_version)s
 ),
 
-top_books(title, ident_hash, authors, revised, authorUsernames) AS (
+top_books(title, ident_hash, short_ident_hash, authors, revised, authorUsernames) AS (
 SELECT first(title),
        ident_hash(uuid, first(major_version), first(minor_version)),
+       short_ident_hash(uuid, first(major_version), first(minor_version)),
        first(authors),
        first(revised),
        first(authorUsernames)
   FROM books GROUP BY uuid
 )
 
-SELECT tb.title, tb.ident_hash, tb.authors, tb.revised
+SELECT tb.title, tb.ident_hash, tb.short_ident_hash as shortId, tb.authors, tb.revised
   FROM top_books tb, page p
-  ORDER BY tb.authorUsernames = p.authors DESC
+  ORDER BY tb.authorUsernames = p.authors DESC, tb.revised DESC
