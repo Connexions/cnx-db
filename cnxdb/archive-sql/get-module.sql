@@ -29,7 +29,7 @@ FROM (SELECT
          module_ident=m.module_ident group by module_ident) as _roles,
   list(tag) as _subject,
   convert_from(file,'utf8'),
-  m.google_analytics as "googleAnalytics",
+  regexp_split_to_array(m.google_analytics, ' ') as "googleAnalytics",
   m.print_style as "printStyle",
   m.buylink as "buyLink",
   m.moduleid as "legacy_id",

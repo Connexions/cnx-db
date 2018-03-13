@@ -80,7 +80,7 @@ FROM (SELECT
   m.language AS language,
   (select '{'||list(''''||roleparam||''':['''||array_to_string(personids,''',''')||''']')||'}' from roles natural join moduleoptionalroles where module_ident=m.module_ident group by module_ident) AS roles,
   ARRAY(SELECT tag FROM moduletags AS mt NATURAL JOIN tags WHERE mt.module_ident = m.module_ident) AS subjects,
-  m.google_analytics AS "googleAnalytics",
+  regexp_split_to_array(m.google_analytics, ' ') AS "googleAnalytics",
   m.buylink AS "buyLink",
   m.moduleid AS "legacy_id",
   m.version AS "legacy_version",
