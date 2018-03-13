@@ -38,8 +38,9 @@ before_script:
   - sudo -u postgres psql -d postgres -c "CREATE USER tester WITH SUPERUSER PASSWORD 'tester';"
   # Set up the database
   - sudo -u postgres createdb -O tester testing
-  - git clone https://github.com/okbob/session_exec
+  - git clone https://github.com/okbob/session_exec.git
   - cd session_exec
+  - git reset --hard dde5cb7661d659fcc4fc3133f9a1e463e82c088c
   - make USE_PGXS=1 -e && sudo make USE_PGXS=1 -e install
   - cd ..
   - export PYPREFIX=$(python -c 'import sys; print(sys.prefix)')
