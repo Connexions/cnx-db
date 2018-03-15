@@ -9,6 +9,17 @@ Change Log
 
    - feature message
 
+1.6.0
+-----
+
+- Pin to a specific version of sesssion_exec when testing.
+- Allow the Google Analytics (GA) code column to stay the same type,
+  but contain multiple GA codes. Adjustments to queries make this
+  an array of GA codes based on space separated list of codes.
+- Adjust the books containing this page query to:
+  - Provide a sorted list of authors and the detailed person info
+  - Provide the shortid
+
 1.5.1
 -----
 
