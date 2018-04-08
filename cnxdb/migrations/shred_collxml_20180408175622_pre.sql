@@ -30,20 +30,16 @@ ns = { "cnx":"http://cnx.rice.edu/cnxml",
 
 FIND_BOOK_META=plpy.prepare("""
     SELECT * FROM modules WHERE module_ident = $1""", ("int",))
-NODE_INS = plpy.prepare(
-    "INSERT INTO trees (parent_id, documentid, childorder, latest) "
-    "SELECT $1, module_ident, $2, $5 from modules WHERE "
-    "moduleid = $3 AND version = $4 RETURNING nodeid",
-    ("int", "int", "text", "text", "bool"))
-NODE_DOC_INS = plpy.prepare(
-    "INSERT INTO trees (parent_id, documentid, childorder, latest) "
-    "VALUES (NULL, $1, 0, $2) returning nodeid",
-    ("int", "bool"))
-NODE_NODOC_INS = plpy.prepare(
-    "INSERT INTO trees (parent_id, childorder, latest) "
-    "VALUES ($1, $2, $3) "
-    "RETURNING nodeid",
-    ("int", "int", "bool"))
+NODE_INS=plpy.prepare("""
+INSERT INTO trees (parent_id, documentid, childorder)
+    SELECT $1, module_ident, $2
+    FROM modules WHERE moduleid = $3 AND version = $4
+    RETURNING nodeid""", ("int","int","text","text"))
+NODE_DOC_INS=plpy.prepare("INSERT INTO trees"
+    " (parent_id, documentid, childorder)"
+        " VALUES (NULL, $1, 0) returning nodeid", ("int",))
+NODE_NODOC_INS=plpy.prepare("INSERT INTO trees (parent_id, childorder)"
+    " VALUES ($1, $2) returning nodeid", ("int","int"))
 NODE_TITLE_UPD=plpy.prepare("UPDATE trees SET title = $1"
     " FROM modules WHERE nodeid = $2 AND"
     " (documentid IS NULL OR"
@@ -100,15 +96,15 @@ SELECT 'SubCollection', $3, $1, uuid5(uuid, $1),
 FROM modules JOIN trees on module_ident = documentid
 WHERE nodeid = $2 RETURNING module_ident""", ("text","int","text"))
 
-def _do_insert(pid, cid, oid=0, ver=0, lat=True):
+def _do_insert(pid,cid,oid=0,ver=0):
     if pid is None:
-        res = plpy.execute(NODE_DOC_INS, (bookid, lat,))
+        res = plpy.execute(NODE_DOC_INS,(bookid,))
     elif oid:
-        res = plpy.execute(NODE_INS, (pid, cid, oid, ver, lat))
-        if res.nrows() == 0:  # no documentid found
-            plpy.execute(NODE_NODOC_INS, (pid, cid, lat))
+        res = plpy.execute(NODE_INS,(pid,cid,oid,ver))
+        if res.nrows() == 0: # no documentid found
+            plpy.execute(NODE_NODOC_INS,(pid,cid))
     else:
-        res = plpy.execute(NODE_NODOC_INS, (pid, cid, lat))
+        res = plpy.execute(NODE_NODOC_INS,(pid,cid))
     if res.nrows():
         nodeid=res[0]["nodeid"]
     else:

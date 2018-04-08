@@ -31,14 +31,17 @@ ns = {"cnx": "http://cnx.rice.edu/cnxml",
 
 FIND_BOOK_META=("SELECT moduleid, name, version, major_version, minor_version FROM modules WHERE module_ident = %s")
 
-NODE_INS = ("INSERT INTO trees (parent_id, documentid, childorder) "
-    "SELECT %s, module_ident, %s from modules WHERE "
+NODE_INS = (
+    "INSERT INTO trees (parent_id, documentid, childorder, latest) "
+    "SELECT %s, module_ident, %s, %s from modules WHERE "
     "moduleid = %s AND version = %s RETURNING nodeid")
-NODE_DOC_INS = ("INSERT INTO trees"
-    " (parent_id, documentid, childorder)"
-        " VALUES (NULL, %s, 0) returning nodeid")
-NODE_NODOC_INS = "INSERT INTO trees (parent_id,childorder) VALUES (%s, %s) "\
-    "RETURNING nodeid"
+NODE_DOC_INS = (
+    "INSERT INTO trees (parent_id, documentid, childorder, latest) "
+    "VALUES (NULL, %s, 0, %s) returning nodeid")
+NODE_NODOC_INS = (
+    "INSERT INTO trees (parent_id, childorder, latest) "
+    "VALUES (%s, %s, %s) "
+    "RETURNING nodeid")
 NODE_TITLE_UPD = "UPDATE trees SET title = %s FROM modules WHERE nodeid = %s "\
     "AND (documentid IS NULL "\
     "OR (documentid = module_ident AND name != %s))"
@@ -84,19 +87,15 @@ SELECT 'SubCollection', %s, %s, uuid5(uuid, %s),
 FROM modules JOIN trees on module_ident = documentid
 WHERE nodeid = %s RETURNING module_ident"""
 
-con = psycopg2.connect('dbname=repository')
-cur = con.cursor()
-
-
-def _do_insert(pid, cid, oid=0, ver=0):
+def _do_insert(pid, cid, oid=0, ver=0, lat=True):
     if pid is None:
-        cur.execute(NODE_DOC_INS, (bookid,))
+        cur.execute(NODE_DOC_INS, (bookid, lat,))
     elif oid:
-        cur.execute(NODE_INS, (pid, cid, oid, ver))
+        cur.execute(NODE_INS, (pid, cid, oid, ver, lat))
         if cur.rowcount == 0:  # no documentid found
-            cur.execute(NODE_NODOC_INS, (pid, cid))
+            cur.execute(NODE_NODOC_INS, (pid, cid, lat))
     else:
-        cur.execute(NODE_NODOC_INS, (pid, cid))
+        cur.execute(NODE_NODOC_INS, (pid, cid, lat))
     res = cur.fetchall()
     if res:
         nodeid = res[0][0]
@@ -221,12 +220,31 @@ class ModuleHandler(sax.ContentHandler):
             self.titled.pop()
 
 
+con = None
+cur = None
+bookid = None
 
-parser = sax.make_parser()
-parser.setFeature(sax.handler.feature_namespaces, 1)
-bookid = sys.argv[1]
-parser.setContentHandler(ModuleHandler())
 
-parser.parse(open(sys.argv[2]))
+def main(argv):
+    global con, cur, bookid
 
-con.commit()
+    try:
+        con_str = argv[3]
+    except IndexError:
+        con_str = 'dbname=repository'
+
+    con = psycopg2.connect(argv[3])
+    cur = con.cursor()
+
+    parser = sax.make_parser()
+    parser.setFeature(sax.handler.feature_namespaces, 1)
+    bookid = sys.argv[1]
+    parser.setContentHandler(ModuleHandler())
+
+    parser.parse(open(sys.argv[2]))
+
+    con.commit()
+
+
+if __name__ == '__main__':
+    main(sys.argv)
