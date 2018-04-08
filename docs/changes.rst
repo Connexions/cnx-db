@@ -9,6 +9,14 @@ Change Log
 
    - feature message
 
+?.?.?
+-----
+
+- Fix shred_collxml code to insert the ``trees.latest`` value.
+  The fix includes a migration to ensure all ``trees.latest`` values are
+  set to true, which should be the casee for all legacy content.
+  See https://github.com/Connexions/cnx-db/issues/120 for issue details.
+
 1.6.0
 -----
 
