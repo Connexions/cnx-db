@@ -22,9 +22,9 @@ VENV_EXTRA_ARGS =
 
 $(STATEDIR)/env/pyvenv.cfg : $(_REQUIREMENTS_FILES)
 ifeq ($(PYTHON_VERSION),2)
-	@echo "Using Python 2..."
+	@echo "Using Python 2.7 ..."
 	rm -rf $(STATEDIR)/env
-	virtualenv $(VENV_EXTRA_ARGS) $(STATEDIR)/env
+	virtualenv -p $$(which python2.7) $(VENV_EXTRA_ARGS) $(STATEDIR)/env
 	# Mark this as having been built
 	touch $(STATEDIR)/env/pyvenv.cfg
 else
