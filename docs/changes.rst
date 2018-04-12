@@ -9,7 +9,7 @@ Change Log
 
    - feature message
 
-?.?.?
+1.6.1
 -----
 
 - Fix shred_collxml code to insert the ``trees.latest`` value.
