@@ -87,8 +87,14 @@ using the imperative configuration style:
        # ...
        return config.make_wsgi_app()
 
-This will give you access to the ``engines`` and ``tables`` attributes
-on the registry.
-The ``engines`` attribute is a dictionary of SQLAlchemy Engine objects.
-The ``tables`` object contains references SQLAlchemy Table objects
-that have been created from the database through inspection.
+This will give you access to the ``get_db_engine`` and ``db_tables``
+methods on the request object.
+
+The ``get_db_engine`` method returns a SQLAlchemy Engine object.
+It can optionally be given a connection name
+(``common``, ``super``, ``readonly``).
+If the connection name is ommited, it will default to the use of ``common``.
+
+The ``db_tables`` methods returns an object contains references
+SQLAlchemy Table objects that have been created from the database
+through SQLAlchemy's inspection process.
