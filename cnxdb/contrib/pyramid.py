@@ -8,6 +8,7 @@ For usage examples, see :ref:`pyramid_usage`
 
 """
 from sqlalchemy import MetaData
+from zope.interface import Interface
 
 from cnxdb.scripting import prepare
 
@@ -26,7 +27,29 @@ class _Tables(object):
         self.metadata = metadata
 
     def __getattr__(self, name):
-        return self.metadata.tables[name]
+        try:
+            return self.metadata.tables[name]
+        except KeyError:
+            raise AttributeError(name)
+
+
+class IEngine(Interface):
+    """A SQLAlchemy Engine"""
+
+
+class ITables(Interface):
+    """Object with attribute access to SQLAlchemy defined tables.
+    Each attribute maps to the name of the database table.
+
+    """
+
+
+def get_db_engine(request, name='common'):
+    return request.registry.getUtility(IEngine, name=name)
+
+
+def db_tables(request):
+    return request.registry.getUtility(ITables)
 
 
 def includeme(config):
@@ -42,8 +65,18 @@ def includeme(config):
     """
     env = prepare(config.registry.settings)
     engines = env['engines']
-    # Set the engines on the registry
-    config.registry.engines = engines
+
     # Initialize the tables on the registry
-    config.registry.tables = _Tables()
-    config.registry.tables.metadata.reflect(bind=engines['common'])
+    tables = _Tables()
+    tables.metadata.reflect(bind=engines['common'])
+    config.registry.registerUtility(tables, ITables)
+
+    # Register engine utilities
+    for name, engine in engines.items():
+        config.registry.registerUtility(engine, IEngine, name=name)
+    # ... and register the 'common' engine as an unnamed utility
+    config.registry.registerUtility(engines['common'], IEngine)
+
+    # Create request methods
+    config.add_request_method(get_db_engine)
+    config.add_request_method(db_tables, reify=True)

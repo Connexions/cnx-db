@@ -32,6 +32,7 @@ def get_settings():
 
     settings = {
         'db.common.url': common_url,
+        'db.readonly.url': common_url,
         'db.super.url': super_url,
     }
     return settings
