@@ -5,9 +5,9 @@ pytest-cov
 pytest-mock
 mock==1.0.1;python_version<="2.7"
 
-git+https://github.com/Connexions/cnx-query-grammar.git#egg=cnx-query-grammar
-git+https://github.com/Connexions/rhaptos.cnxmlutils.git#egg=rhaptos.cnxmlutils
-git+https://github.com/Connexions/cnx-epub.git#egg=cnx-epub
-git+https://github.com/Connexions/cnx-recipes.git#egg=cnx-recipes
+-e git+https://github.com/Connexions/cnx-query-grammar.git#egg=cnx-query-grammar
+-e git+https://github.com/Connexions/rhaptos.cnxmlutils.git#egg=rhaptos.cnxmlutils
+-e git+https://github.com/Connexions/cnx-epub.git#egg=cnx-epub
+-e git+https://github.com/Connexions/cnx-recipes.git#egg=cnx-recipes
 # FIXME circular dependency here...
-git+https://github.com/Connexions/cnx-archive.git#egg=cnx-archive
+-e git+https://github.com/Connexions/cnx-archive.git#egg=cnx-archive
