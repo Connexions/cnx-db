@@ -244,15 +244,23 @@ class TestHtmlReferenceResolution(BaseTestCase):
         # m19809 "Gavin Bakers entry..."
         expected = (MODULE_REFERENCE, ('m19770', None, None, None, ''))
         assert parse_reference('/ m19770') == expected
+        assert parse_reference(' m19770') == expected
 
         # m16562 "Flat Stanley.pdf"
         expected = (RESOURCE_REFERENCE, ('Flat Stanley.pdf', None, None))
         assert parse_reference(' Flat Stanley.pdf') == expected
 
+        # a17dd5c3-3b8c-4fd5-b814-e78bc5a30917@1.html
+        expected = (RESOURCE_REFERENCE, ('m16020_DotPlot_description.html',
+                                         None, None))
+        assert parse_reference('/m16020_DotPlot_description.html') == expected
+        assert parse_reference('m16020_DotPlot_description.html') == expected
+
         # m34830 "Auto_fatalities_data.xls"
         expected = (RESOURCE_REFERENCE,
                     ('Auto_fatalities_data.xls', None, None))
         assert parse_reference('/Auto_fatalities_data.xls') == expected
+        assert parse_reference('Auto_fatalities_data.xls') == expected
 
         # m35999 "version 2.3 of the first module"
         expected = (MODULE_REFERENCE, ('m0000', '2.3', None, None, ''))
