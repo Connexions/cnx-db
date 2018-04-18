@@ -13,6 +13,8 @@ Change Log
 -----
 
 - Fix the documentation for Pyramid integration properties.
+- Fix the HTML reference resolver for cases where the moduleid is found
+  in the resource filename.
 
 2.0.0
 -----

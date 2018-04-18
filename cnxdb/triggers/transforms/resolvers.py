@@ -29,7 +29,7 @@ if sys.version_info > (3,):
 
 
 LEGACY_PATH_REFERENCE_REGEX = re.compile(
-r"""^
+    r"""^
 (?:
   (https?://cnx.org)
   |
@@ -43,8 +43,9 @@ r"""^
     (m|col)
     \d{4,5}
   )
+  (?![^/@\#?])  # negative lookahead to see if this is a url or filename
   (
-    [/@]
+    [/@]  # / or @ (note, @ is put in by xslt for 'link' tags)
     (?P<version>
       (
         [.\d]+
