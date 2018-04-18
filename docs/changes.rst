@@ -9,7 +9,7 @@ Change Log
 
    - feature message
 
-?.?.?
+2.0.0
 -----
 
 - Transition the following Pyramid integration properties:
