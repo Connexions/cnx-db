@@ -88,13 +88,13 @@ using the imperative configuration style:
        return config.make_wsgi_app()
 
 This will give you access to the ``get_db_engine`` and ``db_tables``
-methods on the request object.
+method and attribute on the request object.
 
 The ``get_db_engine`` method returns a SQLAlchemy Engine object.
 It can optionally be given a connection name
 (``common``, ``super``, ``readonly``).
 If the connection name is ommited, it will default to the use of ``common``.
 
-The ``db_tables`` methods returns an object contains references
+The ``db_tables`` attribute returns an object contains references
 SQLAlchemy Table objects that have been created from the database
 through SQLAlchemy's inspection process.

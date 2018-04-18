@@ -9,13 +9,18 @@ Change Log
 
    - feature message
 
+?.?.X
+-----
+
+- Fix the documentation for Pyramid integration properties.
+
 2.0.0
 -----
 
 - Transition the following Pyramid integration properties:
   ``registry.engines`` and ``registry.tables``. These are now moved to
-  ``request.get_db_engine()`` and ``request.db_tables()``.
-  This favors the recommended pattern of using request methods
+  ``request.get_db_engine()`` and ``request.db_tables``.
+  This favors the recommended pattern of using request methods and attributes
   for hooking into the current thread local variable space.
 
 1.6.1
