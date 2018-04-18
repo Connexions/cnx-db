@@ -29,14 +29,56 @@ if sys.version_info > (3,):
 
 
 LEGACY_PATH_REFERENCE_REGEX = re.compile(
-    r'^(?:(https?://cnx.org)|(?P<legacy>https?://legacy.cnx.org))?'
-    r'(/?(content/)? *'
-    r'(?P<module>(m|col)\d{4,5})([/@](?P<version>([.\d]+|latest)))?)?/?'
-    r'(?P<resource>[^#?][ -_.@\w\d]+)?'
-    r'(?:\?collection=(?P<collection>(col\d{4,5}))'
-    r'(?:[/@](?P<collection_version>([.\d]+|latest)))?)?'
-    r'(?P<fragment>#?.*)?$',
-    re.IGNORECASE)
+r"""^
+(?:
+  (https?://cnx.org)
+  |
+  (?P<legacy>https?://legacy.cnx.org)
+)?
+(
+  /?
+  (content/)?
+  [ ]*
+  (?P<module>
+    (m|col)
+    \d{4,5}
+  )
+  (
+    [/@]
+    (?P<version>
+      (
+        [.\d]+
+        |
+        latest
+      )
+    )
+  )?
+)?
+/?
+(?P<resource>
+  [^\#?]
+  [ -_.@\w\d]+
+)?
+(?:
+  \?
+  collection=
+  (?P<collection>
+    (col\d{4,5})
+  )
+  (?:
+    [/@]
+    (?P<collection_version>
+      (
+        [.\d]+
+        |
+        latest
+      )
+    )
+  )?
+)?
+(?P<fragment>\#?.*)?
+$""",
+    re.IGNORECASE | re.VERBOSE)
 PATH_REFERENCE_REGEX = re.compile(r"""
 ^(?:
   (https?://cnx.org)
