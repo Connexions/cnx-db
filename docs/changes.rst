@@ -9,7 +9,7 @@ Change Log
 
    - feature message
 
-?.?.X
+2.0.1
 -----
 
 - Fix the documentation for Pyramid integration properties.
