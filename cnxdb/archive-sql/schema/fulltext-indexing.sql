@@ -180,7 +180,7 @@ CREATE OR REPLACE FUNCTION index_fulltext_book_trigger()
   $$
   LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS index_fullext_book ON latest_modules;
+DROP TRIGGER IF EXISTS index_fulltext_book ON latest_modules;
 CREATE TRIGGER index_fulltext_book
   AFTER INSERT OR UPDATE ON latest_modules
     FOR EACH row WHEN (NEW.portal_type = 'Collection')
