@@ -20,7 +20,7 @@ CREATE INDEX latest_modules_uuid_text_version_idx on
 CREATE UNIQUE INDEX lastest_modules_short_id_idx on latest_modules (short_id(uuid));
 
 CREATE INDEX fti_idx ON modulefti USING gin (module_idx);
-CREATE INDEX collated_fti_idx ON collated_fti USING gist (module_idx);
+CREATE INDEX collated_fti_idx ON collated_fti USING gin (module_idx);
 
 CREATE INDEX moduletags_module_ident_idx on moduletags (module_ident);
 
