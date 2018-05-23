@@ -3,8 +3,6 @@ services:
   db:
     build: .
     volumes:
-      # slim database dump
-      - ${PWD}/cnx_slim_dump.2018-05-13.4.sql.gz:/docker-entrypoint-initdb.d/cnx_slim_dump.sql.gz
       - ./docs:/src/docs:z
       - ./cnxdb:/src/cnxdb:z
       - ./htmlcov:/src/htmlcov:z
