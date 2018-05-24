@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from dbmigrator import deferred
 
 
 def helper(cursor, create_idx, drop_idx, table_name, method, create):
@@ -27,6 +28,7 @@ def helper(cursor, create_idx, drop_idx, table_name, method, create):
         raise excpt
 
 
+@deferred
 def up(cursor):
     cursor.connection.rollback()
     cursor.connection.autocommit = True
