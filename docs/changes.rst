@@ -9,6 +9,11 @@ Change Log
 
    - feature message
 
+2.1.0
+-----
+
+- Adds fulltext search fixes and speedups.
+
 2.0.1
 -----
 
