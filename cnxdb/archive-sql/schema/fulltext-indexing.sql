@@ -157,13 +157,13 @@ CREATE TRIGGER index_collated_fulltext
   AFTER INSERT OR UPDATE ON collated_file_associations
     FOR EACH row
       EXECUTE PROCEDURE index_collated_fulltext_trigger();
---
--- CREATE AGGREGATE tsvector_agg (
---       BASETYPE = tsvector,
---       SFUNC = tsvector_concat,
---       STYPE = tsvector,
---       INITCOND = ''
---     );
+
+CREATE AGGREGATE tsvector_agg (
+  BASETYPE = tsvector,
+  SFUNC = tsvector_concat,
+  STYPE = tsvector,
+  INITCOND = ''
+);
 
 CREATE OR REPLACE FUNCTION insert_book_fti(bookid integer)
   RETURNS void
