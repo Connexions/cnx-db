@@ -9,6 +9,13 @@ Change Log
 
    - feature message
 
+2.2.0
+-----
+
+- Add a SQL query to obtain the 'head' version of content. The head
+  is the last publication made for that content regardless of whether
+  it is in a publicly viewable state.
+
 2.1.0
 -----
 
