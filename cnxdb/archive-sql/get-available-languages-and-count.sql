@@ -8,4 +8,5 @@
 -- arguments: N/A
 SELECT language, count(language)
 FROM latest_modules
-group by language;
+GROUP BY language
+ORDER BY language;
