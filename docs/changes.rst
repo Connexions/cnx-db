@@ -9,6 +9,11 @@ Change Log
 
    - feature message
 
+2.2.1
+-----
+
+- Add an index to dramatically speed up `/contents/<book-id>@ver:<pageid>@ver`
+
 2.2.0
 -----
 
