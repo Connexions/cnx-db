@@ -14,7 +14,7 @@ CREATE INDEX latest_modules_upname_idx ON latest_modules  (upper(name));
 CREATE INDEX latest_modules_moduleid_idx on latest_modules (moduleid);
 CREATE INDEX latest_modules_module_ident_idx on latest_modules (module_ident);
 CREATE INDEX latest_modules_portal_type_idx on latest_modules (portal_type);
-CREATE INDEX latest_modules_gin_authors_idx on latest_modules gin(authors);
+CREATE INDEX latest_modules_gin_authors_idx on latest_modules using gin(authors);
 CREATE INDEX latest_modules_publication_year_idx on latest_modules (year(revised));
 CREATE UNIQUE INDEX lastest_modules_uuid_idx on latest_modules (uuid);
 CREATE INDEX latest_modules_uuid_text_version_idx on
