@@ -133,11 +133,9 @@ CREATE OR REPLACE FUNCTION index_collated_fulltext_trigger()
     has_existing_record integer;
     _baretext text;
     _idx_vectors tsvector;
-
   BEGIN
     has_existing_record := (SELECT item FROM collated_fti WHERE item = NEW.item and context = NEW.context);
     _baretext := (SELECT xml_to_baretext(convert_from(f.file, 'UTF8')::xml)::text FROM files AS f WHERE f.fileid = NEW.fileid);
-
     _idx_vectors := to_tsvector(_baretext);
 
     IF has_existing_record IS NULL THEN
