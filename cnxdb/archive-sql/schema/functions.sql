@@ -198,6 +198,12 @@ CREATE OR REPLACE FUNCTION short_ident_hash(uuid uuid, major integer, minor inte
  IMMUTABLE
 AS $function$ select short_id(uuid) || '@' || concat_ws('.', major, minor) $function$;
 
+CREATE FUNCTION year(ts timestamptz)
+  RETURNS DOUBLE PRECISION IMMUTABLE
+  AS $$
+  SELECT EXTRACT(year from ts)
+  $$ LANGUAGE SQL;
+
 CREATE OR REPLACE FUNCTION plainto_or_tsquery (TEXT) RETURNS tsquery AS $$
   SELECT to_tsquery( regexp_replace( $1, E'[\\s\'|:&()!]+','|','g') );
 $$ LANGUAGE SQL STRICT IMMUTABLE;
@@ -227,4 +233,6 @@ CREATE AGGREGATE LAST (
         basetype = anyelement,
         stype    = anyelement
 );
+
+
 
