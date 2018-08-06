@@ -38,7 +38,3 @@ def up(cursor):
 
 def down(cursor):
     return
-    # cursor.connection.rollback()
-    # cursor.connection.autocommit = True
-    # # Create the GIST index
-    # helper(cursor, 'modulefti_module_idx_idx', None, "modulefti", "gist(module_idx)", True)
