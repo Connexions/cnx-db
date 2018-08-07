@@ -1,6 +1,7 @@
 -- arguments text_terms:string "%(text_terms)s"
 SELECT row_to_json(combined_rows) as results
 FROM (
+
 WITH weighted_query_results AS (
   SELECT
 
@@ -8,7 +9,8 @@ WITH weighted_query_results AS (
 
   %(fulltext_key)s as keys,
 
-  ts_rank_cd(module_idx, plainto_tsquery(%(text_terms)s),4) * 2 ^ length(to_tsvector(%(text_terms)s)) as weight
+  ts_rank_cd(module_idx, plainto_tsquery(%(text_terms)s))
+  * 2 ^ length(to_tsvector(%(text_terms)s)) as weight
 
 FROM
 
@@ -47,12 +49,17 @@ WHERE
 -- author
   {8}
 
+-- abstract
+  {9}
+
   ),
 
 derived_weighted_query_results AS (
   SELECT
     wqr.module_ident,
-    CASE WHEN lm.parent IS NULL THEN weight + 1
+    CASE WHEN lm.parent IS NOT NULL THEN
+    ts_rank_cd((select module_idx from modulefti mfti where mfti.module_ident = lm.parent)
+               , plainto_tsquery(%(text_terms)s)) * 2 ^ length(to_tsvector(%(text_terms)s)) - 1
          ELSE weight
     END AS weight,
     keys
@@ -84,7 +91,7 @@ SELECT
          WHERE users.username::text = ANY (lm.authors)
          ) as user_rows) as authors,
   -- The following are used internally for further sorting and debugging.
-  weight, rank,
+  wqr.weight as "weight", rank,
   keys as _keys, '' as matched, '' as fields,
   ts_headline(ab.html,plainto_tsquery(%(text_terms)s), 'ShortWord=5, MinWords=50, MaxWords=60') as abstract,
   -- until we actually do something with it
