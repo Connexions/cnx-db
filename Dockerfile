@@ -25,6 +25,11 @@ RUN set -x \
     && make \
     && make install
 
+# Upgrade pip and packaging tools
+RUN set -x \
+    && pip install -U pip setuptools wheel \
+    && apt remove python-pip -y
+
 COPY requirements /tmp/requirements
 
 # Copy the project into the container
@@ -32,7 +37,6 @@ COPY . /src/
 WORKDIR /src/
 
 RUN set -x \
-    && pip install -U pip setuptools wheel \
     && pip install -r /tmp/requirements/test.txt \
     && pip install -r /tmp/requirements/deploy.txt \
                    -r /tmp/requirements/main.txt \
