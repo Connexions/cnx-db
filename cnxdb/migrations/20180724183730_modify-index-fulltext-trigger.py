@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
+from dbmigrator import deferred
 
 
+def update_module_idx(cursor):
+    cursor.execute("""
+    UPDATE module_files SET module_ident = module_ident WHERE filename="index.cnxml.html";
+    UPDATE latest_modules SET module_ident = module_ident WHERE portal_type="Collection";
+    """)
+
+
+@deferred
 def up(cursor):
     cursor.execute("""
     CREATE OR REPLACE FUNCTION index_fulltext_trigger()
@@ -49,6 +58,7 @@ def up(cursor):
   $$
   LANGUAGE plpgsql;
       """)
+    update_module_idx(cursor)
 
 
 def down(cursor):
@@ -76,3 +86,4 @@ def down(cursor):
       $$
       LANGUAGE plpgsql;
       """)
+    update_module_idx(cursor)
