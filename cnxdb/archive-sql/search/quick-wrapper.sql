@@ -9,8 +9,7 @@ WITH weighted_query_results AS (
 
   %(fulltext_key)s as keys,
 
-  ts_rank_cd(module_idx, plainto_tsquery(%(text_terms)s))
-  * 2 ^ length(to_tsvector(%(text_terms)s)) as weight
+  ts_rank_cd(module_idx, plainto_tsquery(%(text_terms)s)) as weight
 
 FROM
 
@@ -57,15 +56,15 @@ WHERE
 derived_weighted_query_results AS (
   SELECT
     wqr.module_ident,
-    CASE WHEN lm.parent IS NOT NULL THEN
-    ts_rank_cd((select module_idx from modulefti mfti where mfti.module_ident = lm.parent)
-               , plainto_tsquery(%(text_terms)s)) * 2 ^ length(to_tsvector(%(text_terms)s)) - 1
-         ELSE weight
-    END AS weight,
+    (CASE WHEN lm.parent IS NOT NULL
+          THEN (weight - length(to_tsvector(%(text_terms)s))) * 2 ^ length(to_tsvector(%(text_terms)s)) - 1
+          ELSE weight * 2 ^ length(to_tsvector(%(text_terms)s))
+    END) AS weight,
     keys
   FROM weighted_query_results AS wqr
        LEFT JOIN latest_modules AS lm ON (wqr.module_ident = lm.module_ident)
   )
+
 SELECT
   lm.name as title, title_order(lm.name) as "sortTitle",
   lm.uuid as id,
