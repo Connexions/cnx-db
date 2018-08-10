@@ -31,7 +31,7 @@ def up(cursor):
                        FROM languages lg
                        WHERE lg.language = (SELECT lm.language
                                             FROM latest_modules lm
-                                            WHERE lm.module_ident = NEW.module_ident))
+                                            WHERE lm.module_ident = NEW.module_ident));
     has_existing_record := (SELECT module_ident FROM modulefti WHERE module_ident = NEW.module_ident);
     _baretext := (SELECT xml_to_baretext(convert_from(f.file, 'UTF8')::xml)::text
                     FROM files AS f WHERE f.fileid = NEW.fileid);
