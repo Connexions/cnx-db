@@ -44,6 +44,7 @@ def up(cursor):
     helper(cursor, None, "collated_fti_idx", None, None, False)
     # Change back the name of the index
     cursor.execute("ALTER INDEX IF EXISTS new_collated_fti_idx RENAME TO collated_fti_idx")
+    cursor.connection.autocommit = False
 
 
 def down(cursor):
@@ -61,6 +62,7 @@ def down(cursor):
     helper(cursor, None, "collated_fti_idx", None, None, False)
     # Change back the name of the index
     cursor.execute("ALTER INDEX IF EXISTS new_collated_fti_idx RENAME TO collated_fti_idx")
+    cursor.connection.autocommit = False
 
 
 

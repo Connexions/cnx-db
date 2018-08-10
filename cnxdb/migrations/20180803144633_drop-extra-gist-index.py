@@ -34,6 +34,7 @@ def up(cursor):
     cursor.connection.autocommit = True
     # Drop the GIST index
     helper(cursor, None, 'modulefti_module_idx_idx', None, None, False)
+    cursor.connection.autocommit = False
 
 
 def down(cursor):
