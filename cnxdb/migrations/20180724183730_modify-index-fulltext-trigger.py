@@ -24,8 +24,14 @@ def up(cursor):
     _idx_title_vectors tsvector;
     _idx_keyword_vectors tsvector;
     _idx_abstract_vectors tsvector;
+    _config text;
 
   BEGIN
+    _config := (SELECT COALESCE(config, 'simple')
+                       FROM languages lg
+                       WHERE lg.language = (SELECT lm.language
+                                            FROM latest_modules lm
+                                            WHERE lm.module_ident = NEW.module_ident))
     has_existing_record := (SELECT module_ident FROM modulefti WHERE module_ident = NEW.module_ident);
     _baretext := (SELECT xml_to_baretext(convert_from(f.file, 'UTF8')::xml)::text
                     FROM files AS f WHERE f.fileid = NEW.fileid);
@@ -36,10 +42,10 @@ def up(cursor):
     _abstract := (SELECT ab.abstract FROM abstracts ab INNER JOIN modules m
                    ON ab.abstractid = m.abstractid
                     WHERE m.module_ident = NEW.module_ident);
-    _idx_title_vectors := setweight(to_tsvector(COALESCE(_title, '')), 'A');
-    _idx_keyword_vectors := setweight(to_tsvector(COALESCE(_keyword, '')), 'B');
-    _idx_abstract_vectors := setweight(to_tsvector(COALESCE(_abstract, '')), 'B');
-    _idx_text_vectors := setweight(to_tsvector(COALESCE(_baretext, '')), 'C');
+    _idx_title_vectors := setweight(to_tsvector(_config, COALESCE(_title, '')), 'A');
+    _idx_keyword_vectors := setweight(to_tsvector(_config, COALESCE(_keyword, '')), 'B');
+    _idx_abstract_vectors := setweight(to_tsvector(_config, COALESCE(_abstract, '')), 'B');
+    _idx_text_vectors := setweight(to_tsvector(_config, COALESCE(_baretext, '')), 'C');
 
 
     IF has_existing_record IS NULL THEN
