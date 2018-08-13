@@ -151,6 +151,22 @@ AS $$
   return upsert_users_from_legacy_publication_trigger(plpy, TD)
 $$ LANGUAGE plpythonu;
 
+CREATE OR REPLACE FUNCTION module_html_abstract ()
+  RETURNS TRIGGER
+AS $$
+DECLARE
+  has_html integer;
+BEGIN
+  SELECT html INTO has_html FROM abstracts where abstractid = NEW.abstractid;
+  IF has_html IS NULL
+    THEN
+      UPDATE abstracts SET html = html_abstract(NEW.module_ident)
+        WHERE abstractid = NEW.abstractid;
+  END IF;
+RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
 CREATE TRIGGER act_10_module_uuid_default
   BEFORE INSERT ON modules FOR EACH ROW
   EXECUTE PROCEDURE assign_uuid_default();
@@ -175,6 +191,9 @@ CREATE TRIGGER module_version_default
   BEFORE INSERT ON modules FOR EACH ROW
   EXECUTE PROCEDURE assign_version_default();
 
+CREATE TRIGGER module_html_abstract_trigger
+  AFTER INSERT OR UPDATE ON modules FOR EACH ROW
+  EXECUTE PROCEDURE module_html_abstract();
 
 
 
