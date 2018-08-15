@@ -9,6 +9,13 @@ Change Log
 
    - feature message
 
+2.3.0
+-----
+
+- Add database indices and modify the fulltext trigger to set different
+  weights to tsvectors based on whether they are generated on titles, keywords
+  or text.
+
 2.2.1
 -----
 
