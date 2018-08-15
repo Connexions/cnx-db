@@ -60,18 +60,41 @@ CREATE OR REPLACE FUNCTION index_fulltext_trigger()
   DECLARE
     has_existing_record integer;
     _baretext text;
-    _idx_vectors tsvector;
+    _keyword text;
+    _title text;
+    _abstract text;
+    _idx_text_vectors tsvector;
+    _idx_title_vectors tsvector;
+    _idx_keyword_vectors tsvector;
+    _idx_abstract_vectors tsvector;
+
   BEGIN
     has_existing_record := (SELECT module_ident FROM modulefti WHERE module_ident = NEW.module_ident);
-    _baretext := (SELECT xml_to_baretext(convert_from(f.file, 'UTF8')::xml)::text FROM files AS f WHERE f.fileid = NEW.fileid);
-    _idx_vectors := to_tsvector(_baretext);
+    _baretext := (SELECT xml_to_baretext(convert_from(f.file, 'UTF8')::xml)::text
+                    FROM files AS f WHERE f.fileid = NEW.fileid);
+    _keyword := (SELECT LIST(k.word) FROM keywords k INNER JOIN modulekeywords m
+                   ON k.keywordid = m.keywordid
+                    WHERE m.module_ident = NEW.module_ident);
+    _title := (SELECT modules.name FROM modules WHERE module_ident = NEW.module_ident);
+    _abstract := (SELECT ab.abstract FROM abstracts ab INNER JOIN modules m
+                   ON ab.abstractid = m.abstractid
+                    WHERE m.module_ident = NEW.module_ident);
+    _idx_title_vectors := setweight(to_tsvector(COALESCE(_title, '')), 'A');
+    _idx_keyword_vectors := setweight(to_tsvector(COALESCE(_keyword, '')), 'B');
+    _idx_abstract_vectors := setweight(to_tsvector(COALESCE(_abstract, '')), 'B');
+    _idx_text_vectors := setweight(to_tsvector(COALESCE(_baretext, '')), 'C');
+
 
     IF has_existing_record IS NULL THEN
       INSERT INTO modulefti (module_ident, fulltext, module_idx)
-        VALUES ( NEW.module_ident, _baretext, _idx_vectors );
+        VALUES ( NEW.module_ident, _baretext, _idx_title_vectors || _idx_keyword_vectors
+                 || _idx_abstract_vectors || _idx_text_vectors);
+
     ELSE
-      UPDATE modulefti SET (fulltext, module_idx) = ( _baretext, _idx_vectors )
-        WHERE module_ident = NEW.module_ident;
+      UPDATE modulefti
+        SET (fulltext, module_idx) = (_baretext, _idx_title_vectors || _idx_keyword_vectors
+             || _idx_abstract_vectors || _idx_text_vectors)
+          WHERE module_ident = NEW.module_ident;
     END IF;
     RETURN NEW;
   END;
@@ -143,11 +166,11 @@ CREATE TRIGGER index_collated_fulltext
       EXECUTE PROCEDURE index_collated_fulltext_trigger();
 
 CREATE AGGREGATE tsvector_agg (
-      BASETYPE = tsvector,
-      SFUNC = tsvector_concat,
-      STYPE = tsvector,
-      INITCOND = ''
-    );
+  BASETYPE = tsvector,
+  SFUNC = tsvector_concat,
+  STYPE = tsvector,
+  INITCOND = ''
+);
 
 CREATE OR REPLACE FUNCTION insert_book_fti(bookid integer)
   RETURNS void
