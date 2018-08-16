@@ -196,7 +196,7 @@ CREATE OR REPLACE FUNCTION short_ident_hash(uuid uuid, major integer, minor inte
  RETURNS text
  LANGUAGE sql
  IMMUTABLE
-AS $function$ select short_id(uuid) || '@' || concat_ws('.', major, minor) $function$;
+AS $function$ select public.short_id(uuid) || '@' || concat_ws('.', major, minor) $function$;
 
 CREATE FUNCTION year(ts timestamptz)
   RETURNS DOUBLE PRECISION IMMUTABLE
