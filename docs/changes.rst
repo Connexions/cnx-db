@@ -9,6 +9,12 @@ Change Log
 
    - feature message
 
+2.3.1
+-----
+
+- Add trigger to transform abstracts to html from cnxml.
+  See https://github.com/Connexions/cnx-db/issues/138
+
 2.3.0
 -----
 
