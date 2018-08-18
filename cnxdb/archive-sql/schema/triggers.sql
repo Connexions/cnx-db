@@ -155,7 +155,7 @@ CREATE OR REPLACE FUNCTION module_html_abstract ()
   RETURNS TRIGGER
 AS $$
 DECLARE
-  has_html integer;
+  has_html text;
 BEGIN
   SELECT html INTO has_html FROM abstracts where abstractid = NEW.abstractid;
   IF has_html IS NULL
