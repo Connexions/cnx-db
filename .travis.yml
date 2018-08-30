@@ -53,6 +53,8 @@ script:
   - py.test --cov="$PYPREFIX/lib/$PYVERDIR/site-packages/cnxdb"
   # If this is python3, we need to undo the plpython3u changes
   - git reset --hard HEAD
+  # Test dump/restore
+  - script/ci_test_dump_restore.sh
   # Test migrations
   - script/ci_test_migrations.sh
 after_success:
