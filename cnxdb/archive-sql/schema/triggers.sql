@@ -13,13 +13,13 @@ BEGIN
   		created, revised, abstractid, stateid, doctype, licenseid,
   		submitter,submitlog, parent, language,
 		authors, maintainers, licensors, parentauthors, google_analytics,
-                major_version, minor_version, print_style, baked, recipe)
+                major_version, minor_version, print_style, baked, recipe, canonical)
   	VALUES (
          NEW.uuid, NEW.module_ident, NEW.portal_type, NEW.moduleid, NEW.version, NEW.name,
   	 NEW.created, NEW.revised, NEW.abstractid, NEW.stateid, NEW.doctype, NEW.licenseid,
   	 NEW.submitter, NEW.submitlog, NEW.parent, NEW.language,
 	 NEW.authors, NEW.maintainers, NEW.licensors, NEW.parentauthors, NEW.google_analytics,
-         NEW.major_version, NEW.minor_version, NEW.print_style, NEW.baked, NEW.recipe);
+         NEW.major_version, NEW.minor_version, NEW.print_style, NEW.baked, NEW.recipe, NEW.canonical);
   END IF;
 
   IF TG_OP = ''UPDATE'' AND NEW.stateid in (1, 8) THEN -- current or fallback
@@ -48,7 +48,8 @@ BEGIN
         minor_version=NEW.minor_version,
         print_style=NEW.print_style,
         baked=NEW.baked,
-        recipe=NEW.recipe
+        recipe=NEW.recipe,
+        canonical=NEW.canonical
         WHERE module_ident=NEW.module_ident;
   END IF;
 
@@ -74,13 +75,13 @@ BEGIN
          created, revised, abstractid, licenseid, doctype, submitter,
          submitlog, stateid, parent, language, authors, maintainers,
          licensors, parentauthors, google_analytics, buylink,
-         major_version, minor_version, print_style, baked, recipe)
+         major_version, minor_version, print_style, baked, recipe, canonical)
     select
          module_ident, portal_type, moduleid, uuid, version, name,
          created, revised, abstractid, licenseid, doctype, submitter,
          submitlog, stateid, parent, language, authors, maintainers,
          licensors, parentauthors, google_analytics, buylink,
-         major_version, minor_version, print_style, baked, recipe
+         major_version, minor_version, print_style, baked, recipe, canonical
     from current_modules where moduleid=OLD.moduleid;
   END IF;
   RETURN OLD;
