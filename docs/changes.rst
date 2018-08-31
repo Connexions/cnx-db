@@ -9,6 +9,11 @@ Change Log
 
    - feature message
 
+2.3.4
+-----
+
+- Fixup function ownership on production DBs (production and anything synced from production)
+
 2.3.3
 -----
 
