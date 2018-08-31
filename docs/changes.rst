@@ -9,6 +9,12 @@ Change Log
 
    - feature message
 
+2.3.3
+-----
+
+- Move html abstract trigger to later event
+- make schema restorable (cf. https://bucardo.org/postgres_all_versions.html#version_9.3.22 re: search_path settings)
+
 2.3.2
 -----
 
