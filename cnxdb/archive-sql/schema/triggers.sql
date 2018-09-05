@@ -192,6 +192,11 @@ CREATE TRIGGER module_version_default
   BEFORE INSERT ON modules FOR EACH ROW
   EXECUTE PROCEDURE assign_version_default();
 
+CREATE TRIGGER collection_html_abstract_trigger
+  AFTER INSERT OR UPDATE ON modules FOR EACH ROW
+  WHEN (new.portal_type = 'Collection'::text)
+  EXECUTE PROCEDURE module_html_abstract();
+
 CREATE TRIGGER module_html_abstract_trigger
   AFTER INSERT OR UPDATE ON module_files FOR EACH ROW
   WHEN (new.filename = 'index.cnxml'::text)
