@@ -351,3 +351,19 @@ $$ LANGUAGE 'plpgsql';
 CREATE TRIGGER delete_from_default_recipes
   BEFORE DELETE ON print_style_recipes FOR EACH ROW
   EXECUTE PROCEDURE delete_from_default_recipes();
+
+CREATE OR REPLACE FUNCTION set_defaut_canonical()
+RETURNS TRIGGER AS
+$$
+BEGIN
+  NEW.canonical = public.default_canonical_book(NEW.uuid);
+  RETURN NEW;
+END;
+$$
+    LANGUAGE plpgsql;
+
+CREATE TRIGGER set_default_canonical_trigger
+  BEFORE INSERT OR UPDATE ON modules FOR EACH ROW 
+  WHEN (new.canonical is NULL)
+  EXECUTE PROCEDURE set_default_canonical();
+

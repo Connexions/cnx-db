@@ -101,14 +101,13 @@ CREATE TABLE "modules" (
         -- Time when this version was successfully baked with the below recipe
 	"recipe" integer,
         -- Recipe used for successful baking
-    "canonical" integer,
-        -- module_ident of collection this book is canonically part of
+        "canonical" uuid,
+        -- uuid of collection this book is canonically part of
 	FOREIGN KEY (abstractid) REFERENCES "abstracts" DEFERRABLE,
 	FOREIGN KEY (stateid) REFERENCES "modulestates" DEFERRABLE,
 	FOREIGN KEY (parent) REFERENCES "modules" DEFERRABLE,
 	FOREIGN KEY (licenseid) REFERENCES "licenses" DEFERRABLE,
-	FOREIGN KEY (recipe) REFERENCES "files" (fileid) DEFERRABLE,
-	FOREIGN KEY (canonical) REFERENCES "modules" DEFERRABLE
+	FOREIGN KEY (recipe) REFERENCES "files" (fileid) DEFERRABLE
 );
 
 -- the following needs to be an identical copy of modules as latest_modules
@@ -145,7 +144,7 @@ CREATE TABLE "latest_modules" (
 	"print_style" text,
 	"baked" timestamp with time zone,
 	"recipe" integer,
-    "canonical" integer
+    "canonical" uuid
 );
 
 CREATE TABLE "modulefti" (

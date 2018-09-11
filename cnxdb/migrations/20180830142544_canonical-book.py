@@ -3,8 +3,8 @@
 
 def up(cursor):
     cursor.execute('''
-ALTER TABLE modules ADD COLUMN canonical integer;
-ALTER TABLE latest_modules ADD COLUMN canonical integer;
+ALTER TABLE modules ADD COLUMN canonical uuid;
+ALTER TABLE latest_modules ADD COLUMN canonical uuid;
 
 CREATE OR REPLACE FUNCTION update_latest() RETURNS trigger AS '
 BEGIN

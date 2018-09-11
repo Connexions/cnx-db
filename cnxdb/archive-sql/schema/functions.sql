@@ -198,7 +198,7 @@ CREATE OR REPLACE FUNCTION short_ident_hash(uuid uuid, major integer, minor inte
  IMMUTABLE
 AS $function$ select public.short_id(uuid) || '@' || concat_ws('.', major, minor) $function$;
 
-CREATE FUNCTION year(ts timestamptz)
+CREATE OR REPLACE FUNCTION year(ts timestamptz)
   RETURNS DOUBLE PRECISION IMMUTABLE
   AS $$
   SELECT EXTRACT(year from ts)
@@ -234,5 +234,26 @@ CREATE AGGREGATE LAST (
         stype    = anyelement
 );
 
+-- Find the first book containing a given uuid (candidate canonical for page)
+CREATE OR REPLACE FUNCTION default_canonical_book(id uuid)
+RETURNS uuid LANGUAGE SQL STRICT IMMUTABLE AS $$
+WITH RECURSIVE t(node, title, parent, path, value) AS (
+      SELECT nodeid, coalesce(title,name), parent_id, ARRAY[nodeid], documentid
+      FROM trees tr, modules m
+      WHERE m.uuid = $1
+      AND tr.documentid = m.module_ident
+      AND tr.parent_id IS NOT NULL
+    UNION ALL
+      SELECT c1.nodeid, c1.title, c1.parent_id,
+             t.path || ARRAY[c1.nodeid], c1.documentid
+              FROM trees c1
+              JOIN t ON (c1.nodeid = t.parent)
+              WHERE not nodeid = any (t.path)
+        )
 
-
+        SELECT uuid
+        from t join modules on t.value = module_ident
+        where t.parent is NULL
+        ORDER BY revised, major_version, minor_version
+        LIMIT 1
+$$;
