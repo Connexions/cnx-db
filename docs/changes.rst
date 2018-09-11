@@ -12,7 +12,7 @@ Change Log
 2.3.4
 -----
 
-- Fixup function ownership on production DBs (production and anything synced from production)
+- Fixup function ownership on production DBs (production and synced from there)
 
 2.3.3
 -----
