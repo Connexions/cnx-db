@@ -55,3 +55,14 @@ info = {
 }
 return [info]
 $$ LANGUAGE plpythonu;
+
+-- Pretty print XML
+
+CREATE OR REPLACE FUNCTION pretty_print(doc xml)
+ RETURNS xml
+ LANGUAGE plpythonu
+AS $$
+from lxml import etree
+return etree.tostring(etree.fromstring(doc), pretty_print=True)
+$$
+

@@ -39,4 +39,9 @@
         "file": "subcol_uuids_func.sql",
         "description": "A function for adding SubCollections to a tree"
     }
+,
+    {
+        "file": "legacy_collxml.sql",
+        "description": "Functions for building collxml from trees and modules"
+    }
 ]
