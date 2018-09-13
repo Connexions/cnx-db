@@ -8,7 +8,9 @@ CREATE TABLE "persons" (
   "fullname" text,
   "email" text,
   "homepage" text,
-  "comment" text
+  "comment" text,
+  passwd bytea,
+  groups text[]
 );
 
 CREATE TABLE moduleratings (

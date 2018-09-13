@@ -8,7 +8,7 @@ SET first_name = NEW.firstname,
     last_name = NEW.surname,
     full_name = NEW.fullname
 WHERE username = NEW.personid;
-RETURN NULL;
+RETURN NEW;
 END;
 ';
 
