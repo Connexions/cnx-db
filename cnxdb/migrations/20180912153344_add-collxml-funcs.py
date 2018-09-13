@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
+from dbmigrator import super_user
 
 
 def up(cursor):
-
     cursor.execute("""
 -- Build MDML from modules table and friends "recurse" param fills in derived-from parent metadata elements
 -- Note that legacy_mdml_inner returns an xml fragment with an assumed xmlns alias of md for
@@ -235,7 +235,12 @@ SELECT xmlelement(name "col:collection",
 )
 FROM modules m JOIN trees t ON m.module_ident = t.documentid WHERE m.module_ident = legacy_collxml.ident
 $$;
+""")
+    cursor.execute('SELECT current_user')
+    username = cursor.fetchall()[0][0]
 
+    with super_user() as super_cursor:
+        super_cursor.execute("""
 CREATE OR REPLACE FUNCTION pretty_print(doc xml)
  RETURNS xml
  LANGUAGE plpythonu
@@ -243,7 +248,8 @@ AS $$
 from lxml import etree
 return etree.tostring(etree.fromstring(doc), pretty_print=True)
 $$;
-""")
+ALTER FUNCTION pretty_print(xml) OWNER TO {username}
+    """.format(username=username))
 
 
 def down(cursor):
@@ -254,5 +260,9 @@ def down(cursor):
     DROP FUNCTION legacy_module (int, text);
     DROP FUNCTION legacy_mdml (int, bool, text);
     DROP FUNCTION legacy_mdml_inner (int, bool, text);
+    """)
+
+    with super_user() as super_cursor:
+        super_cursor.execute("""
     DROP FUNCTION pretty_print (xml);
     """)
