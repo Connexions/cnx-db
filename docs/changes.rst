@@ -9,6 +9,11 @@ Change Log
 
    - feature message
 
+2.4.0
+-----
+
+- Added columns to legacy persons table to hold authentication info
+
 2.3.4
 -----
 
