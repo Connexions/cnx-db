@@ -88,11 +88,137 @@ BEGIN
   RETURN OLD;
 END;
 ' LANGUAGE 'plpgsql';
-    ''')
+
+CREATE OR REPLACE FUNCTION default_canonical_book(id uuid)
+RETURNS uuid LANGUAGE SQL STRICT IMMUTABLE AS $$
+WITH RECURSIVE t(node, title, parent, path, value) AS (
+      SELECT nodeid, coalesce(title,name), parent_id, ARRAY[nodeid], documentid
+      FROM trees tr, modules m
+      WHERE m.uuid = $1
+      AND tr.documentid = m.module_ident
+      AND tr.parent_id IS NOT NULL
+    UNION ALL
+      SELECT c1.nodeid, c1.title, c1.parent_id,
+             t.path || ARRAY[c1.nodeid], c1.documentid
+              FROM trees c1
+              JOIN t ON (c1.nodeid = t.parent)
+              WHERE not nodeid = any (t.path)
+        )
+
+        SELECT uuid
+        from t join modules on t.value = module_ident
+        where t.parent is NULL
+        ORDER BY revised, major_version, minor_version
+        LIMIT 1
+$$;
+
+CREATE OR REPLACE VIEW public.current_modules AS
+ WITH latest_idents(module_ident) AS (
+         SELECT m2.module_ident
+           FROM (public.modules m2
+             JOIN public.modulestates ms ON ((m2.stateid = ms.stateid)))
+          WHERE ((m2.major_version = ( SELECT max(m3.major_version) AS max
+                   FROM public.modules m3
+                  WHERE (m2.uuid = m3.uuid))) AND ((m2.minor_version IS NULL) OR (m2.minor_version = ( SELECT max(m4.minor_version) AS max
+                   FROM public.modules m4
+                  WHERE ((m2.uuid = m4.uuid) AND (m2.major_version = m4.major_version))))) AND (ms.statename = ANY (ARRAY['current'::text, 'fallback'::text])))
+        )
+ SELECT m.module_ident,
+    m.portal_type,
+    m.moduleid,
+    m.uuid,
+    m.version,
+    m.name,
+    m.created,
+    m.revised,
+    m.abstractid,
+    m.licenseid,
+    m.doctype,
+    m.submitter,
+    m.submitlog,
+    m.stateid,
+    m.parent,
+    m.language,
+    m.authors,
+    m.maintainers,
+    m.licensors,
+    m.parentauthors,
+    m.google_analytics,
+    m.buylink,
+    m.major_version,
+    m.minor_version,
+    m.print_style,
+    m.baked,
+    m.recipe,
+    m.canonical
+   FROM (latest_idents li
+     JOIN public.modules m ON ((m.module_ident = li.module_ident)));
+
+CREATE OR REPLACE FUNCTION set_default_canonical()
+RETURNS TRIGGER AS
+$$
+BEGIN
+  NEW.canonical = public.default_canonical_book(NEW.uuid);
+  RETURN NEW;
+END;
+$$
+    LANGUAGE plpgsql;
+
+CREATE TRIGGER set_default_canonical_trigger
+  BEFORE INSERT OR UPDATE ON modules FOR EACH ROW
+  WHEN (new.canonical is NULL)
+  EXECUTE PROCEDURE set_default_canonical();
+''')
 
 
 def down(cursor):
     cursor.execute('''
+DROP TRIGGER set_default_canonical_trigger on modules;
+DROP FUNCTION set_default_canonical();
+DROP FUNCTION default_canonical_book(uuid);
+
+DROP VIEW public.current_modules;
+CREATE OR REPLACE VIEW public.current_modules AS
+ WITH latest_idents(module_ident) AS (
+         SELECT m2.module_ident
+           FROM (public.modules m2
+             JOIN public.modulestates ms ON ((m2.stateid = ms.stateid)))
+          WHERE ((m2.major_version = ( SELECT max(m3.major_version) AS max
+                   FROM public.modules m3
+                  WHERE (m2.uuid = m3.uuid))) AND ((m2.minor_version IS NULL) OR (m2.minor_version = ( SELECT max(m4.minor_version) AS max
+                   FROM public.modules m4
+                  WHERE ((m2.uuid = m4.uuid) AND (m2.major_version = m4.major_version))))) AND (ms.statename = ANY (ARRAY['current'::text, 'fallback'::text])))
+        )
+ SELECT m.module_ident,
+    m.portal_type,
+    m.moduleid,
+    m.uuid,
+    m.version,
+    m.name,
+    m.created,
+    m.revised,
+    m.abstractid,
+    m.licenseid,
+    m.doctype,
+    m.submitter,
+    m.submitlog,
+    m.stateid,
+    m.parent,
+    m.language,
+    m.authors,
+    m.maintainers,
+    m.licensors,
+    m.parentauthors,
+    m.google_analytics,
+    m.buylink,
+    m.major_version,
+    m.minor_version,
+    m.print_style,
+    m.baked,
+    m.recipe
+   FROM (latest_idents li
+     JOIN public.modules m ON ((m.module_ident = li.module_ident)));
+
 CREATE OR REPLACE FUNCTION update_latest() RETURNS trigger AS '
 BEGIN
 -- lastest content is the highest version that has successfully baked - states 1 and 8 (current and fallback)
