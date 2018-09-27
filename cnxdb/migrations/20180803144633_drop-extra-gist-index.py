@@ -2,6 +2,12 @@
 from dbmigrator import deferred
 
 
+def should_run(cursor):
+    cursor.execute("select True from pg_catalog.pg_class where relname = 'modules_moduleid_idx_idx'")
+    res = cursor.fetchone()
+    return res
+
+
 def helper(cursor, create_idx, drop_idx, table_name, method, create):
     excpt = None
     # Try creating or drop an index concurrently for at most three times
