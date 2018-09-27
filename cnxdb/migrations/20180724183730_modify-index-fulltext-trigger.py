@@ -9,6 +9,16 @@ def update_module_idx(cursor):
     """)
 
 
+def should_run(cursor):
+    cursor.execute("""select prosrc !~ 'setweight'
+            FROM pg_catalog.pg_proc
+            WHERE proname = 'index_fulltext_trigger'
+            """)
+    res = cursor.fetchone()
+    if res:
+        return res[0]
+
+
 @deferred
 def up(cursor):
     cursor.execute("""

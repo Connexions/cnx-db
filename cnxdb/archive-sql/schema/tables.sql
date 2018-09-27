@@ -101,6 +101,8 @@ CREATE TABLE "modules" (
         -- Time when this version was successfully baked with the below recipe
 	"recipe" integer,
         -- Recipe used for successful baking
+        "canonical" uuid,
+        -- uuid of collection this book is canonically part of
 	FOREIGN KEY (abstractid) REFERENCES "abstracts" DEFERRABLE,
 	FOREIGN KEY (stateid) REFERENCES "modulestates" DEFERRABLE,
 	FOREIGN KEY (parent) REFERENCES "modules" DEFERRABLE,
@@ -141,7 +143,8 @@ CREATE TABLE "latest_modules" (
 	"minor_version" integer,
 	"print_style" text,
 	"baked" timestamp with time zone,
-	"recipe" integer
+	"recipe" integer,
+    "canonical" uuid
 );
 
 CREATE TABLE "modulefti" (
