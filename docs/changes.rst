@@ -8,6 +8,10 @@ Change Log
    ----------------------
 
    - feature message
+2.5.0
+-----
+
+- Support for canonical book per page - uuid
 
 2.4.0
 -----
