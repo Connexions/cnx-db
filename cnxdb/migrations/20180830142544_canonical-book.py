@@ -112,6 +112,7 @@ WITH RECURSIVE t(node, title, parent, path, value) AS (
         LIMIT 1
 $$;
 
+DROP VIEW public.current_modules;
 CREATE OR REPLACE VIEW public.current_modules AS
  WITH latest_idents(module_ident) AS (
          SELECT m2.module_ident
