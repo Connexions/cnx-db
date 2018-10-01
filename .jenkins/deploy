@@ -21,7 +21,7 @@ pipeline {
       }
       when {
         expression {
-          release = sh(returnStdout: true, script: 'git tag -l --points-at HEAD | head -n 1').trim()
+          release = sh(returnStdout: true, script: 'git tag -l --points-at HEAD | head -n 1 | sed -e "s/^v//"').trim()
           return release
         }
       }
