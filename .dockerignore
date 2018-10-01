@@ -1,3 +1,4 @@
 ./.state
 ./dist
 ./build
+./.jenkins
