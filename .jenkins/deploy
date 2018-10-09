@@ -16,8 +16,9 @@ pipeline {
     }
     stage('Publish Release') {
       environment {
-        TWINE_USERNAME = 'openstax'
-        TWINE_PASSWORD = credentials('pypi-openstax-password')
+        TWINE_CREDS = credentials('pypi-openstax-creds')
+        TWINE_USERNAME = "${TWINE_CREDS_USR}"
+        TWINE_PASSWORD = "${TWINE_CREDS_PSW}"
       }
       when {
         expression {
@@ -34,7 +35,7 @@ pipeline {
         }
         // FIXME Note, this uses the Test PyPI. Since we are unable to test these changes prior to use, the first occurance will be test test.
         // Note, '.git' is a volume, because versioneer needs it to resolve the python distribution's version. 
-        sh "docker run --rm -e TWINE_USERNAME -e TWINE_PASSWORD -v ${PWD}/.git:/src/.git:ro openstax/cnx-db:latest /bin/bash -c \"pip install -q twine && python setup.py bdist_wheel --universal && twine upload --repository-url https://test.pypi.org/legacy/ dist/*\""
+        sh "docker run --rm -e TWINE_USERNAME -e TWINE_PASSWORD -v ${WORKSPACE}/.git:/src/.git:ro openstax/cnx-db:latest /bin/bash -c \"pip install -q twine && python setup.py bdist_wheel --universal && twine upload --repository-url https://test.pypi.org/legacy/ dist/*\""
       }
     }
   }
