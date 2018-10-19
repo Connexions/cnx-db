@@ -61,6 +61,7 @@ $$ LANGUAGE plpythonu;
 CREATE OR REPLACE FUNCTION pretty_print(doc xml)
  RETURNS xml
  LANGUAGE plpythonu
+ IMMUTABLE STRICT
 AS $$
 from lxml import etree
 return etree.tostring(etree.fromstring(doc), pretty_print=True)

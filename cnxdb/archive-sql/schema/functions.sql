@@ -16,6 +16,7 @@ $function$;
 CREATE OR REPLACE FUNCTION sha1(f bytea)
  RETURNS text
  LANGUAGE plpythonu
+ IMMUTABLE STRICT
 AS $function$
 import hashlib
 return hashlib.new('sha1',f).hexdigest()

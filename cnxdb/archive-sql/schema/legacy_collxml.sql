@@ -8,7 +8,9 @@ CREATE OR REPLACE FUNCTION legacy_mdml_inner (
     mod_ident int,
     recurse bool default False,
     repo text default 'https://legacy.cnx.org/content')
-RETURNS XML as
+RETURNS XML
+IMMUTABLE STRICT
+AS
 $$
 SELECT
   xmlconcat(
@@ -112,7 +114,9 @@ CREATE OR REPLACE FUNCTION legacy_mdml (
     mod_ident int,
     recurse bool default False,
     repo text default 'https://legacy.cnx.org/content')
-RETURNS XML as
+RETURNS XML
+IMMUTABLE STRICT
+AS
 $$
 SELECT  xmlelement(name "md:metadata", xmlattributes('http://cnx.rice.edu/mdml' as "xmlns:md"),
         legacy_mdml_inner(legacy_mdml.mod_ident, legacy_mdml.recurse, legacy_mdml.repo)
@@ -128,6 +132,7 @@ CREATE OR REPLACE FUNCTION legacy_module(nodeid int,
     repo text default 'https://legacy.cnx.org/content')
 RETURNS xml
 LANGUAGE SQL
+IMMUTABLE STRICT
 AS
 $$
 SELECT xmlelement(name "col:module",
@@ -160,6 +165,7 @@ $$;
 CREATE OR REPLACE FUNCTION legacy_subcol(nodeid int,
     repo text default 'https://legacy.cnx.org/content')
 RETURNS xml
+IMMUTABLE STRICT
 LANGUAGE SQL
 AS
 $$
@@ -179,6 +185,7 @@ $$;
 CREATE OR REPLACE FUNCTION legacy_content(nodeid int,
     repo text default 'https://legacy.cnx.org/content')
 RETURNS xml
+IMMUTABLE STRICT
 LANGUAGE SQL
 AS
 $$
@@ -204,6 +211,7 @@ CREATE OR REPLACE FUNCTION legacy_collxml (ident int,
       repo text default 'https://legacy.cnx.org/content')
 RETURNS xml
 LANGUAGE SQL
+IMMUTABLE STRICT
 AS
 $$
 SELECT xmlelement(name "col:collection",
