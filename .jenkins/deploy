@@ -15,15 +15,16 @@ pipeline {
       }
     }
     stage('Publish Release') {
+      when { buildingTag() }
       environment {
-        TWINE_USERNAME = 'openstax'
-        TWINE_PASSWORD = credentials('pypi-openstax-password')
-      }
-      when {
-        expression {
-          release = sh(returnStdout: true, script: 'git tag -l --points-at HEAD | head -n 1 | sed -e "s/^v//"').trim()
-          return release
-        }
+        TWINE_CREDS = credentials('pypi-openstax-creds')
+        TWINE_USERNAME = "${TWINE_CREDS_USR}"
+        TWINE_PASSWORD = "${TWINE_CREDS_PSW}"
+        release = """${sh(
+          returnStdout: true,
+          // Strip the `v` prefix
+          script: 'bash -c \'echo ${TAG_NAME#v*}\''
+        ).trim()}"""
       }
       steps {
         withDockerRegistry([credentialsId: 'docker-registry', url: '']) {
@@ -32,9 +33,8 @@ pipeline {
           sh "docker push openstax/cnx-db:${release}"
           sh "docker push openstax/cnx-db:latest"
         }
-        // FIXME Note, this uses the Test PyPI. Since we are unable to test these changes prior to use, the first occurance will be test test.
         // Note, '.git' is a volume, because versioneer needs it to resolve the python distribution's version. 
-        sh "docker run --rm -e TWINE_USERNAME -e TWINE_PASSWORD -v ${PWD}/.git:/src/.git:ro openstax/cnx-db:latest /bin/bash -c \"pip install -q twine && python setup.py bdist_wheel --universal && twine upload --repository-url https://test.pypi.org/legacy/ dist/*\""
+        sh "docker run --rm -e TWINE_USERNAME -e TWINE_PASSWORD -v ${WORKSPACE}/.git:/src/.git:ro openstax/cnx-db:latest /bin/bash -c \"pip install -q twine && python setup.py bdist_wheel --universal && twine upload dist/*\""
       }
     }
   }
