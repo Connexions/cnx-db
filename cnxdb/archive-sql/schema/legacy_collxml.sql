@@ -230,7 +230,7 @@ SELECT xmlelement(name "col:collection",
     ),
     xmlelement(name "col:parameters",
         xmlelement(name "col:param",
-            xmlattributes('print-style' as "name", print_style as "value")
+            xmlattributes('print-style' as "name", COALESCE(print_style, '') as "value")
         )
     ),
     legacy_content(nodeid, legacy_collxml.repo)
