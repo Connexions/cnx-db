@@ -45,7 +45,7 @@ class FauxPlPyPlan(object):
     def __init__(self, cursor, stmt):
         self._cursor = cursor
         self.stmt = re.sub(
-            '\$([0-9]+)', lambda m: '%(param_{})s'.format(m.group(1)), stmt)
+            '\\$([0-9]+)', lambda m: '%(param_{})s'.format(m.group(1)), stmt)
 
     def execute(self, args, rows=None):
         params = {}
