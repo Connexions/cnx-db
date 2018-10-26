@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
-
-
-# Uncomment should_run if this is a repeat migration
-# def should_run(cursor):
-#     # TODO return True if migration should run
+from dbmigrator import super_user
 
 
 def up(cursor):
-    cursor.execute("""
+    with super_user() as cursor:
+        cursor.execute("""
 CREATE OR REPLACE FUNCTION public.pretty_print(doc xml)
 RETURNS xml
 LANGUAGE plpythonu
@@ -261,9 +258,11 @@ FROM modules m JOIN trees t ON m.module_ident = t.documentid WHERE m.module_iden
 $$;
 
     """)
-       
+
+
 def down(cursor):
-    cursor.execute("""
+    with super_user() as cursor:
+        cursor.execute("""
 CREATE OR REPLACE FUNCTION public.pretty_print(doc xml)
 RETURNS xml
 LANGUAGE plpythonu
@@ -505,4 +504,3 @@ SELECT xmlelement(name "col:collection",
 )
 FROM modules m JOIN trees t ON m.module_ident = t.documentid WHERE m.module_ident = legacy_collxml.ident
 $$ """)
-
