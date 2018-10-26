@@ -11,6 +11,18 @@ Change Log
 
    - feature message
 
+2.6.0
+-----
+
+ - Jenkins CI framework and initial support
+ - Generate collexion.xml files for new (minor rev)
+   collections that do not have them.
+
+2.5.1
+-----
+
+ - bugfix in a db migration script - no production impact
+
 2.5.0
 -----
 
