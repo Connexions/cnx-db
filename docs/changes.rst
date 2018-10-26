@@ -11,6 +11,11 @@ Change Log
 
    - feature message
 
+2.6.1
+-----
+
+ - bugfix in db migration script (need db superuser)
+
 2.6.0
 -----
 
