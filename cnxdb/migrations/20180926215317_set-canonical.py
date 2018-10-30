@@ -11,7 +11,9 @@ def _batcher(seq, size):
 
 
 def should_run(cursor, limit='limit 1'):
-    cursor.execute("""SELECT module_ident FROM modules WHERE canonical is null {}""".format(limit))
+    cursor.execute("SELECT module_ident FROM modules WHERE canonical is null"
+                   " AND portal_type in ('Module', 'CompositeModule')"
+                   " {}".format(limit))
     return cursor.fetchall()
 
 
