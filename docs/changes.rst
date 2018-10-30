@@ -11,6 +11,11 @@ Change Log
 
    - feature message
 
+2.6.2
+-----
+
+ - more migration script bugfixes
+
 2.6.1
 -----
 
