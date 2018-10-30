@@ -34,7 +34,7 @@ def _build_collxml(collid, cursor):
     WITH collxml as (
         INSERT INTO files (file, media_type)
             SELECT pretty_print(legacy_collxml(%s, True))::text::bytea,
-                  'text/xml')
+                  'text/xml'
         RETURNING fileid)
     INSERT INTO module_files (module_ident, fileid, filename)
             SELECT %s, fileid, 'collection.xml' from collxml""",
