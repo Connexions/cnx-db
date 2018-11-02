@@ -60,9 +60,9 @@ SELECT
       ),
 
       xmlelement(name "md:roles",
-            xmlelement(name "md:role", xmlattributes('authors' as "type"), array_to_string(m.authors,' ')),
-            xmlelement(name "md:role", xmlattributes('maintainers' as "type"), array_to_string(m.maintainers,' ')),
-            xmlelement(name "md:role", xmlattributes('licensors' as "type"), array_to_string(m.licensors,' ')),
+            xmlelement(name "md:role", xmlattributes('author' as "type"), array_to_string(m.authors,' ')),
+            xmlelement(name "md:role", xmlattributes('maintainer' as "type"), array_to_string(m.maintainers,' ')),
+            xmlelement(name "md:role", xmlattributes('licensor' as "type"), array_to_string(m.licensors,' ')),
             (SELECT xmlelement(name "md:role", xmlattributes(roleparam as "type"), array_to_string(personids, ' ')) FROM
                 roles r join moduleoptionalroles mor on r.roleid = mor.roleid WHERE mor.module_ident = m.module_ident
             )
