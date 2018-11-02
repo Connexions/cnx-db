@@ -115,6 +115,32 @@ $$
 LANGUAGE SQL;
     """)
 
+    cursor.execute("""
+
+CREATE OR REPLACE FUNCTION legacy_content(nodeid int,
+    repo text default 'https://legacy.cnx.org/content')
+RETURNS xml
+IMMUTABLE STRICT
+LANGUAGE SQL
+AS
+$$
+SELECT
+    xmlelement(name "col:content",
+    (SELECT xmlagg(
+            CASE WHEN c.portal_type in ('Module','CompositeModule')
+                THEN legacy_module(c.nodeid, legacy_content.repo)
+                WHEN c.portal_type in ('SubCollection','CompositeSubCollection')
+                THEN legacy_subcol(c.nodeid, legacy_content.repo)
+            END)
+            FROM (SELECT nodeid, portal_type FROM trees t JOIN modules m
+                ON t.documentid = m.module_ident
+                WHERE parent_id = legacy_content.nodeid
+                ORDER BY childorder) AS c
+            )
+        )
+$$;
+    """)
+
 
 def down(cursor):
     cursor.execute("""
@@ -223,4 +249,28 @@ WHERE
 GROUP BY m.module_ident, m.moduleid, m.name, m.version, m.created, m.revised, m.language, l.url, l.name, ab.abstract
 $$
 LANGUAGE SQL;
+    """)
+
+    cursor.execute("""
+
+CREATE OR REPLACE FUNCTION legacy_content(nodeid int,
+    repo text default 'https://legacy.cnx.org/content')
+RETURNS xml
+IMMUTABLE STRICT
+LANGUAGE SQL
+AS
+$$
+SELECT
+    xmlelement(name "col:content",
+    (SELECT xmlagg(
+            CASE WHEN portal_type in ('Module','CompositeModule')
+                THEN legacy_module(t.nodeid, legacy_content.repo)
+                WHEN portal_type in ('SubCollection','CompositeSubCollection')
+                THEN legacy_subcol(t.nodeid, legacy_content.repo)
+            END)
+            FROM trees t join modules m on t.documentid = m.module_ident
+                WHERE parent_id = legacy_content.nodeid
+            )
+        )
+$$;
     """)

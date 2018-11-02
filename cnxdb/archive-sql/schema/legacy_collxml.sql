@@ -179,7 +179,7 @@ SELECT
     WHERE t.nodeid = legacy_subcol.nodeid
 $$;
 
--- redefine or above, since needs to recurse back to subcol
+-- redefine for above, since needs to recurse back to subcol
 -- recursion terminates on all-module subcols
 
 CREATE OR REPLACE FUNCTION legacy_content(nodeid int,
@@ -192,13 +192,15 @@ $$
 SELECT
     xmlelement(name "col:content",
     (SELECT xmlagg(
-            CASE WHEN portal_type in ('Module','CompositeModule')
-                THEN legacy_module(t.nodeid, legacy_content.repo)
-                WHEN portal_type in ('SubCollection','CompositeSubCollection')
-                THEN legacy_subcol(t.nodeid, legacy_content.repo)
+            CASE WHEN c.portal_type in ('Module','CompositeModule')
+                THEN legacy_module(c.nodeid, legacy_content.repo)
+                WHEN c.portal_type in ('SubCollection','CompositeSubCollection')
+                THEN legacy_subcol(c.nodeid, legacy_content.repo)
             END)
-            FROM trees t join modules m on t.documentid = m.module_ident
+            FROM (SELECT nodeid, portal_type FROM trees t JOIN modules m
+                ON t.documentid = m.module_ident
                 WHERE parent_id = legacy_content.nodeid
+                ORDER BY childorder) AS c
             )
         )
 $$;
