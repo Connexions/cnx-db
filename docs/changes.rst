@@ -11,6 +11,11 @@ Change Log
 
    - feature message
 
+2.6.3
+-----
+
+ - collxml generator function fixes
+
 2.6.2
 -----
 
