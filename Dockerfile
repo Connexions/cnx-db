@@ -1,7 +1,5 @@
 FROM openstax/postgres:9.4
 
-MAINTAINER Michael Mulich <michael.mulich@gmail.com>
-
 RUN apt-get update
 
 # Install build dependencies
@@ -50,13 +48,11 @@ EXPOSE 5432
 # This is a specially created user for non-superuser operations.
 ENV DB_USER=rhaptos
 
-# We use the 'rhaptos_admin' user for superuser operations.
-ENV POSTGRES_USER=rhaptos_admin
 ENV POSTGRES_DB=repository
 
 # These are used by this codebase's tools (e.g. `cnxdb init`).
-ENV DB_URL=postgresql://rhaptos@localhost/repository
-ENV DB_SUPER_URL=postgresql://postgres@localhost/repository
+ENV DB_URL=postgresql://rhaptos@/repository
+ENV DB_SUPER_URL=postgresql://rhaptos_admin@/repository
 
 # This is a hook into the postgres:* container to do database init
 COPY .dockerfiles/initdb.d/* /docker-entrypoint-initdb.d/
