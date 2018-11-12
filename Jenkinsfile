@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('Build') {
       steps {
-        sh "docker build --build-arg environment=prod -t openstax/cnx-db:dev ."
+        sh "docker build -t openstax/cnx-db:dev ."
       }
     }
     stage('Publish Dev Container') {
