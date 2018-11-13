@@ -1,12 +1,20 @@
+@Library('pipeline-library') _
+
 pipeline {
   agent { label 'docker' }
   stages {
     stage('Build') {
       steps {
-        sh "docker build --build-arg environment=prod -t openstax/cnx-db:dev ."
+        sh "docker build -t openstax/cnx-db:dev ."
       }
     }
     stage('Publish Dev Container') {
+      when {
+        anyOf {
+          branch 'master'
+          buildingTag()
+        }
+      }
       steps {
         // 'docker-registry' is defined in Jenkins under credentials
         withDockerRegistry([credentialsId: 'docker-registry', url: '']) {
@@ -20,11 +28,7 @@ pipeline {
         TWINE_CREDS = credentials('pypi-openstax-creds')
         TWINE_USERNAME = "${TWINE_CREDS_USR}"
         TWINE_PASSWORD = "${TWINE_CREDS_PSW}"
-        release = """${sh(
-          returnStdout: true,
-          // Strip the `v` prefix
-          script: 'bash -c \'echo ${TAG_NAME#v*}\''
-        ).trim()}"""
+        release = meta.version()
       }
       steps {
         withDockerRegistry([credentialsId: 'docker-registry', url: '']) {
