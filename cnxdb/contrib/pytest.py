@@ -87,8 +87,7 @@ def db_wipe_module_scope(db_engines, request):
     return db_wipe(db_engines, request)
 
 
-@pytest.fixture
-def db_init(db_engines):
+def _db_init(db_engines):
     """Initializes the database"""
     from cnxdb.init.main import init_db
     init_db(db_engines['super'], is_venv_importable())
@@ -99,10 +98,16 @@ def db_init(db_engines):
             engine.dispose()
 
 
+@pytest.fixture
+def db_init(db_engines):
+    """Initializes the database"""
+    _db_init(db_engines)
+
+
 @pytest.fixture(scope='module')
 def db_init_module_scope(db_engines):
     """Initializes the database"""
-    db_init(db_engines)
+    _db_init(db_engines)
 
 
 @pytest.fixture
@@ -144,14 +149,14 @@ def _maybe_init_database(db_engines):
     # Use the database if it exists, otherwise initialize it
     if _db_cursor__first_run:
         _wipe_db(db_engines['super'])
-        db_init(db_engines)
+        _db_init(db_engines)
         _db_cursor__first_run = False
         # Dispose of any attempted connections that may not be venv
         # initialized, which would not have the necessary imports.
         for eng in db_engines.values():
             eng.dispose()
     elif 'modules' not in tables:
-        db_init(db_engines)
+        _db_init(db_engines)
 
 
 @pytest.fixture
