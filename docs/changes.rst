@@ -11,6 +11,12 @@ Change Log
 
    - feature message
 
+2.7.0
+-----
+
+ - various build-system infrastructure changes (yay Jenkins)
+ - functions for explicitly setting canonical for all pages in a book
+
 2.6.3
 -----
 
