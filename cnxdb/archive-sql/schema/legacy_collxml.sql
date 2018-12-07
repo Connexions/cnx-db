@@ -22,6 +22,10 @@ SELECT
       xmlelement(name "md:content-id", m.moduleid),
       xmlelement(name "md:title", m.name),
 
+      xmlelement(name "md:document-uuid", m.uuid),
+      xmlelement(name "md:document-version", module_version(m.major_version, m.minor_version)),
+      xmlelement(name "md:document-hash", ident_hash(m.uuid, m.major_version, m.minor_version)),
+
       xmlelement(name "md:version", m.version),
       xmlelement(name "md:created", m.created),
       xmlelement(name "md:revised", m.revised),
