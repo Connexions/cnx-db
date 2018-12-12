@@ -5,7 +5,7 @@ pipeline {
   stages {
     stage('Build') {
       steps {
-        sh "docker build -t openstax/cnx-db:dev ."
+        sh "docker build --pull -t openstax/cnx-db:dev ."
       }
     }
     stage('Test Container Build') {
