@@ -5,7 +5,22 @@ pipeline {
   stages {
     stage('Build') {
       steps {
-        sh "docker build -t openstax/cnx-db:dev ."
+        sh "docker build --pull -t openstax/cnx-db:dev ."
+      }
+    }
+    stage('Test Container Build') {
+      steps {
+        sh "docker run --name ${meta.getContainerName()} -d openstax/cnx-db:dev"
+        // Give the server time to startup
+        sh "sleep 20s"
+        // If this command is successful, then the container is accepting connections
+        sh "docker run --rm --link ${meta.getContainerName()}:db openstax/cnx-db:dev psql -h db -U postgres -c \"\\l\""
+        // ^^^ If this is failing, it usually means the base container is out-of-date.
+      }
+      post {
+        always {
+          sh "docker rm -f ${meta.getContainerName()}"
+        }
       }
     }
     stage('Publish Dev Container') {
