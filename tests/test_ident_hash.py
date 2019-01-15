@@ -344,7 +344,7 @@ class TestCNXHash(unittest.TestCase):
         self.assertEqual(
             CNXHash.validate(self.cnxhash.get_shortid()), CNXHash.SHORTID)
         self.assertEqual(
-            CNXHash.validate(unicode(self.cnxhash.get_shortid())),
+            CNXHash.validate(self.cnxhash.get_shortid().decode('utf-8')),
             CNXHash.SHORTID)
 
     def test_error_handling(self):
