@@ -13,8 +13,7 @@ import sys
 
 from lxml import etree
 
-# XXX (2017-10-12) deps-on-cnx-archive: Depends on cnx-archive
-from cnxarchive.utils import split_ident_hash, join_ident_hash
+from cnxdb.ident_hash import split_ident_hash, join_ident_hash
 
 
 __all__ = (
