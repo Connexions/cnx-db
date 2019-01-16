@@ -125,7 +125,7 @@ class CNXHash(uuid.UUID):
     FULLUUID = 2
     _SHORT_HASH_LENGTH = 8
     _MAX_SHORT_HASH_LENGTH = 22
-    _HASH_PADDING_CHAR = b'='
+    _HASH_PADDING_CHAR = '='
     _HASH_DUMMY_CHAR = '0'
 
     def __init__(self, uu=None, *args, **kwargs):
@@ -153,13 +153,15 @@ class CNXHash(uuid.UUID):
         elif not(isinstance(identifier, uuid.UUID)):
             raise TypeError("must be uuid or string.")
         identifier = base64.urlsafe_b64encode(identifier.bytes)
-        identifier = identifier.rstrip(cls._HASH_PADDING_CHAR)
+        identifier = identifier.rstrip(cls._HASH_PADDING_CHAR.encode('utf-8'))
         return identifier
 
     @classmethod
     def base642uuid(cls, identifier):
         if not(isinstance(identifier, basestring)):
             raise TypeError("must be a string.")
+        if isinstance(identifier, bytes):
+            identifier = identifier.decode('utf-8')
         try:
             identifier = str(identifier +
                              cls._HASH_PADDING_CHAR * (len(identifier) % 4))
@@ -174,6 +176,8 @@ class CNXHash(uuid.UUID):
         if isinstance(hash_id, uuid.UUID) or isinstance(hash_id, cls):
             return cls.FULLUUID
         elif isinstance(hash_id, basestring):
+            if isinstance(hash_id, bytes):
+                hash_id = hash_id.decode('utf-8')
             if len(hash_id) == cls._SHORT_HASH_LENGTH:
                 try:  # convert short_id to one possible full hash to validate
                     hash_id = hash_id + \

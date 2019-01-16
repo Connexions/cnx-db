@@ -314,11 +314,11 @@ class TestCNXHash(unittest.TestCase):
         expected_uuid = self.uuid
         returned_uuid = CNXHash(expected_uuid)
         self.assertEqual(str(expected_uuid), str(returned_uuid))
-        returned_uuid = CNXHash(hex=expected_uuid.get_hex())
+        returned_uuid = CNXHash(hex=expected_uuid.hex)
         self.assertEqual(str(expected_uuid), str(returned_uuid))
         returned_uuid = CNXHash(str(expected_uuid))
         self.assertEqual(str(expected_uuid), str(returned_uuid))
-        returned_uuid = CNXHash(bytes=expected_uuid.get_bytes())
+        returned_uuid = CNXHash(bytes=expected_uuid.bytes)
         self.assertEqual(str(expected_uuid), str(returned_uuid))
 
     def test_truncated_hash(self):
