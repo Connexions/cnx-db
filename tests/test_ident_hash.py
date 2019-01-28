@@ -397,7 +397,7 @@ class TestMiscellaneousFunctions:
         from .test_ident_hash import identifiers_equal
 
         db_cursor.execute("""\
-CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 text, identifier2 text)
+CREATE OR REPLACE FUNCTION identifiers_equal (ident1 text, ident2 text)
   RETURNS BOOLEAN
 AS $$
 import uuid
@@ -405,25 +405,25 @@ from cnxarchive.utils import CNXHash, IdentHashSyntaxError
 
 {}
 
-return identifiers_equal(identifier1, identifier2)
+return identifiers_equal(ident1, ident2)
 $$ LANGUAGE plpythonu;
 
-CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 uuid, identifier2 uuid)
+CREATE OR REPLACE FUNCTION identifiers_equal (ident1 uuid, ident2 uuid)
   RETURNS BOOLEAN
 AS $$
-  SELECT identifiers_equal(identifier1::text, identifier2::text)
+  SELECT identifiers_equal(ident1::text, ident2::text)
 $$ LANGUAGE sql;
 
-CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 text, identifier2 uuid)
+CREATE OR REPLACE FUNCTION identifiers_equal (ident1 text, ident2 uuid)
   RETURNS BOOLEAN
 AS $$
-  SELECT identifiers_equal(identifier1, identifier2::text)
+  SELECT identifiers_equal(ident1, ident2::text)
 $$ LANGUAGE sql;
 
-CREATE OR REPLACE FUNCTION identifiers_equal (identifier1 uuid, identifier2 text)
+CREATE OR REPLACE FUNCTION identifiers_equal (ident1 uuid, ident2 text)
   RETURNS BOOLEAN
 AS $$
-  SELECT identifiers_equal(identifier1::text, identifier2)
+  SELECT identifiers_equal(ident1::text, ident2)
 $$ LANGUAGE sql;
 
 CREATE OR REPLACE FUNCTION uuid2base64 (identifier uuid)
@@ -440,51 +440,58 @@ $$ LANGUAGE plpythonu;
         assert db_cursor.fetchone()[0] is False
 
         db_cursor.execute(
-            "select identifiers_equal(uuid_generate_v4(), uuid2base64(uuid_generate_v4()))")
+            "select identifiers_equal(uuid_generate_v4(), "
+            "uuid2base64(uuid_generate_v4()))")
         assert db_cursor.fetchone()[0] is False
 
         db_cursor.execute(
-            "select identifiers_equal(uuid2base64(uuid_generate_v4()),uuid_generate_v4())")
+            "select identifiers_equal(uuid2base64(uuid_generate_v4()),"
+            "uuid_generate_v4())")
         assert db_cursor.fetchone()[0] is False
 
         db_cursor.execute(
-            "select identifiers_equal(uuid2base64(uuid_generate_v4()), uuid2base64(uuid_generate_v4()))")
+            "select identifiers_equal(uuid2base64(uuid_generate_v4()), "
+            "uuid2base64(uuid_generate_v4()))")
         assert db_cursor.fetchone()[0] is False
 
         identifier = str(uuid.uuid4())
 
         db_cursor.execute(
-            "select identifiers_equal('{}','{}')".format(identifier, identifier))
-        assert db_cursor.fetchone()[0] is True
-
-        db_cursor.execute("select identifiers_equal('{}'::uuid,'{}'::uuid)".format(
-            identifier, identifier))
+            "select identifiers_equal('{}','{}')".format(identifier,
+                                                         identifier))
         assert db_cursor.fetchone()[0] is True
 
         db_cursor.execute(
-            "select identifiers_equal('{}','{}'::uuid)".format(identifier, identifier))
+            "select identifiers_equal('{}'::uuid,"
+            "'{}'::uuid)".format(identifier, identifier))
         assert db_cursor.fetchone()[0] is True
 
         db_cursor.execute(
-            "select identifiers_equal('{}'::uuid,'{}')".format(identifier, identifier))
+            "select identifiers_equal('{}','{}'::uuid)".format(identifier,
+                                                               identifier))
         assert db_cursor.fetchone()[0] is True
 
-        db_cursor.execute("select identifiers_equal('{}', uuid2base64('{}'))".format(
-            identifier, identifier))
+        db_cursor.execute(
+            "select identifiers_equal('{}'::uuid,'{}')".format(identifier,
+                                                               identifier))
         assert db_cursor.fetchone()[0] is True
 
-        db_cursor.execute("select identifiers_equal('{}'::uuid, uuid2base64('{}'))".format(
-            identifier, identifier))
+        db_cursor.execute("select identifiers_equal('{}', "
+                          "uuid2base64('{}'))".format(identifier, identifier))
         assert db_cursor.fetchone()[0] is True
 
-        db_cursor.execute("select identifiers_equal(uuid2base64('{}'),'{}')".format(
-            identifier, identifier))
+        db_cursor.execute("select identifiers_equal('{}'::uuid, "
+                          "uuid2base64('{}'))".format(identifier, identifier))
         assert db_cursor.fetchone()[0] is True
 
-        db_cursor.execute("select identifiers_equal(uuid2base64('{}'),'{}'::uuid)".format(
-            identifier, identifier))
+        db_cursor.execute("select identifiers_equal(uuid2base64('{}'),"
+                          "'{}')".format(identifier, identifier))
         assert db_cursor.fetchone()[0] is True
 
-        db_cursor.execute("select identifiers_equal(uuid2base64('{}'), uuid2base64('{}'))".format(
-            identifier, identifier))
+        db_cursor.execute("select identifiers_equal(uuid2base64('{}'),"
+                          "'{}'::uuid)".format(identifier, identifier))
+        assert db_cursor.fetchone()[0] is True
+
+        db_cursor.execute("select identifiers_equal(uuid2base64('{}'), "
+                          "uuid2base64('{}'))".format(identifier, identifier))
         assert db_cursor.fetchone()[0] is True
