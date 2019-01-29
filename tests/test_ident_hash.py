@@ -5,11 +5,22 @@
 # Public License version 3 (AGPLv3).
 # See LICENCE.txt for details.
 # ###
+import os
+import subprocess
+import sys
 import uuid
 import unittest
 
+import pytest
+
 from cnxdb.ident_hash import (CNXHash, IdentHashSyntaxError, IdentHashShortId,
                               IdentHashMissingVersion)
+
+
+def py3_too_old(*args):
+    if sys.version_info >= (3,) and os.path.exists('/usr/bin/python3'):
+        out = subprocess.check_output(['/usr/bin/python3', '--version'])
+        return out < b'Python 3.4'
 
 
 class SplitIdentTestCase(unittest.TestCase):
@@ -391,6 +402,7 @@ class TestCNXHash(unittest.TestCase):
 
 
 class TestMiscellaneousFunctions:
+    @pytest.mark.skipif(py3_too_old)
     def test_identifiers_equal_function(self, db_cursor):
         import inspect
 
