@@ -11,6 +11,13 @@ Change Log
 
    - feature message
 
+3.0.0
+-----
+
+- Move ident hash code to cnx-db (#625)
+- Adjust container setup (#173)
+- Add replace_collxml function (#171)
+
 2.7.0
 -----
 
