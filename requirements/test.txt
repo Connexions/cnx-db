@@ -10,5 +10,6 @@ mock==1.0.1;python_version<="2.7"
 -e git+https://github.com/Connexions/rhaptos.cnxmlutils.git#egg=rhaptos.cnxmlutils
 -e git+https://github.com/Connexions/cnx-epub.git#egg=cnx-epub
 -e git+https://github.com/Connexions/cnx-recipes.git#egg=cnx-recipes
+-e git+https://github.com/openstax/cnx-transforms.git#egg=cnx-transforms
 # FIXME circular dependency here...
 -e git+https://github.com/Connexions/cnx-archive.git#egg=cnx-archive
