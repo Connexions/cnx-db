@@ -1,4 +1,5 @@
 # This project's dependencies
+cnx-transforms
 lxml
 psycopg2
 sqlalchemy
