@@ -3,7 +3,6 @@ recursive-include cnxdb/*-sql *.*
 recursive-include cnxdb/schema *.*
 recursive-include cnxdb/migrations *.py
 recursive-include cnxdb/migrations *.sql
-recursive-include tests/**/data *.*
 recursive-include docs *.*
 recursive-exclude docs/_build *.*
 include versioneer.py

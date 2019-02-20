@@ -47,12 +47,10 @@ setup(
     install_requires=install_requires,
     tests_require=tests_require,
     extras_require=extras_require,
-    test_suite='cnxdb.tests',
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests', 'tests.*']),
     include_package_data=True,
     package_data={
         'cnxdb': ['*-sql/*.sql', '*-sql/**/*.sql', 'schema/*.json'],
-        'cnxdb.tests': ['data/init/**/*.*'],
         },
     cmdclass=versioneer.get_cmdclass(),
     entry_points="""\
