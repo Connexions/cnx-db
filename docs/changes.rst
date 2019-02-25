@@ -11,6 +11,13 @@ Change Log
 
    - feature message
 
+3.1.0
+-----
+
+- Split transforms (cnxml->html,html->cnxml) code into a new package,
+  cnx-transforms. The cnx-transforms package is now a dependency
+  of this project.
+
 3.0.0
 -----
 
