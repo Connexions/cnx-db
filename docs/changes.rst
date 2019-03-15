@@ -11,6 +11,11 @@ Change Log
 
    - feature message
 
+3.1.1
+-----
+
+- Exclude tests in find_packages() in setup.py (#175)
+
 3.1.0
 -----
 
