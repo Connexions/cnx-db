@@ -5,6 +5,7 @@ services:
     volumes:
       - ./docs:/src/docs:z
       - ./cnxdb:/src/cnxdb:z
+      - ./tests:/src/tests:z
       - ./htmlcov:/src/htmlcov:z
       - ./.dockerfiles/initdb.d/:/docker-entrypoint-initdb.d/:z
       - pg-data:/var/lib/postgresql/data
