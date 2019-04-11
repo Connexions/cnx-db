@@ -47,7 +47,7 @@ EXPOSE 5432
 
 # This is a specially created user for non-superuser operations.
 ENV DB_USER=rhaptos
-
+ENV AS_VENV_IMPORTABLE=0
 ENV POSTGRES_DB=repository
 
 # These are used by this codebase's tools (e.g. `cnxdb init`).
