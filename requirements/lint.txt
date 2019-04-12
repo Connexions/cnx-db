@@ -1,3 +1,4 @@
 # The project's lint dependencies...
 doc8
 flake8
+sphinx

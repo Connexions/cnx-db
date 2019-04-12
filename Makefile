@@ -17,7 +17,7 @@ default : help
 #  Helpers
 # ###
 
-_REQUIREMENTS_FILES = requirements/main.txt requirements/docs.txt requirements/test.txt requirements/lint.txt
+_REQUIREMENTS_FILES = requirements/main.txt requirements/docs.txt requirements/test.txt
 VENV_EXTRA_ARGS =
 
 $(STATEDIR)/env/pyvenv.cfg : $(_REQUIREMENTS_FILES)
@@ -40,6 +40,27 @@ endif
 	$(BINDIR)/python -m pip install $(foreach req,$(_REQUIREMENTS_FILES),-r $(req))
 	# Install the package
 	$(BINDIR)/python -m pip install -e .
+
+
+$(STATEDIR)/lint-env/pyvenv.cfg : requirements/lint.txt
+ifeq ($(PYTHON_VERSION),2)
+	@echo "Using Python 2.7 ..."
+	rm -rf $(STATEDIR)/lint-env
+	virtualenv -p $$(which python2.7) $(VENV_EXTRA_ARGS) $(STATEDIR)/lint-env
+	# Mark this as having been built
+	touch $(STATEDIR)/lint-env/pyvenv.cfg
+else
+	@echo "Using Python 3..."
+	# Create our Python 3 virtual environment
+	rm -rf $(STATEDIR)/lint-env
+	python3 -m venv $(VENV_EXTRA_ARGS) $(STATEDIR)/lint-env
+endif
+	# Upgrade tooling requirements
+	$(STATEDIR)/lint-env/bin/python -m pip install --upgrade pip wheel tox setuptools
+
+	# Install requirements
+	$(STATEDIR)/lint-env/bin/python -m pip install -r requirements/lint.txt
+
 
 $(STATEDIR)/docker-build: Dockerfile requirements/main.txt requirements/deploy.txt
 	# Build our docker container(s) for this project.
@@ -144,10 +165,10 @@ help-lint :
 	@echo "${_SHORT_DESC_LINT}"
 	@echo "Usage: make lint"
 
-lint : $(STATEDIR)/env/pyvenv.cfg setup.cfg
-	$(BINDIR)/python -m flake8 .
+lint : $(STATEDIR)/lint-env/pyvenv.cfg setup.cfg
+	$(STATEDIR)/lint-env/bin/python -m flake8 .
 	@echo '====  ====  ====  ====  ====  ====  ====  ====  ====  ===='
-	$(BINDIR)/python bin/doc8 README.rst docs/
+	$(STATEDIR)/lint-env/bin/python bin/doc8 README.rst docs/
 
 # /Lint
 
