@@ -9,6 +9,7 @@ For more information on how pytest fixtures work, look at the
 """
 from __future__ import absolute_import
 import os
+import warnings
 
 import psycopg2
 import pytest
@@ -188,17 +189,32 @@ def db_dict_cursor(db_engines, db_settings):
     conn.close()
 
 
-@pytest.fixture
-def db_tables(db_engines):
+def _db_tables(db_engines):
     """Provides access to sqlalchemy table objects"""
     # FIXME put the Tables class in a more common location.
     from .pyramid import _Tables
     tables = _Tables()
-    tables.metadata.reflect(bind=db_engines['common'])
+    with warnings.catch_warnings():
+        # This suppresses SAWarnning during table reflection
+        # e.g. SAWarning: Skipped unsupported reflection of expression-based
+        #      index lastest_modules_short_id_idx ...
+        warnings.simplefilter('ignore')
+        tables.metadata.reflect(bind=db_engines['common'])
     return tables
+
+
+@pytest.fixture(scope='session')
+def db_tables_session_scope(db_engines):
+    return _db_tables(db_engines)
 
 
 @pytest.fixture(scope='module')
 def db_tables_module_scope(db_engines):
     """Provides access to sqlalchemy table objects"""
-    return db_tables(db_engines)
+    return _db_tables(db_engines)
+
+
+@pytest.fixture
+def db_tables(db_engines):
+    # override cnx-db's db_tables to use the session scoped version.
+    return _db_tables(db_engines)
