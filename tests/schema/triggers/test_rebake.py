@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+"""\
+This module tests the psql trigger function known as 'rebake'.
+"""
 import uuid
 
 import pytest
 
-from cnxdb.contrib import testing
 
 
 def test_rebake_triggered_from_ruleset_css(db_init_and_wipe, db_engines, db_tables):
