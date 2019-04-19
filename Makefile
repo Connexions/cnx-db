@@ -122,15 +122,11 @@ TEST_EXTRA_ARGS =
 
 help-test :
 	@echo "${_SHORT_DESC_TEST}"
-	@echo "Usage: make test [<VAR>=<val>, ...]"
+	@echo "Usage: make test [<arguments-to-pytest> ...]"
 	@echo ""
-	@echo "Where <VAR> could be:"  # alphbetical please
-	@echo "  * TEST -- specify the test to run (default: '$(TEST)')"
-	@echo "  * TEST_EXTRA_ARGS -- extra arguments to give ~tox~ (default: '$(TEST_EXTRA_ARGS)')"
-	@echo "    (see also setup.cfg's pytest configuration)"
 
 test : $(STATEDIR)/env/pyvenv.cfg
-	$(BINDIR)/tox $(TEST_EXTRA_ARGS) $(TEST)
+	$(BINDIR)/tox -- $(filter-out $@, $(MAKECMDGOALS))
 
 # /Test
 
@@ -207,3 +203,11 @@ serve: $(STATEDIR)/docker-build
 	docker-compose up
 
 # /Serve
+
+# ###
+#  Catch-all to avoid errors when passing args to make test
+# ###
+
+%:
+	@:
+# /Catch-all
