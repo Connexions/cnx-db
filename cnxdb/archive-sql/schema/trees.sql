@@ -21,6 +21,7 @@ CREATE TABLE trees (
     childorder integer, -- position within parent node
     latest boolean, -- is this node supposed to track upstream changes
     is_collated boolean DEFAULT FALSE,
+    slug text, -- is a slug string (i.e. `1-1-the-science-of-biology`)
     PRIMARY KEY (nodeid),
     FOREIGN KEY (parent_id) REFERENCES trees (nodeid) ON DELETE CASCADE
 );
