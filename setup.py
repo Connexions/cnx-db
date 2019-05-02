@@ -9,6 +9,7 @@ setup_requires = (
     'pytest-runner',
     )
 install_requires = (
+    'cnx-common',
     'cnx-transforms',
     'psycopg2',
     'sqlalchemy',
