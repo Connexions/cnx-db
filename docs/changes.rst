@@ -4,12 +4,11 @@ Change Log
 
 .. RUN `make lint` before you commit
 
-.. Use the following to start a new version entry:
+3.2.0
+-----
 
-   |version|
-   ----------------------
-
-   - feature message
+- Add a column for the REX URL slug (#178)
+- Include the slug value in tree_to_json results (#179)
 
 3.1.1
 -----
