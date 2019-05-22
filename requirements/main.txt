@@ -1,4 +1,5 @@
 # This project's dependencies
+cnx-common
 cnx-transforms
 lxml
 psycopg2
