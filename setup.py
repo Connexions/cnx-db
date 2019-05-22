@@ -1,29 +1,35 @@
 # -*- coding: utf-8 -*-
+import os
 import sys
-from setuptools import setup, find_packages
+
 import versioneer
+from setuptools import setup, find_packages
 
-IS_PY3 = sys.version_info > (3,)
 
-setup_requires = (
-    'pytest-runner',
-    )
-install_requires = (
-    'cnx-common',
-    'cnx-transforms',
-    'psycopg2',
-    'sqlalchemy',
-    'rhaptos.cnxmlutils',
-    'venusian',
-    )
-tests_require = [
-    'pyramid',
-    'pytest',
-    'pytest-mock',
-    ]
+here = os.path.abspath(os.path.dirname(__file__))
+
+
+def _filter_requirement(req):
+    req = req.strip()
+    # skip comments and dash options (e.g. `-e` & `-r`)
+    return bool(req and req[0] not in '#-')
+
+
+def read_from_requirements_txt(filepath):
+    f = os.path.join(here, filepath)
+    with open(f) as fb:
+        return tuple([
+            x.strip()
+            for x in fb
+            if _filter_requirement(x)
+        ])
+
+
+install_requires = read_from_requirements_txt('requirements/main.txt')
+tests_require = read_from_requirements_txt('requirements/test.txt')
 extras_require = {
     'test': tests_require,
-    }
+}
 description = "Connexions Database Library"
 with open('README.rst', 'r') as readme, \
      open('docs/changes.rst', 'r') as changes:
@@ -32,8 +38,6 @@ with open('README.rst', 'r') as readme, \
         changes.read(),
     ])
 
-if not IS_PY3:
-    tests_require.append('mock==1.0.1')
 
 setup(
     name='cnx-db',
@@ -44,7 +48,6 @@ setup(
     license='LGPL, See also LICENSE.txt',
     description=description,
     long_description=long_description,
-    setup_requires=setup_requires,
     install_requires=install_requires,
     tests_require=tests_require,
     extras_require=extras_require,
