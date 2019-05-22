@@ -36,6 +36,7 @@ before_install:
   - if [[ $PYTHON_VERSION -eq 3 ]]; then sed -i 's/plpythonu/plpython3u/' $(git grep -l plpythonu cnxdb/ tests/); fi
 install:
   # Uninstall, because cnx-archive installs it due to the circular dependence.
+  - pip install -r requirements/main.txt -r requirements/test.txt
   - pip uninstall -y cnx-db
   - pip install .
 before_script:
