@@ -15,6 +15,7 @@ install_requires = (
     'sqlalchemy',
     'rhaptos.cnxmlutils',
     'venusian',
+    'zope.deprecation >= 3.5.0',
     )
 tests_require = [
     'pyramid',
