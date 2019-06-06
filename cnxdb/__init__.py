@@ -3,7 +3,7 @@
 import os
 import sys
 
-import cnxcommon
+import cnxcommon.ident_hash
 from zope.deprecation import deprecated
 
 
