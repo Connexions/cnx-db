@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
+import os
 import time
 from datetime import timedelta
 
+import requests
 import rhaptos.cnxmlutils
 from dbmigrator import deferred, logger
+
+
+ARCHIVE_DOMAIN = os.getenv('ARCHIVE_DOMAIN')
+VARNISH_HOSTS = os.getenv('VARNISH_HOSTS', '').split(',')
+VARNISH_PORT = int(os.getenv('VARNISH_PORT', 80))
 
 
 def _batcher(seq, size):
@@ -26,6 +33,19 @@ WITH index_cnxml_html AS (
     GROUP BY fileid {}""".format(limit),
                    (version_text,))
     return cursor.fetchall()
+
+
+def purge_contents_cache():
+    if not ARCHIVE_DOMAIN or not VARNISH_HOSTS:
+        logger.warn('ARCHIVE_DOMAIN or VARNISH_HOSTS not set, not purging pages')
+        return
+    for varnish_host in VARNISH_HOSTS:
+        resp = requests.request(
+            'PURGE_REGEXP', 'http://{}:{}/contents/*'.format(
+                varnish_host, VARNISH_PORT),
+            headers={'Host': ARCHIVE_DOMAIN})
+        if resp.status_code != 200:
+            logger.error('Content purge failed:\n{}'.format(resp.text))
 
 
 @deferred
@@ -113,6 +133,7 @@ WHERE fileid = %s""", (new_fileid[0][0], fileid))
                                             time.ctime(est_complete),
                                             timedelta(0, remaining_est)))
 
+    purge_contents_cache()
     logger.info('Total runtime: {}'.format(timedelta(0, elapsed)))
 
 
@@ -144,3 +165,4 @@ DELETE FROM files
             SELECT 1 FROM module_files
             WHERE module_files.fileid = files.fileid);
 DROP TABLE datamigrations.index_cnxml_html""")
+    purge_contents_cache()

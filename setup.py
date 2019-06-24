@@ -13,6 +13,7 @@ install_requires = (
     'cnx-transforms',
     'psycopg2',
     'sqlalchemy',
+    'requests',
     'rhaptos.cnxmlutils',
     'venusian',
     'zope.deprecation >= 3.5.0',
