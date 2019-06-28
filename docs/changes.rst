@@ -4,6 +4,14 @@ Change Log
 
 .. RUN `make lint` before you commit
 
+3.3.0
+-----
+
+- Move ident-hash parsing functionality to cnx-common (#180)
+- Purge varnish cache after transforms (#181)
+- Add script/dump_book.py to dump/load a book from db (#183)
+- SQL queries for xpath search (#182)
+
 3.2.0
 -----
 
