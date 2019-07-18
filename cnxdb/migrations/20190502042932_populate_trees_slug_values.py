@@ -96,6 +96,25 @@ def generate_update_values(nodeid, title):
     return [str(nodeid), slug]
 
 
+def should_run(cursor):
+    # Regenerate the slugs to fix this bug:
+    # https://github.com/openstax/cnx/issues/595
+    #
+    # A specific example is the slug for "Astronomy" ->
+    # "2 Observing the Sky: The Birth of Astronomy" -> "Exercises" ->
+    # "Review Questions" should be "2-review-questions" instead of
+    # "review-questions"
+    cursor.execute("""\
+        SELECT slug FROM trees
+        JOIN modules ON trees.documentid = modules.module_ident
+        WHERE modules.uuid = '1e7cea52-7771-53b4-8957-2d26b35ea373'
+        LIMIT 1""")
+    result = cursor.fetchone()
+    if result:
+        return result[0] == 'review-questions'
+    return False
+
+
 @deferred
 def up(cursor):
     # Create sql function for reducing the dimension of an array
