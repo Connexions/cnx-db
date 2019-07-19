@@ -86,20 +86,21 @@ def get_latest_version(book_uuid):
 
 def get_module_idents_tree_nodes(book_uuid, book_version):
     get_module_idents_sql = """
-    WITH RECURSIVE t(node, path, value) AS (
-        SELECT nodeid, ARRAY[nodeid], documentid
+    WITH RECURSIVE t(node, path, value, parent) AS (
+        SELECT nodeid, ARRAY[nodeid], documentid, parent_id
         FROM trees tr, modules m
         WHERE m.uuid::text = %s AND
               module_version(m.major_version, m.minor_version) = %s AND
               tr.documentid = m.module_ident AND
               tr.parent_id IS NULL
     UNION ALL
-        SELECT c1.nodeid, t.path || ARRAY[c1.nodeid], c1.documentid
+        SELECT c1.nodeid, t.path || ARRAY[c1.nodeid], c1.documentid,
+               c1.parent_id
         FROM trees c1 JOIN t ON (c1.parent_id = t.node)
         WHERE NOT nodeid = ANY(t.path)
     )
-    SELECT DISTINCT value, node
-    FROM t"""
+    SELECT DISTINCT value, node, parent
+    FROM t ORDER BY parent DESC"""
     return execute_sql(get_module_idents_sql, (book_uuid, book_version),
                        cursor_factory=None)
 
