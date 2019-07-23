@@ -1,3 +1,4 @@
 # The project's lint dependencies...
 doc8
+docutils==0.14  # 0.15 breaks bin/doc8
 flake8
