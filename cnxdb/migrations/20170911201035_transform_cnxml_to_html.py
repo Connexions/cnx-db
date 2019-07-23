@@ -18,10 +18,10 @@ def _batcher(seq, size):
         yield seq[pos:pos + size]
 
 
-def should_run(cursor, limit='LIMIT 1'):
+def get_outdated_raw_html(cursor, limit=''):
     version = rhaptos.cnxmlutils.__version__
     version_text = '%data-cnxml-to-html-ver="{}"%'.format(version)
-    logger.info('Looking for {}'.format(version_text))
+    logger.info('Looking for index.cnxml.html without {}'.format(version_text))
     cursor.execute("""\
 WITH index_cnxml_html AS (
     SELECT files.fileid, module_ident, file
@@ -30,9 +30,33 @@ WITH index_cnxml_html AS (
 ) SELECT fileid, max(module_ident)
     FROM index_cnxml_html
     WHERE convert_from(file, 'utf-8') NOT LIKE %s
-    GROUP BY fileid {}""".format(limit),
-                   (version_text,))
+    GROUP BY fileid {}""".format(limit), (version_text,))
     return cursor.fetchall()
+
+
+def get_outdated_baked_books(cursor, limit=''):
+    version = rhaptos.cnxmlutils.__version__
+    version_text = '%data-cnxml-to-html-ver="{}"%'.format(version)
+    logger.info('Looking for baked html without {}'.format(version_text))
+    cursor.execute("""\
+WITH collated_files AS (
+    SELECT file, context
+        FROM collated_file_associations c
+        NATURAL JOIN files
+        JOIN modules m ON c.item = m.module_ident
+    WHERE m.portal_type = 'Module'
+) SELECT DISTINCT context
+    FROM collated_files
+    WHERE convert_from(file, 'utf-8') NOT LIKE %s
+    {}""".format(limit), (version_text,))
+    return cursor.fetchall()
+
+
+def should_run(cursor):
+    raw_results = get_outdated_raw_html(cursor, limit='LIMIT 1')
+    baked_results = get_outdated_baked_books(cursor, limit='LIMIT 1')
+    return bool(raw_results) or bool(baked_results)
+
 
 
 def purge_contents_cache():
@@ -53,11 +77,12 @@ def up(cursor):
     """Transform all index.cnxml to index.cnxml.html"""
     # Get all the index.cnxml.html that does not have rhaptos.cnxmlutils
     # current version
-    to_transform = should_run(cursor, limit='')
-    num_todo = len(to_transform)
+    raw_to_transform = get_outdated_raw_html(cursor)
+    baked_to_transform = get_outdated_baked_books(cursor)
+    num_todo = len(raw_to_transform) + len(baked_to_transform)
 
     batch_size = 100
-    logger.info('Pages to transform: {}'.format(num_todo))
+    logger.info('Pages and books to transform: {}'.format(num_todo))
     logger.info('Batch size: {}'.format(batch_size))
 
     start = time.time()
@@ -66,15 +91,17 @@ def up(cursor):
     logger.info('Completion guess: '
                 '"{}" ({})'.format(time.ctime(guess_complete),
                                    timedelta(0, guesstimate)))
-    module_idents = tuple([i[1] for i in to_transform])
 
-    # Check if datamigrations.index_cnxml_html exists, else create it
-    cursor.execute("CREATE SCHEMA IF NOT EXISTS datamigrations")
-    cursor.execute("""\
+    if raw_to_transform:
+        module_idents = tuple([i[1] for i in raw_to_transform])
+
+        # Check if datamigrations.index_cnxml_html exists, else create it
+        cursor.execute("CREATE SCHEMA IF NOT EXISTS datamigrations")
+        cursor.execute("""\
 CREATE TABLE IF NOT EXISTS datamigrations.index_cnxml_html
     ( LIKE module_files )""")
     # Store module_files for modules we are going to update
-    cursor.execute("""\
+        cursor.execute("""\
 INSERT INTO datamigrations.index_cnxml_html
     SELECT * FROM module_files
         WHERE module_ident IN %s
@@ -89,10 +116,10 @@ UPDATE datamigrations.index_cnxml_html b
       AND module_files.filename = b.filename
       AND module_files.fileid != b.fileid
       AND module_files.module_ident IN %s""",
-                   (module_idents, module_idents))
+                       (module_idents, module_idents))
 
     num_complete = 0
-    for batch in _batcher(to_transform, batch_size):
+    for batch in _batcher(raw_to_transform, batch_size):
         module_idents = tuple([i[1] for i in batch])
         logger.debug('Transform module_idents {}'.format(module_idents))
 
@@ -123,6 +150,27 @@ UPDATE module_files SET fileid = %s
 WHERE fileid = %s""", (new_fileid[0][0], fileid))
 
         cursor.connection.commit()
+        num_complete += len(batch)
+        percent_comp = num_complete * 100.0 / num_todo
+        elapsed = time.time() - start
+        remaining_est = elapsed * (num_todo - num_complete) / num_complete
+        est_complete = start + elapsed + remaining_est
+        logger.info('{:.1f}% complete '
+                    'est: "{}" ({})'.format(percent_comp,
+                                            time.ctime(est_complete),
+                                            timedelta(0, remaining_est)))
+
+    # index.cnxml.html must be transformed first before baking as baking uses
+    # index.cnxml.html
+    for batch in _batcher(baked_to_transform, batch_size):
+        book_module_idents = tuple([i[0] for i in batch])
+        logger.debug('Rebaking books {}'.format(book_module_idents))
+
+        cursor.execute("""\
+UPDATE modules SET stateid = (
+    SELECT stateid FROM modulestates WHERE statename = 'post-publication'
+) WHERE module_ident IN %s""", (book_module_idents,))
+
         num_complete += len(batch)
         percent_comp = num_complete * 100.0 / num_todo
         elapsed = time.time() - start
