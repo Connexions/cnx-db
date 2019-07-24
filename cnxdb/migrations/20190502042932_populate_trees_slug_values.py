@@ -1,11 +1,18 @@
 # -*- coding: utf-8 -*-
+import os
 import time
 from datetime import timedelta
 from functools import wraps
 
+import requests
 from dbmigrator import deferred
 from dbmigrator import logger
 from cnxcommon.urlslug import generate_slug
+
+
+ARCHIVE_DOMAIN = os.getenv('ARCHIVE_DOMAIN')
+VARNISH_HOSTS = os.getenv('VARNISH_HOSTS', '').split(',')
+VARNISH_PORT = int(os.getenv('VARNISH_PORT', 80))
 
 
 BATCH_SIZE = 1000
@@ -96,6 +103,38 @@ def generate_update_values(nodeid, title):
     return [str(nodeid), slug]
 
 
+def should_run(cursor):
+    # Regenerate the slugs to fix this bug:
+    # https://github.com/openstax/cnx/issues/595
+    #
+    # A specific example is the slug for "Astronomy" ->
+    # "2 Observing the Sky: The Birth of Astronomy" -> "Exercises" ->
+    # "Review Questions" should be "2-review-questions" instead of
+    # "review-questions"
+    cursor.execute("""\
+        SELECT slug FROM trees
+        JOIN modules ON trees.documentid = modules.module_ident
+        WHERE modules.uuid = '1e7cea52-7771-53b4-8957-2d26b35ea373'
+        LIMIT 1""")
+    result = cursor.fetchone()
+    if result:
+        return result[0] == 'review-questions'
+    return False
+
+
+def purge_contents_cache():
+    if not ARCHIVE_DOMAIN or not VARNISH_HOSTS:
+        logger.warn('ARCHIVE_DOMAIN or VARNISH_HOSTS not set, not purging pages')
+        return
+    for varnish_host in VARNISH_HOSTS:
+        resp = requests.request(
+            'PURGE_REGEXP', 'http://{}:{}/contents/*'.format(
+                varnish_host, VARNISH_PORT),
+            headers={'Host': ARCHIVE_DOMAIN})
+        if resp.status_code != 200:
+            logger.error('Content purge failed:\n{}'.format(resp.text))
+
+
 @deferred
 def up(cursor):
     # Create sql function for reducing the dimension of an array
@@ -150,6 +189,7 @@ def up(cursor):
     logger.info('Total runtime: {}'.format(total_time))
 
     cursor.execute(DROP_REDUCE_DIM)
+    purge_contents_cache()
 
 
 def down(cursor):
