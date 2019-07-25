@@ -4,6 +4,15 @@ Change Log
 
 .. RUN `make lint` before you commit
 
+3.4.0
+-----
+
+- Fix empty collated file associations in dump_book.py (#185)
+- Pin docutils to 0.14 in requirements/lint.txt (#186)
+- Repeat populate tree slug migration
+- Add cache purging code to populate trees slug migration
+- Update setup.py to require cnx-common>=1.2.1
+
 3.3.0
 -----
 
