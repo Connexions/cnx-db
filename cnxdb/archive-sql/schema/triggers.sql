@@ -1,3 +1,6 @@
+-- ANY UPDATES TO THIS FILE SHOULD ALSO CONTAIN UPDATES TO
+-- THE DOCUMENATION AT docs/triggers.rst
+
 CREATE OR REPLACE FUNCTION update_latest() RETURNS trigger AS '
 BEGIN
 -- lastest content is the highest version that has successfully baked - states 1 and 8 (current and fallback)
