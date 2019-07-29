@@ -68,6 +68,7 @@ Contents
 
    config
    usage
+   triggers
    api
    changes
 
