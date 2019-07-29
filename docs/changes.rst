@@ -4,6 +4,12 @@ Change Log
 
 .. RUN `make lint` before you commit
 
+3.5.0
+-----
+
+- Documentation for the database triggers (#188)
+- Rebake books in cnxml-to-html transforms migration (#187)
+
 3.4.0
 -----
 
