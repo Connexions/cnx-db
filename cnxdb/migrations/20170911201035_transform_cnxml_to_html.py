@@ -38,6 +38,7 @@ def get_outdated_baked_books(cursor, limit=''):
     version = rhaptos.cnxmlutils.__version__
     version_text = '%data-cnxml-to-html-ver="{}"%'.format(version)
     logger.info('Looking for baked html without {}'.format(version_text))
+    # Only look for latest books authored by OpenStaxCollege
     cursor.execute("""\
 WITH collated_files AS (
     SELECT file, context
@@ -45,9 +46,11 @@ WITH collated_files AS (
         NATURAL JOIN files
         JOIN modules m ON c.item = m.module_ident
     WHERE m.portal_type = 'Module'
+      AND m.authors @> '{{"OpenStaxCollege"}}'
 ) SELECT DISTINCT context
-    FROM collated_files
+    FROM collated_files c
     WHERE convert_from(file, 'utf-8') NOT LIKE %s
+      AND EXISTS (SELECT 1 FROM latest_modules WHERE module_ident = context)
     {}""".format(limit), (version_text,))
     return cursor.fetchall()
 
