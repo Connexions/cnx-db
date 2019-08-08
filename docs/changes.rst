@@ -4,6 +4,11 @@ Change Log
 
 .. RUN `make lint` before you commit
 
+3.5.1
+-----
+
+- Rebake only latest openstax books in transforms migration (#189)
+
 3.5.0
 -----
 
