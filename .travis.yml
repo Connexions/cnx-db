@@ -59,6 +59,8 @@ script:
   - script/ci_test_dump_restore.sh
   # Test migrations
   - script/ci_test_migrations.sh
+  # Check dist
+  - script/ci_check_dist.sh
 after_success:
   # Report test coverage to codecov.io
   - codecov
