@@ -188,14 +188,17 @@ def db_dict_cursor(db_engines, db_settings):
     conn.close()
 
 
-@pytest.fixture
 def db_tables(db_engines):
-    """Provides access to sqlalchemy table objects"""
-    # FIXME put the Tables class in a more common location.
     from .pyramid import _Tables
     tables = _Tables()
     tables.metadata.reflect(bind=db_engines['common'])
     return tables
+
+
+@pytest.fixture(name='db_tables')
+def db_tables_fixture(db_engines):
+    """Provides access to sqlalchemy table objects"""
+    return db_tables(db_engines)
 
 
 @pytest.fixture(scope='module')
