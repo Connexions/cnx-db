@@ -4,6 +4,12 @@ Change Log
 
 .. RUN `make lint` before you commit
 
+3.5.2
+-----
+
+- Add twine check on travis (#190)
+- Separate db_tables function and fixture for reuse (#191)
+
 3.5.1
 -----
 
