@@ -283,14 +283,60 @@ def dump_book(book_ident_hash):
 
 
 def load_table(cursor, tablename, columns, data):
-    sql = 'INSERT INTO {} ({}) VALUES ({})'.format(
-        tablename, ', '.join(columns), ', '.join('%s' for c in columns))
+    pkey_column = get_pkey_column(cursor, tablename)
+
+    # FIXME: Most of the branching here can be replaced
+    #        by an upsert in postgres >9.4
+    if pkey_column is None:
+        sql = SQL("""
+        INSERT INTO {} ({})
+        VALUES({})
+        """).format(Identifier(tablename),
+                    SQL(', ').join(map(Identifier, columns)),
+                    SQL(', ').join(Placeholder() for c in columns))
+    else:
+        sql = SQL("""
+        INSERT INTO {0} ({1})
+        SELECT {2}
+        WHERE NOT EXISTS (
+            SELECT * FROM {0} WHERE {3} = %s
+        )""").format(Identifier(tablename),
+                    SQL(', ').join(map(Identifier, columns)),
+                    SQL(', ').join(Placeholder() for c in columns),
+                    Identifier(pkey_column))
+
     for d in data:
-        with db_cursor(cursor_factory=None) as cursor:
-            try:
-                cursor.execute(sql, d)
-            except psycopg2.errors.UniqueViolation as e:
-                logging.error(e)
+        if pkey_column is not None:
+            pkey_value = dict(zip(columns, d))[pkey_column]
+            params = d + (pkey_value,)
+        else:
+            params = d
+        try:
+            cursor.execute(sql, params)
+        except psycopg2.errors.UniqueViolation as e:
+            logging.error(e)
+
+
+def get_pkey_column(cursor, tablename):
+    sql = """
+    SELECT a.attname, format_type(a.atttypid, a.atttypmod) AS data_type
+    FROM pg_index i
+    JOIN pg_attribute a ON a.attrelid = i.indrelid
+        AND a.attnum = ANY(i.indkey)
+    WHERE i.indrelid = %s::regclass
+    AND i.indisprimary;
+    """
+    result = None
+    try:
+        cursor.execute(sql, (tablename,))
+    except psycopg2.errors.UniqueViolation as e:
+        logging.error(e)
+    try:
+        result = cursor.fetchone()[0]
+    except TypeError:
+        print('info: could not find pkey column for table: {}'.format(
+            tablename))
+    return result
 
 
 def load_data(tablename, data):
