@@ -50,6 +50,7 @@ import tarfile
 import tempfile
 
 import psycopg2.extras
+from psycopg2.sql import SQL, Identifier, Literal, Placeholder
 
 
 DB_URL = os.getenv('DB_URL')
@@ -317,6 +318,17 @@ def confirm_load():
     return confirmation.lower() == 'yes'
 
 
+def bump_sequence(sequence, table, id_column):
+    print('updating sequence {} from {}:{}'.format(sequence, table, id_column))
+    sql = SQL('SELECT setval(%s, (SELECT max({}) + 1 FROM {}))').format(
+        Identifier(id_column), Identifier(table))
+    with db_cursor(cursor_factory=None) as cursor:
+        try:
+            cursor.execute(sql, (sequence,))
+        except psycopg2.errors.UniqueViolation as e:
+            logging.error(e)
+
+
 def load_book(filename):
     infile = tarfile.open(filename, 'r')
 
@@ -369,6 +381,12 @@ def load_book(filename):
     load_data('module_files', get_data('module_files'))
     load_data('moduletags', get_data('moduletags'))
     load_data('trees', get_data('trees'))
+
+    bump_sequence('abstracts_abstractid_seq', 'abstracts', 'abstractid')
+    bump_sequence('files_fileid_seq', 'files', 'fileid')
+    bump_sequence('licenses_licenseid_seq', 'licenses', 'licenseid')
+    bump_sequence('modules_module_ident_seq', 'modules', 'module_ident')
+    bump_sequence('tags_tagid_seq', 'tags', 'tagid')
 
     # Enable the triggers again
     with db_cursor() as cursor:
