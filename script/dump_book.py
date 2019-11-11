@@ -50,7 +50,7 @@ import tarfile
 import tempfile
 
 import psycopg2.extras
-from psycopg2.sql import SQL, Identifier, Literal, Placeholder
+from psycopg2.sql import SQL, Identifier, Placeholder
 
 
 DB_URL = os.getenv('DB_URL')
@@ -282,12 +282,12 @@ def dump_book(book_ident_hash):
     print('Output in {}'.format(output_filename))
 
 
-def load_table(cursor, tablename, columns, data):
-    pkey_column = get_pkey_column(cursor, tablename)
+def load_table(cursor, tablename, columns, data, unique_key=None):
+    unique_key = unique_key or (get_pkey_column(cursor, tablename),)
 
     # FIXME: Most of the branching here can be replaced
     #        by an upsert in postgres >9.4
-    if pkey_column is None:
+    if unique_key == (None,):
         sql = SQL("""
         INSERT INTO {} ({})
         VALUES({})
@@ -295,22 +295,31 @@ def load_table(cursor, tablename, columns, data):
                     SQL(', ').join(map(Identifier, columns)),
                     SQL(', ').join(Placeholder() for c in columns))
     else:
+        unique_as_idents = list(map(Identifier, unique_key))
+        unique_as_placeholders = [Placeholder() for c in unique_key]
+        unique_matches_condition = SQL(' AND ').join(
+            map(lambda ident_ph_tup: SQL('{} = {}').format(ident_ph_tup[0],
+                                                           ident_ph_tup[1]),
+                zip(unique_as_idents, unique_as_placeholders)))
+
         sql = SQL("""
         INSERT INTO {0} ({1})
         SELECT {2}
         WHERE NOT EXISTS (
-            SELECT * FROM {0} WHERE {3} = %s
+            SELECT * FROM {0} WHERE {3}
         )""").format(Identifier(tablename),
-                    SQL(', ').join(map(Identifier, columns)),
-                    SQL(', ').join(Placeholder() for c in columns),
-                    Identifier(pkey_column))
+                     SQL(', ').join(map(Identifier, columns)),
+                     SQL(', ').join(Placeholder() for c in columns),
+                     unique_matches_condition)
 
-    for d in data:
-        if pkey_column is not None:
-            pkey_value = dict(zip(columns, d))[pkey_column]
-            params = d + (pkey_value,)
+    for row in data:
+        if unique_key == (None,):
+            params = row
         else:
-            params = d
+            row_data = dict(zip(columns, row))
+            unique_values = tuple(map(lambda column: row_data[column],
+                                      unique_key))
+            params = row + unique_values
         try:
             cursor.execute(sql, params)
         except psycopg2.errors.UniqueViolation as e:
@@ -339,14 +348,15 @@ def get_pkey_column(cursor, tablename):
     return result
 
 
-def load_data(tablename, data):
+def load_data(tablename, data, unique_key=None):
     print('loading data into {}'.format(tablename))
     if not data:
         return
     columns = list(data[0].keys())
     with db_cursor(cursor_factory=None) as cursor:
         load_table(cursor, tablename, columns,
-                   (tuple(d[c] for c in columns) for d in data))
+                   (tuple(d[c] for c in columns) for d in data),
+                   unique_key)
 
 
 def confirm_load():
@@ -424,8 +434,10 @@ def load_book(filename):
     load_data('modules', modules)
     load_data('collated_file_associations',
               get_data('collated_file_associations'))
-    load_data('module_files', get_data('module_files'))
-    load_data('moduletags', get_data('moduletags'))
+    load_data('module_files',
+              get_data('module_files'),
+              ('module_ident', 'filename'))
+    load_data('moduletags', get_data('moduletags'), ('module_ident',))
     load_data('trees', get_data('trees'))
 
     bump_sequence('abstracts_abstractid_seq', 'abstracts', 'abstractid')
