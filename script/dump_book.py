@@ -50,6 +50,7 @@ import tarfile
 import tempfile
 
 import psycopg2.extras
+from psycopg2.sql import SQL, Identifier, Placeholder
 
 
 DB_URL = os.getenv('DB_URL')
@@ -281,25 +282,81 @@ def dump_book(book_ident_hash):
     print('Output in {}'.format(output_filename))
 
 
-def load_table(cursor, tablename, columns, data):
-    sql = 'INSERT INTO {} ({}) VALUES ({})'.format(
-        tablename, ', '.join(columns), ', '.join('%s' for c in columns))
-    for d in data:
-        with db_cursor(cursor_factory=None) as cursor:
-            try:
-                cursor.execute(sql, d)
-            except psycopg2.errors.UniqueViolation as e:
-                logging.error(e)
+def load_table(cursor, tablename, columns, data, unique_key=None):
+    unique_key = unique_key or (get_pkey_column(cursor, tablename),)
+
+    # FIXME: Most of the branching here can be replaced
+    #        by an upsert in postgres >9.4
+    if unique_key == (None,):
+        sql = SQL("""
+        INSERT INTO {} ({})
+        VALUES({})
+        """).format(Identifier(tablename),
+                    SQL(', ').join(map(Identifier, columns)),
+                    SQL(', ').join(Placeholder() for c in columns))
+    else:
+        unique_as_idents = list(map(Identifier, unique_key))
+        unique_as_placeholders = [Placeholder() for c in unique_key]
+        unique_matches_condition = SQL(' AND ').join(
+            map(lambda ident_ph_tup: SQL('{} = {}').format(ident_ph_tup[0],
+                                                           ident_ph_tup[1]),
+                zip(unique_as_idents, unique_as_placeholders)))
+
+        sql = SQL("""
+        INSERT INTO {0} ({1})
+        SELECT {2}
+        WHERE NOT EXISTS (
+            SELECT * FROM {0} WHERE {3}
+        )""").format(Identifier(tablename),
+                     SQL(', ').join(map(Identifier, columns)),
+                     SQL(', ').join(Placeholder() for c in columns),
+                     unique_matches_condition)
+
+    for row in data:
+        if unique_key == (None,):
+            params = row
+        else:
+            row_data = dict(zip(columns, row))
+            unique_values = tuple(map(lambda column: row_data[column],
+                                      unique_key))
+            params = row + unique_values
+        try:
+            cursor.execute(sql, params)
+        except psycopg2.errors.UniqueViolation as e:
+            logging.error(e)
 
 
-def load_data(tablename, data):
+def get_pkey_column(cursor, tablename):
+    sql = """
+    SELECT a.attname, format_type(a.atttypid, a.atttypmod) AS data_type
+    FROM pg_index i
+    JOIN pg_attribute a ON a.attrelid = i.indrelid
+        AND a.attnum = ANY(i.indkey)
+    WHERE i.indrelid = %s::regclass
+    AND i.indisprimary;
+    """
+    result = None
+    try:
+        cursor.execute(sql, (tablename,))
+    except psycopg2.errors.UniqueViolation as e:
+        logging.error(e)
+    try:
+        result = cursor.fetchone()[0]
+    except TypeError:
+        print('info: could not find pkey column for table: {}'.format(
+            tablename))
+    return result
+
+
+def load_data(tablename, data, unique_key=None):
     print('loading data into {}'.format(tablename))
     if not data:
         return
     columns = list(data[0].keys())
     with db_cursor(cursor_factory=None) as cursor:
         load_table(cursor, tablename, columns,
-                   (tuple(d[c] for c in columns) for d in data))
+                   (tuple(d[c] for c in columns) for d in data),
+                   unique_key)
 
 
 def confirm_load():
@@ -315,6 +372,17 @@ def confirm_load():
     else:
         confirmation = input()
     return confirmation.lower() == 'yes'
+
+
+def bump_sequence(sequence, table, id_column):
+    print('updating sequence {} from {}:{}'.format(sequence, table, id_column))
+    sql = SQL('SELECT setval(%s, (SELECT max({}) + 1 FROM {}))').format(
+        Identifier(id_column), Identifier(table))
+    with db_cursor(cursor_factory=None) as cursor:
+        try:
+            cursor.execute(sql, (sequence,))
+        except psycopg2.errors.UniqueViolation as e:
+            logging.error(e)
 
 
 def load_book(filename):
@@ -366,9 +434,17 @@ def load_book(filename):
     load_data('modules', modules)
     load_data('collated_file_associations',
               get_data('collated_file_associations'))
-    load_data('module_files', get_data('module_files'))
-    load_data('moduletags', get_data('moduletags'))
+    load_data('module_files',
+              get_data('module_files'),
+              ('module_ident', 'filename'))
+    load_data('moduletags', get_data('moduletags'), ('module_ident',))
     load_data('trees', get_data('trees'))
+
+    bump_sequence('abstracts_abstractid_seq', 'abstracts', 'abstractid')
+    bump_sequence('files_fileid_seq', 'files', 'fileid')
+    bump_sequence('licenses_licenseid_seq', 'licenses', 'licenseid')
+    bump_sequence('modules_module_ident_seq', 'modules', 'module_ident')
+    bump_sequence('tags_tagid_seq', 'tags', 'tagid')
 
     # Enable the triggers again
     with db_cursor() as cursor:
