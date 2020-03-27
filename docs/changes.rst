@@ -4,6 +4,22 @@ Change Log
 
 .. RUN `make lint` before you commit
 
+3.5.3
+-----
+
+- Merge pull request #194 from openstax/933-remove-transform-migration
+  - pin lint dependencies to versions that passed in last build of master
+  - setuptools>=45 breaks python 2.7 build for travis. Setting different
+  installs for setuptools for python 2 and 3
+  - added pip install -upgrade pip to .travis.yml file in before_install step
+  - Removed 20170911201035_transform_cnxml_to_html.py from migrations
+- Merge pull request #193 from openstax/cnx-stack-compose
+  - Add script to create legacy user w/ passwd for dev purposes
+  - Accept explicit and multiple values for table unique key
+  - Attempt to not insert when a duplicate pkey is found
+  - Bump sequences to max pkey value to avoid conflicts
+- Remove upload pypi step in Jenkinsfile (#192)
+
 3.5.2
 -----
 
