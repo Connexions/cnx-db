@@ -27,14 +27,17 @@ ifeq ($(PYTHON_VERSION),2)
 	virtualenv -p $$(which python2.7) $(VENV_EXTRA_ARGS) $(STATEDIR)/env
 	# Mark this as having been built
 	touch $(STATEDIR)/env/pyvenv.cfg
+	$(BINDIR)/python -m pip install --upgrade pip 
+	$(BINDIR)/python -m pip install "setuptools<45"
 else
 	@echo "Using Python 3..."
 	# Create our Python 3 virtual environment
 	rm -rf $(STATEDIR)/env
 	python3 -m venv $(VENV_EXTRA_ARGS) $(STATEDIR)/env
+	$(BINDIR)/python -m pip install --upgrade pip setuptools
 endif
 	# Upgrade tooling requirements
-	$(BINDIR)/python -m pip install --upgrade pip wheel tox setuptools
+	$(BINDIR)/python -m pip install --upgrade wheel tox
 
 	# Install requirements
 	$(BINDIR)/python -m pip install $(foreach req,$(_REQUIREMENTS_FILES),-r $(req))
