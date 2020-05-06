@@ -52,6 +52,16 @@ Or::
     pip install -r requirements/test.txt
     py.test
 
+Testing in Docker
+-----------------
+
+The tests can be run inside a docker container by running the following:
+
+    docker-compose up
+    docker-compose exec db psql --username=rhaptos_admin --no-password --dbname=repository -c "CREATE USER tester WITH SUPERUSER PASSWORD 'tester';"
+    docker-compose exec db createdb --username=rhaptos_admin --no-password --owner=tester testing
+    docker-compose exec db make test
+
 License
 -------
 

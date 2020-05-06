@@ -30,6 +30,14 @@ RUN set -x \
 
 COPY requirements /tmp/requirements
 
+# Install session_exec
+RUN git clone https://github.com/okbob/session_exec.git \
+    && cd session_exec \
+    && git checkout dc2885e08fbd1ebef9170047fde53167b1f28c70 \
+    && make USE_PGXS=1 -e && make USE_PGXS=1 -e install
+
+RUN apt-get install python3-venv python3-dev --no-install-recommends -y
+
 # Copy the project into the container
 COPY . /src/
 WORKDIR /src/
