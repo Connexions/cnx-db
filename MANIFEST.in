@@ -7,3 +7,4 @@ recursive-include docs *.*
 recursive-exclude docs/_build *.*
 include versioneer.py
 include cnxdb/_version.py
+recursive-include requirements/ *.txt
