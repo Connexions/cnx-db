@@ -10,12 +10,12 @@ setup_requires = (
     )
 install_requires = (
     'cnx-common >= 1.2.1',
-    'cnx-transforms',
-    'psycopg2',
-    'sqlalchemy',
-    'requests',
-    'rhaptos.cnxmlutils',
-    'venusian',
+    'cnx-transforms==1.2.0',
+    'psycopg2==2.8.5',
+    'sqlalchemy==1.3.16',
+    'requests==2.23.0',
+    'rhaptos.cnxmlutils==1.7.3',
+    'venusian==1.2.0',
     'zope.deprecation >= 3.5.0',
     )
 tests_require = [
