@@ -5,7 +5,7 @@ RUN apt-get update
 # Install build dependencies
 RUN set -x \
     && apt-get update \
-    && apt-get install build-essential pkg-config git python-pip --no-install-recommends -y \
+    && apt-get install build-essential pkg-config git python-pip python3-dev python3-venv --no-install-recommends -y \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -22,11 +22,18 @@ RUN set -x \
     && cd plxslt \
     && make \
     && make install
+    
+RUN set -x \
+    && git clone https://github.com/okbob/session_exec.git \
+    && cd session_exec \
+    && git checkout dc2885e08fbd1ebef9170047fde53167b1f28c70 \
+    && make USE_PGXS=1 -e && make USE_PGXS=1 -e install
 
 # Upgrade pip and packaging tools
 RUN set -x \
     && pip install -U pip setuptools wheel \
-    && apt remove python-pip -y
+    && apt remove python-pip -y \
+    && apt-get install python3-venv
 
 COPY requirements /tmp/requirements
 
