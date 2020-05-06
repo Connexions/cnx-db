@@ -3,9 +3,7 @@ services:
   db:
     build: .
     volumes:
-      - ./docs:/src/docs:z
-      - ./cnxdb:/src/cnxdb:z
-      - ./htmlcov:/src/htmlcov:z
+      - .:/src
       - ./.dockerfiles/initdb.d/:/docker-entrypoint-initdb.d/:z
       - pg-data:/var/lib/postgresql/data
     ports:
