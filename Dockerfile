@@ -17,17 +17,21 @@ RUN set -x \
 # Install the 'plxslt' extension language
 RUN set -x \
     && apt-get update \
-    && apt-get install libxml2-dev libxslt-dev zlib1g-dev postgresql-server-dev-$PG_MAJOR --no-install-recommends -y \
+    && apt-get install curl libxml2-dev libxslt-dev zlib1g-dev postgresql-server-dev-$PG_MAJOR --no-install-recommends -y \
     && git clone https://github.com/petere/plxslt.git \
     && cd plxslt \
     && make \
     && make install
-    
+
+# Install session_exec. Create db sessions using python in a venv
 RUN set -x \
     && git clone https://github.com/okbob/session_exec.git \
     && cd session_exec \
     && git checkout dc2885e08fbd1ebef9170047fde53167b1f28c70 \
     && make USE_PGXS=1 -e && make USE_PGXS=1 -e install
+
+RUN curl https://raw.githubusercontent.com/vishnubob/wait-for-it/54d1f0bfeb6557adf8a3204455389d0901652242/wait-for-it.sh \
+  -o /usr/local/bin/wait-for-it && chmod a+x /usr/local/bin/wait-for-it
 
 # Upgrade pip and packaging tools
 RUN set -x \
