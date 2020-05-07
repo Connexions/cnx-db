@@ -52,6 +52,25 @@ Or::
     pip install -r requirements/test.txt
     py.test
 
+Testing with Docker and Docker Compose
+--------------------------------------
+
+Requirements:
+* Install `Docker <https://docs.docker.com/install/>`_
+* Install `docker-compose <https://docs.docker.com/compose/install/>`_
+
+To help with installation of packages this project also comes with a
+``Dockerfile`` and ``docker-compose.yml`` file.
+
+To run the tests in the test suite execute the following script:
+
+.. code-block:: bash
+
+   $ ./script/tests.local.sh
+
+This should build and run the tests within your local docker container
+environment.
+
 License
 -------
 
