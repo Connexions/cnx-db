@@ -46,7 +46,6 @@ setup(
     license='LGPL, See also LICENSE.txt',
     description=description,
     long_description=long_description,
-    setup_requires=setup_requires,
     install_requires=install_requires,
     tests_require=tests_require,
     extras_require=extras_require,
