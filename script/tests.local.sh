@@ -3,17 +3,20 @@
 # Exit in case of error
 set -e
 
-if [ $(uname -s) = "Linux" ]; then
-    echo "Remove __pycache__ files"
-    sudo find . -type d -name __pycache__ -exec rm -r {} \+
-fi
+echo "Remove python bytecode files"
+make clean-pyc
 
+# Build the image and wait for the database server to come up
 docker-compose build
 docker-compose down -v --remove-orphans # Remove possibly previous broken stacks left hanging after an error
 docker-compose up -d
-docker-compose exec db wait-for-it -t 10 db:5432
+docker-compose exec db wait-for-it -t 30 db:5432
 
+# Instantiate the testing database, database user, and run tests
+# If these steps do not continue then there may be an issue with the container starting up.
+# Run `docker-compose logs db` to diagnose
 docker-compose exec db psql -U postgres -c "DROP DATABASE IF EXISTS testing"
+docker-compose exec db psql -U postgres -c "DROP ROLE IF EXISTS tester"
 docker-compose exec db psql -U postgres -c "CREATE USER tester WITH SUPERUSER PASSWORD 'tester';"
 docker-compose exec db createdb -U postgres -O tester testing
-docker-compose exec db make test 
+docker-compose exec db make test
