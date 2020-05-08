@@ -4,7 +4,7 @@
 set -e
 
 echo "Remove python bytecode files"
-make clean-pyc
+make -f Makefile.docker clean
 
 # Build the image and wait for the database server to come up
 docker-compose build
@@ -19,4 +19,6 @@ docker-compose exec db psql -U postgres -c "DROP DATABASE IF EXISTS testing"
 docker-compose exec db psql -U postgres -c "DROP ROLE IF EXISTS tester"
 docker-compose exec db psql -U postgres -c "CREATE USER tester WITH SUPERUSER PASSWORD 'tester';"
 docker-compose exec db createdb -U postgres -O tester testing
-docker-compose exec db make test
+docker-compose exec db make -f Makefile.docker flake8
+docker-compose exec db make -f Makefile.docker doc8
+docker-compose exec db make -f Makefile.docker test
