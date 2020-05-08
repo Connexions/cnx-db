@@ -10,7 +10,9 @@ make -f Makefile.docker clean
 docker-compose build
 docker-compose down -v --remove-orphans # Remove possibly previous broken stacks left hanging after an error
 docker-compose up -d
-docker-compose exec db wait-for-it -t 30 db:5432
+docker-compose logs db
+
+docker-compose exec db wait-for-it -t 30 0.0.0.0:5432
 
 # Instantiate the testing database, database user, and run tests
 # If these steps do not continue then there may be an issue with the container starting up.
