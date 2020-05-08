@@ -5,7 +5,7 @@ pytest
 pytest-cov
 pytest-mock
 mock==1.0.1;python_version<="2.7"
-tox
+tox==3.15.0
 cnx-query-grammar==0.2.2
 cnx-epub==0.21.1
 cnx-transforms==1.2.0
