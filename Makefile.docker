@@ -1,0 +1,30 @@
+# A Makefile that assumes the commands will be executed in relation to docker.
+
+help:
+	@echo "make"
+	@echo "    clean"
+	@echo "        Remove Python/build artifacts."
+	@echo "    test"
+	@echo "        Run the test suite using tox for python 2 and python 3."
+	@echo "    flake8"
+	@echo "        Run flake8 using tox for code style linting."
+	@echo "    doc8"
+	@echo "        Run doc8 using tox for document style linting."
+
+test:
+	tox -e py2,py3
+
+flake8:
+	tox -e flake8
+
+doc8:
+	tox -e doc8
+
+clean:
+	find . -name '*.pyc' -exec rm -f {} +
+	find . -name '*.pyo' -exec rm -f {} +
+	find . -name '*~' -exec rm -f  {} +
+	rm -rf build/
+	rm -rf .pytype/
+	rm -rf dist/
+	rm -rf docs/_build
