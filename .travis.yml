@@ -1,9 +1,11 @@
 language: python
+services:
+  - docker
 python:
   - "2.7"
   - "3.5"
 sudo: required
-dist: precise
+dist: trusty
 addons:
   postgresql: "9.4"
   apt:
@@ -62,6 +64,8 @@ script:
   - script/ci_test_migrations.sh
   # Check dist
   - script/ci_check_dist.sh
+  # Try out the docker scripts
+  - ./script/tests.local.sh
 after_success:
   # Report test coverage to codecov.io
   - codecov

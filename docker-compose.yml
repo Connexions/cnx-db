@@ -7,7 +7,7 @@ services:
       - ./.dockerfiles/initdb.d/:/docker-entrypoint-initdb.d/:z
       - pg-data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       - DB_URL=postgresql://rhaptos@/repository
       - DB_SUPER_URL=postgresql://postgres@/repository
