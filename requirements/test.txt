@@ -9,7 +9,6 @@ tox
 cnx-query-grammar==0.2.2
 cnx-epub==0.21.1
 cnx-transforms==1.2.0
-rhaptos.cnxmlutils==1.7.3
 cnx-recipes==1.50.0
 
 # FIXME circular dependency here...
