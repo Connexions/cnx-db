@@ -7,12 +7,12 @@ echo "Remove python bytecode files"
 make -f Makefile.docker clean
 
 # Build the image and wait for the database server to come up
-docker-compose build
+docker-compose build --no-cache
 docker-compose down -v --remove-orphans # Remove possibly previous broken stacks left hanging after an error
 docker-compose up -d
 docker-compose logs db
 
-docker-compose exec db wait-for-it -t 30 0.0.0.0:5432
+docker-compose exec db make -f Makefile.docker db-wait
 
 # Instantiate the testing database, database user, and run tests
 # If these steps do not continue then there may be an issue with the container starting up.

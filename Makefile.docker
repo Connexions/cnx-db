@@ -10,6 +10,8 @@ help:
 	@echo "        Run flake8 using tox for code style linting."
 	@echo "    doc8"
 	@echo "        Run doc8 using tox for document style linting."
+	@echo "    db-wait"
+	@echo "        Run db_wait.py script to check if the database is up"
 
 test:
 	tox -e py27,py3
@@ -19,6 +21,9 @@ flake8:
 
 doc8:
 	tox -e doc8
+
+db-wait:
+	./script/db_wait.py
 
 clean:
 	find . -name '*.pyc' -exec rm -f {} +
