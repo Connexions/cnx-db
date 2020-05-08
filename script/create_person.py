@@ -77,7 +77,7 @@ def create_person(user_w_pass, groups):
     sql_insert = """
     INSERT INTO persons (personid, passwd, groups)
     VALUES (%(user)s, %(pass_ssha)s, %(groups)s)
-    )"""
+    """
 
     with db_cursor() as cursor:
         cursor.execute(sql_update, {'user': username,
