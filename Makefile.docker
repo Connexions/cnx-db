@@ -12,7 +12,7 @@ help:
 	@echo "        Run doc8 using tox for document style linting."
 
 test:
-	tox -e py2,py3
+	tox -e py27,py3
 
 flake8:
 	tox -e flake8
