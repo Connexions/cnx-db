@@ -52,12 +52,13 @@ Or::
     pip install -r requirements/test.txt
     py.test
 
-Testing with Docker and Docker Compose
---------------------------------------
+Testing with Docker and Docker Compose (recommended)
+----------------------------------------------------
 
 Requirements:
-* Install `Docker <https://docs.docker.com/install/>`_
-* Install `docker-compose <https://docs.docker.com/compose/install/>`_
+
+- Install `Docker <https://docs.docker.com/install/>`_
+- Install `docker-compose <https://docs.docker.com/compose/install/>`_
 
 To help with installation of packages this project also comes with a
 ``Dockerfile`` and ``docker-compose.yml`` file.
@@ -70,6 +71,17 @@ To run the tests in the test suite execute the following script:
 
 This should build and run the tests within your local docker container
 environment.
+
+The commands being executed are named explicitly so the developer can tell what
+is happening.
+
+.. note::
+   The script uses ``Makefile.docker`` located in the root of the project. This
+   file was created to separate concerns from the main Makefile. The main
+   Makefile creates virtualenvs and manages a ``.state`` directory which are
+   not things to be concerned about when operating within the docker container.
+   To not break any of that functionality it was decided to separate actions
+   needed to be taken within the container.
 
 License
 -------
